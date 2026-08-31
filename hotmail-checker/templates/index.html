@@ -421,6 +421,80 @@
 
         .export-section .title i { color: var(--accent); }
 
+        .file-list {
+            margin-top: 10px;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .file-list::-webkit-scrollbar { width: 4px; }
+        .file-list::-webkit-scrollbar-track { background: rgba(10, 14, 23, 0.5); }
+        .file-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+            margin-bottom: 3px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .file-item:hover { background: rgba(0, 212, 255, 0.08); }
+
+        .file-item .name { color: var(--text-primary); font-family: monospace; }
+        .file-item .size { color: var(--text-secondary); font-size: 10px; }
+        .file-item .download-btn { 
+            background: var(--success); 
+            border: none; 
+            color: #0a0e17;
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-size: 10px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .file-item .download-btn:hover { opacity: 0.8; }
+
+        .notification {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--bg-card);
+            border: 1px solid var(--success);
+            border-radius: 12px;
+            padding: 15px 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.5s;
+            z-index: 999;
+            max-width: 400px;
+        }
+
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .notification .title { color: var(--success); font-weight: 700; margin-bottom: 5px; }
+        .notification .message { color: var(--text-secondary); font-size: 13px; }
+        .notification .close-btn {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 18px;
+            cursor: pointer;
+        }
+
         @media (max-width: 1024px) { .main-grid { grid-template-columns: 1fr; } }
 
         @media (max-width: 768px) {
@@ -430,6 +504,7 @@
             .settings-row { flex-direction: column; align-items: stretch; }
             .btn-group { justify-content: center; }
             .btn-group-export { justify-content: center; }
+            .notification { left: 20px; right: 20px; bottom: 20px; }
         }
 
         @media (max-width: 480px) {
@@ -541,14 +616,15 @@ Security Alert</textarea>
                     <div class="export-section">
                         <div class="title"><i class="fas fa-download"></i> Export Results</div>
                         <div class="btn-group-export">
-                            <button class="btn btn-success" onclick="exportAll()"><i class="fas fa-file-archive"></i> All (ZIP)</button>
-                            <button class="btn btn-success" onclick="exportInbox()"><i class="fas fa-inbox"></i> Inbox</button>
-                            <button class="btn btn-success" onclick="exportValid()"><i class="fas fa-check-circle"></i> Valid</button>
-                            <button class="btn btn-success" onclick="export2FA()"><i class="fas fa-lock"></i> 2FA</button>
+                            <button class="btn btn-success" onclick="downloadAll()"><i class="fas fa-file-archive"></i> All (ZIP)</button>
+                            <button class="btn btn-success" onclick="downloadFile('inbox')"><i class="fas fa-inbox"></i> Inbox</button>
+                            <button class="btn btn-success" onclick="downloadFile('valid')"><i class="fas fa-check-circle"></i> Valid</button>
+                            <button class="btn btn-success" onclick="downloadFile('2fa')"><i class="fas fa-lock"></i> 2FA</button>
                         </div>
-                        <div class="btn-group-export" style="margin-top:5px;">
-                            <button class="btn btn-purple btn-sm" onclick="exportCountry()"><i class="fas fa-flag"></i> By Country</button>
-                            <button class="btn btn-purple btn-sm" onclick="exportKeyword()"><i class="fas fa-tag"></i> By Keyword</button>
+                        <div class="file-list" id="fileList">
+                            <div style="color:var(--text-secondary);font-size:11px;text-align:center;padding:5px;">
+                                <i class="fas fa-spinner fa-spin"></i> Loading files...
+                            </div>
                         </div>
                     </div>
 
@@ -580,14 +656,19 @@ Security Alert</textarea>
         </div>
     </div>
 
+    <!-- NOTIFICATION -->
+    <div class="notification" id="notification">
+        <button class="close-btn" onclick="closeNotification()">✕</button>
+        <div class="title" id="notifTitle">✅ Ready</div>
+        <div class="message" id="notifMessage">Files are ready for download</div>
+    </div>
+
     <script>
         // ============================================
         // STATE
         // ============================================
         let running = false;
         let updateInterval = null;
-        let countriesList = [];
-        let keywordsList = [];
 
         // ============================================
         // DOM ELEMENTS
@@ -602,6 +683,7 @@ Security Alert</textarea>
         const statusDot = document.getElementById('statusDot');
         const accountFileInput = document.getElementById('accountFileInput');
         const proxyFileInput = document.getElementById('proxyFileInput');
+        const fileList = document.getElementById('fileList');
 
         // ============================================
         // FILE UPLOAD HANDLERS
@@ -713,6 +795,22 @@ Security Alert</textarea>
         }
 
         // ============================================
+        // NOTIFICATION
+        // ============================================
+        function showNotification(title, message, type = 'success') {
+            const notif = document.getElementById('notification');
+            document.getElementById('notifTitle').textContent = title;
+            document.getElementById('notifTitle').style.color = type === 'success' ? 'var(--success)' : 'var(--warning)';
+            document.getElementById('notifMessage').textContent = message;
+            notif.classList.add('show');
+            setTimeout(() => notif.classList.remove('show'), 8000);
+        }
+
+        function closeNotification() {
+            document.getElementById('notification').classList.remove('show');
+        }
+
+        // ============================================
         // MAIN FUNCTIONS
         // ============================================
         async function startCheck() {
@@ -793,6 +891,11 @@ Security Alert</textarea>
                     });
                 }
                 
+                // Actualizar lista de archivos
+                if (data.export_ready && data.export_files) {
+                    updateFileList(data.export_files);
+                }
+                
                 if (!data.running && running) {
                     running = false;
                     startBtn.disabled = false;
@@ -804,8 +907,7 @@ Security Alert</textarea>
                         updateInterval = null;
                     }
                     addLog('✅ Check completed', 'success');
-                    // Cargar listas de países y keywords para export
-                    loadExportLists();
+                    showNotification('✅ Check Completed', 'Results are ready for download!');
                 }
                 
                 if (data.stats.total > 0 && data.stats.checked >= data.stats.total) {
@@ -818,7 +920,6 @@ Security Alert</textarea>
                         clearInterval(updateInterval);
                         updateInterval = null;
                     }
-                    loadExportLists();
                 }
                 
             } catch (error) {
@@ -827,130 +928,64 @@ Security Alert</textarea>
         }
 
         // ============================================
-        // EXPORT FUNCTIONS
+        // FILE LIST
         // ============================================
-        async function loadExportLists() {
-            try {
-                // Cargar países
-                const countryRes = await fetch('/api/export/countries/list');
-                const countryData = await countryRes.json();
-                countriesList = countryData.countries || [];
-                
-                // Cargar keywords
-                const keywordRes = await fetch('/api/export/keywords/list');
-                const keywordData = await keywordRes.json();
-                keywordsList = keywordData.keywords || [];
-                
-                addLog(`📋 Available exports: ${countriesList.length} countries, ${keywordsList.length} keywords`, 'info');
-            } catch (e) {
-                console.error('Error loading export lists:', e);
+        function updateFileList(files) {
+            if (!files || files.length === 0) {
+                fileList.innerHTML = `<div style="color:var(--text-secondary);font-size:11px;text-align:center;padding:5px;">
+                    <i class="fas fa-info-circle"></i> No files available yet
+                </div>`;
+                return;
             }
+
+            let html = '';
+            files.forEach(file => {
+                const size = file.size > 1024 * 1024 
+                    ? (file.size / (1024 * 1024)).toFixed(2) + ' MB'
+                    : (file.size / 1024).toFixed(1) + ' KB';
+                const name = file.name.replace('Countries/', '🌍 ').replace('Keywords/', '🏷️ ');
+                const downloadUrl = `/api/download/${encodeURIComponent(file.name)}`;
+                html += `
+                    <div class="file-item">
+                        <span class="name">${name}</span>
+                        <span class="size">${size}</span>
+                        <button class="download-btn" onclick="downloadSpecificFile('${file.name}')">⬇️</button>
+                    </div>
+                `;
+            });
+            
+            fileList.innerHTML = html;
         }
 
-        async function downloadFile(url, filename) {
-            try {
-                addLog(`📤 Exporting ${filename}...`, 'info');
-                const response = await fetch(url, { method: 'POST' });
-                
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || 'Export failed');
-                }
-                
-                const blob = await response.blob();
-                const downloadUrl = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = downloadUrl;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                setTimeout(() => URL.revokeObjectURL(downloadUrl), 5000);
-                addLog(`✅ ${filename} downloaded successfully`, 'success');
-            } catch (error) {
-                addLog(`⚠️ Export error: ${error.message}`, 'error');
-            }
+        // ============================================
+        // DOWNLOAD FUNCTIONS
+        // ============================================
+        function downloadSpecificFile(filename) {
+            const url = `/api/download/${encodeURIComponent(filename)}`;
+            window.open(url, '_blank');
+            addLog(`📤 Downloading: ${filename}`, 'info');
         }
 
-        function exportAll() {
-            downloadFile('/api/export/all', `hotmail_results_${Date.now()}.zip`);
-        }
-
-        function exportInbox() {
-            downloadFile('/api/export/inbox', 'Inbox.txt');
-        }
-
-        function exportValid() {
-            downloadFile('/api/export/valid', 'Valid.txt');
-        }
-
-        function export2FA() {
-            downloadFile('/api/export/2fa', '2FA.txt');
-        }
-
-        function exportCountry() {
-            if (countriesList.length === 0) {
-                addLog('⚠️ No country results available to export', 'warning');
+        function downloadFile(type) {
+            const endpoints = {
+                'inbox': '/api/download/inbox',
+                'valid': '/api/download/valid',
+                '2fa': '/api/download/2fa'
+            };
+            
+            const url = endpoints[type];
+            if (!url) {
+                addLog('⚠️ Invalid file type', 'warning');
                 return;
             }
             
-            // Crear selector de países
-            const options = countriesList.map(c => `<option value="${c}">${c}</option>`).join('');
-            const html = `
-                <div style="background:rgba(0,0,0,0.5);padding:20px;border-radius:10px;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:999;min-width:300px;border:1px solid var(--border-color);">
-                    <h3 style="color:var(--accent);margin-bottom:15px;">Select Country</h3>
-                    <select id="countrySelect" style="width:100%;padding:10px;background:var(--bg-primary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:8px;margin-bottom:15px;">
-                        ${options}
-                    </select>
-                    <div style="display:flex;gap:10px;">
-                        <button onclick="downloadCountry()" class="btn btn-success" style="flex:1;">Download</button>
-                        <button onclick="this.closest('div[style]').remove()" class="btn btn-danger" style="flex:1;">Cancel</button>
-                    </div>
-                </div>
-            `;
-            const overlay = document.createElement('div');
-            overlay.innerHTML = html;
-            document.body.appendChild(overlay.firstElementChild);
+            window.open(url, '_blank');
+            addLog(`📤 Downloading ${type}.txt...`, 'info');
         }
 
-        function downloadCountry() {
-            const select = document.getElementById('countrySelect');
-            if (!select) return;
-            const country = select.value;
-            downloadFile(`/api/export/country/${country}`, `${country}.txt`);
-            select.closest('div[style]').remove();
-        }
-
-        function exportKeyword() {
-            if (keywordsList.length === 0) {
-                addLog('⚠️ No keyword results available to export', 'warning');
-                return;
-            }
-            
-            const options = keywordsList.map(k => `<option value="${k}">${k}</option>`).join('');
-            const html = `
-                <div style="background:rgba(0,0,0,0.5);padding:20px;border-radius:10px;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:999;min-width:300px;border:1px solid var(--border-color);">
-                    <h3 style="color:var(--accent);margin-bottom:15px;">Select Keyword</h3>
-                    <select id="keywordSelect" style="width:100%;padding:10px;background:var(--bg-primary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:8px;margin-bottom:15px;">
-                        ${options}
-                    </select>
-                    <div style="display:flex;gap:10px;">
-                        <button onclick="downloadKeyword()" class="btn btn-success" style="flex:1;">Download</button>
-                        <button onclick="this.closest('div[style]').remove()" class="btn btn-danger" style="flex:1;">Cancel</button>
-                    </div>
-                </div>
-            `;
-            const overlay = document.createElement('div');
-            overlay.innerHTML = html;
-            document.body.appendChild(overlay.firstElementChild);
-        }
-
-        function downloadKeyword() {
-            const select = document.getElementById('keywordSelect');
-            if (!select) return;
-            const keyword = select.value;
-            downloadFile(`/api/export/keyword/${keyword}`, `${keyword}.txt`);
-            select.closest('div[style]').remove();
+        function downloadAll() {
+            window.open('/api/download/all', '_blank');
+            addLog('📤 Downloading all results as ZIP...', 'info');
         }
 
         function clearLogs() {
@@ -958,17 +993,36 @@ Security Alert</textarea>
             document.getElementById('logCount').textContent = '1 entries';
         }
 
-        // Auto fetch status
+        // ============================================
+        // LOAD FILES ON STARTUP
+        // ============================================
+        async function loadFiles() {
+            try {
+                const response = await fetch('/api/files');
+                const data = await response.json();
+                if (data.files) {
+                    updateFileList(data.files);
+                }
+            } catch (e) {
+                console.error('Error loading files:', e);
+            }
+        }
+
+        // Auto fetch status and files
         setInterval(() => {
             if (!running) {
                 fetchStatus();
             }
         }, 5000);
 
+        // Load files on startup
+        loadFiles();
+
         addLog('🔧 Hotmail Checker Pro ready', 'info');
         addLog('💡 Upload accounts.txt or paste credentials', 'info');
         addLog('📁 Drag & drop files supported', 'info');
-        addLog('📤 Use Export buttons to download results', 'info');
+        addLog('📤 Results are automatically saved in Results folder', 'info');
+        addLog('⬇️ Use download buttons to get your files', 'info');
     </script>
 </body>
 </html>
