@@ -32,7 +32,6 @@ CONFIG = {
     'accounts_file': 'acc.txt'
 }
 
-# Intentar cargar config.ini
 try:
     import configparser
     config = configparser.ConfigParser()
@@ -214,7 +213,7 @@ def update_stats():
             stats['cpm'] = int(stats['checked'] / elapsed * 60)
 
 # ============================================
-# CLASE MICROSOFT INBOX CHECKER (COMPLETA)
+# CLASE MICROSOFT INBOX CHECKER
 # ============================================
 class MicrosoftInboxChecker:
     def __init__(self, email, password, proxy=None, inbox_keywords=None):
@@ -616,6 +615,10 @@ def check_account(email, password, keywords, proxies):
                 hits_str = ' | '.join(inbox_hits)
                 save_string = f"{email}:{password} | {country} | {total_count} Email Found | [{hits_str}]"
                 save_result('Inbox.txt', save_string)
+                
+                inbox_entry = f"{email}:{password} | {country} | {total_count} emails | {', '.join(inbox_hits)}"
+                checker_state['results']['inbox'].append(inbox_entry)
+                
                 for hit in inbox_hits:
                     if ': ' in hit:
                         kw, count = hit.rsplit(': ', 1)
@@ -628,22 +631,26 @@ def check_account(email, password, keywords, proxies):
                 add_log(f"📬 {email} - INBOX HITS: {total_count} emails ({country}) | {hits_str}", 'success')
                 
             else:
+                checker_state['results']['valid'].append(f"{email}:{password} | {country}")
                 add_log(f"✅ {email} - VALID ({country})", 'success')
             
         elif status == '2FA':
             with threading.Lock():
                 checker_state['stats']['2fa'] += 1
             save_result('2FA.txt', f"{email}:{password}")
+            checker_state['results']['2fa'].append(f"{email}:{password}")
             add_log(f"🔐 {email} - 2FA REQUIRED", 'warning')
             
         else:
             with threading.Lock():
                 checker_state['stats']['bad'] += 1
+            checker_state['results']['bad'].append(f"{email}:{password}")
             add_log(f"❌ {email} - INVALID", 'error')
     
     except Exception as e:
         with threading.Lock():
             checker_state['stats']['errors'] += 1
+        checker_state['results']['errors'].append(f"{email}:{str(e)}")
         add_log(f"⚠️ {email} - ERROR: {str(e)}", 'error')
     
     finally:
@@ -675,7 +682,6 @@ def start_checking():
     if not keywords:
         keywords = ["Steam", "Netflix", "PayPal", "Amazon", "Security Alert"]
     
-    # Resetear estado
     checker_state['running'] = True
     checker_state['stats'] = {
         'checked': 0, 'valid': 0, 'inbox': 0, 'custom': 0,
@@ -685,7 +691,7 @@ def start_checking():
     checker_state['results'] = {'valid': [], 'inbox': [], '2fa': [], 'bad': [], 'errors': []}
     checker_state['logs'] = []
     checker_state['start_time'] = time.time()
-    checker_state['session_folder'] = None  # Reset para nueva sesión
+    checker_state['session_folder'] = None
     
     get_session_folder()
     
@@ -695,7 +701,6 @@ def start_checking():
     add_log(f"⚙️ Hilos: {threads}", 'info')
     add_log(f"📁 Session folder: {get_session_folder()}", 'info')
     
-    # Ejecutar en hilo separado
     thread = threading.Thread(target=run_checker, args=(accounts, keywords, proxies, threads))
     thread.daemon = True
     thread.start()
@@ -749,37 +754,81 @@ def get_status():
 
 @app.route('/api/export', methods=['POST'])
 def export_results():
-    lines = ['=== HOTMAIL CHECKER RESULTS ===']
-    lines.append(f'Date: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
-    lines.append(f'Session: {get_session_folder()}')
+    """Exporta todos los resultados en un archivo TXT"""
+    lines = []
+    lines.append('=' * 70)
+    lines.append('          HOTMAIL CHECKER - RESULTADOS COMPLETOS')
+    lines.append('=' * 70)
+    lines.append(f'📅 Fecha: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
+    lines.append(f'📁 Sesión: {get_session_folder()}')
+    lines.append('=' * 70)
+    lines.append('')
+    
+    lines.append('📊 ESTADÍSTICAS')
+    lines.append('-' * 50)
+    lines.append(f'Total verificadas: {checker_state["stats"]["checked"]}')
+    lines.append(f'✅ Válidas: {checker_state["stats"]["valid"]}')
+    lines.append(f'📬 Inbox Hits: {checker_state["stats"]["inbox"]}')
+    lines.append(f'🔐 2FA: {checker_state["stats"]["2fa"]}')
+    lines.append(f'❌ Inválidas: {checker_state["stats"]["bad"]}')
+    lines.append(f'⚠️ Errores: {checker_state["stats"]["errors"]}')
     lines.append('')
     
     if checker_state['results']['valid']:
-        lines.append('--- VALID ACCOUNTS ---')
-        lines.extend(checker_state['results']['valid'])
+        lines.append('✅ CUENTAS VÁLIDAS (SIN INBOX)')
+        lines.append('-' * 50)
+        for item in checker_state['results']['valid']:
+            lines.append(item)
         lines.append('')
     
     if checker_state['results']['inbox']:
-        lines.append('--- INBOX HITS ---')
-        lines.extend(checker_state['results']['inbox'])
+        lines.append('📬 CUENTAS CON INBOX HITS')
+        lines.append('-' * 50)
+        for item in checker_state['results']['inbox']:
+            lines.append(item)
         lines.append('')
     
     if checker_state['results']['2fa']:
-        lines.append('--- 2FA ACCOUNTS ---')
-        lines.extend(checker_state['results']['2fa'])
+        lines.append('🔐 CUENTAS CON 2FA')
+        lines.append('-' * 50)
+        for item in checker_state['results']['2fa']:
+            lines.append(item)
         lines.append('')
     
     if checker_state['results']['bad']:
-        lines.append('--- INVALID ACCOUNTS ---')
-        lines.extend(checker_state['results']['bad'])
+        lines.append('❌ CUENTAS INVÁLIDAS')
+        lines.append('-' * 50)
+        for item in checker_state['results']['bad']:
+            lines.append(item)
+        lines.append('')
+    
+    if checker_state['results']['errors']:
+        lines.append('⚠️ ERRORES')
+        lines.append('-' * 50)
+        for item in checker_state['results']['errors']:
+            lines.append(item)
+        lines.append('')
+    
+    if not any([checker_state['results']['valid'], checker_state['results']['inbox'], 
+                checker_state['results']['2fa'], checker_state['results']['bad']]):
+        lines.append('⚠️ No hay resultados disponibles. Ejecuta una verificación primero.')
+    
+    lines.append('')
+    lines.append('=' * 70)
+    lines.append('Fin del reporte')
     
     content = '\n'.join(lines)
-    filename = f"results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+    filename = f"resultados_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
     
     with open(filename, 'w', encoding='utf-8') as f:
         f.write(content)
     
-    return send_file(filename, as_attachment=True)
+    return send_file(
+        filename, 
+        as_attachment=True, 
+        download_name=filename,
+        mimetype='text/plain'
+    )
 
 @app.route('/api/config', methods=['GET'])
 def get_config():
