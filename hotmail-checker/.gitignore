@@ -8,3 +8,6 @@ venv/
 results_*.txt
 *.log
 .DS_Store
+# Local Python cache
+__pycache__/
+*.py[cod]
