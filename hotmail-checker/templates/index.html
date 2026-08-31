@@ -6,11 +6,7 @@
     <title>Hotmail Checker Pro</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
             --bg-primary: #0a0e17;
@@ -20,7 +16,6 @@
             --text-primary: #e8edf5;
             --text-secondary: #8899b4;
             --accent: #00d4ff;
-            --accent-glow: rgba(0, 212, 255, 0.15);
             --success: #2ed573;
             --warning: #ffa502;
             --danger: #ff4757;
@@ -39,10 +34,7 @@
                 radial-gradient(ellipse at 90% 80%, rgba(0, 212, 255, 0.03) 0%, transparent 50%);
         }
 
-        .container {
-            max-width: 1440px;
-            margin: 0 auto;
-        }
+        .container { max-width: 1440px; margin: 0 auto; }
 
         .header {
             display: flex;
@@ -83,10 +75,7 @@
             -webkit-text-fill-color: transparent;
         }
 
-        .logo-text span {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
+        .logo-text span { font-size: 12px; color: var(--text-secondary); }
 
         .header-status {
             display: flex;
@@ -144,20 +133,8 @@
             transform: translateY(-2px);
         }
 
-        .stat-number {
-            font-size: 24px;
-            font-weight: 700;
-            display: block;
-            line-height: 1.2;
-        }
-
-        .stat-label {
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-secondary);
-            margin-top: 3px;
-        }
+        .stat-number { font-size: 24px; font-weight: 700; display: block; line-height: 1.2; }
+        .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin-top: 3px; }
 
         .stat-card.valid .stat-number { color: var(--success); }
         .stat-card.inbox .stat-number { color: var(--warning); }
@@ -200,9 +177,7 @@
             gap: 10px;
         }
 
-        .card-title i {
-            font-size: 15px;
-        }
+        .card-title i { font-size: 15px; }
 
         .card-badge {
             font-size: 11px;
@@ -240,20 +215,9 @@
             cursor: pointer;
         }
 
-        .file-upload-area .upload-icon {
-            font-size: 28px;
-            color: var(--text-secondary);
-            margin-bottom: 5px;
-        }
-
-        .file-upload-area .upload-text {
-            color: var(--text-secondary);
-            font-size: 12px;
-        }
-
-        .file-upload-area .upload-text strong {
-            color: var(--accent);
-        }
+        .file-upload-area .upload-icon { font-size: 28px; color: var(--text-secondary); margin-bottom: 5px; }
+        .file-upload-area .upload-text { color: var(--text-secondary); font-size: 12px; }
+        .file-upload-area .upload-text strong { color: var(--accent); }
 
         .file-info {
             display: flex;
@@ -266,22 +230,11 @@
             font-size: 12px;
         }
 
-        .file-info i {
-            color: var(--success);
-        }
+        .file-info i { color: var(--success); }
+        .file-info .file-name { color: var(--text-primary); font-weight: 500; }
+        .file-info .file-size { color: var(--text-secondary); margin-left: auto; font-size: 11px; }
 
-        .file-info .file-name {
-            color: var(--text-primary);
-            font-weight: 500;
-        }
-
-        .file-info .file-size {
-            color: var(--text-secondary);
-            margin-left: auto;
-            font-size: 11px;
-        }
-
-        .file-info .btn-remove {
+        .btn-remove {
             background: var(--danger);
             border: none;
             color: #fff;
@@ -305,10 +258,7 @@
             min-height: 90px;
         }
 
-        textarea:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
+        textarea:focus { outline: none; border-color: var(--accent); }
 
         .settings-row {
             display: flex;
@@ -317,10 +267,7 @@
             align-items: center;
         }
 
-        .settings-row label {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
+        .settings-row label { font-size: 12px; color: var(--text-secondary); }
 
         .settings-row input[type="number"] {
             width: 70px;
@@ -332,10 +279,7 @@
             font-size: 13px;
         }
 
-        .settings-row input[type="number"]:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
+        .settings-row input[type="number"]:focus { outline: none; border-color: var(--accent); }
 
         .settings-row textarea.small {
             min-height: 36px;
@@ -369,52 +313,22 @@
             box-shadow: 0 8px 30px rgba(0, 212, 255, 0.3);
         }
 
-        .btn-primary:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-        .btn-danger {
-            background: var(--danger);
-            color: #fff;
-        }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255, 71, 87, 0.3); }
+        .btn-danger:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-        .btn-danger:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(255, 71, 87, 0.3);
-        }
+        .btn-success { background: var(--success); color: #0a0e17; }
+        .btn-success:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(46, 213, 115, 0.3); }
 
-        .btn-danger:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
+        .btn-warning { background: var(--warning); color: #0a0e17; }
+        .btn-warning:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255, 165, 2, 0.3); }
 
-        .btn-success {
-            background: var(--success);
-            color: #0a0e17;
-        }
+        .btn-purple { background: var(--purple); color: #0a0e17; }
+        .btn-purple:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(162, 155, 254, 0.3); }
 
-        .btn-success:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(46, 213, 115, 0.3);
-        }
-
-        .btn-warning {
-            background: var(--warning);
-            color: #0a0e17;
-        }
-
-        .btn-warning:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(255, 165, 2, 0.3);
-        }
-
-        .btn-sm {
-            padding: 5px 12px;
-            font-size: 11px;
-        }
+        .btn-sm { padding: 5px 12px; font-size: 11px; }
 
         .btn-group {
             display: flex;
@@ -423,9 +337,16 @@
             margin: 10px 0;
         }
 
-        .progress-container {
-            margin: 12px 0 5px 0;
+        .btn-group-export {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 5px 0;
         }
+
+        .btn-group-export .btn { padding: 6px 14px; font-size: 11px; }
+
+        .progress-container { margin: 12px 0 5px 0; }
 
         .progress-info {
             display: flex;
@@ -463,18 +384,9 @@
             border: 1px solid var(--border-color);
         }
 
-        .log-container::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .log-container::-webkit-scrollbar-track {
-            background: rgba(10, 14, 23, 0.5);
-        }
-
-        .log-container::-webkit-scrollbar-thumb {
-            background: var(--border-color);
-            border-radius: 3px;
-        }
+        .log-container::-webkit-scrollbar { width: 6px; }
+        .log-container::-webkit-scrollbar-track { background: rgba(10, 14, 23, 0.5); }
+        .log-container::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
 
         .log-line {
             padding: 2px 0;
@@ -483,61 +395,46 @@
             gap: 10px;
         }
 
-        .log-line .time {
-            color: var(--text-secondary);
-            min-width: 55px;
-            font-size: 11px;
-        }
-
-        .log-line .message {
-            word-break: break-all;
-        }
-
+        .log-line .time { color: var(--text-secondary); min-width: 55px; font-size: 11px; }
+        .log-line .message { word-break: break-all; }
         .log-line .message.success { color: var(--success); }
         .log-line .message.error { color: var(--danger); }
         .log-line .message.warning { color: var(--warning); }
         .log-line .message.info { color: var(--text-secondary); }
 
-        @media (max-width: 1024px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-            }
+        .export-section {
+            background: rgba(0, 212, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px 15px;
+            margin-top: 10px;
         }
 
+        .export-section .title {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .export-section .title i { color: var(--accent); }
+
+        @media (max-width: 1024px) { .main-grid { grid-template-columns: 1fr; } }
+
         @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                gap: 15px;
-                align-items: stretch;
-                text-align: center;
-            }
-
-            .header-status {
-                justify-content: center;
-            }
-
-            .stats-grid {
-                grid-template-columns: repeat(4, 1fr);
-            }
-
-            .settings-row {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .btn-group {
-                justify-content: center;
-            }
+            .header { flex-direction: column; gap: 15px; align-items: stretch; text-align: center; }
+            .header-status { justify-content: center; }
+            .stats-grid { grid-template-columns: repeat(4, 1fr); }
+            .settings-row { flex-direction: column; align-items: stretch; }
+            .btn-group { justify-content: center; }
+            .btn-group-export { justify-content: center; }
         }
 
         @media (max-width: 480px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .card {
-                padding: 14px;
-            }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .card { padding: 14px; }
         }
     </style>
 </head>
@@ -563,34 +460,13 @@
 
         <!-- STATS -->
         <div class="stats-grid">
-            <div class="stat-card valid">
-                <span class="stat-number" id="statValid">0</span>
-                <span class="stat-label">✅ Valid</span>
-            </div>
-            <div class="stat-card inbox">
-                <span class="stat-number" id="statInbox">0</span>
-                <span class="stat-label">📬 Inbox Hits</span>
-            </div>
-            <div class="stat-card fa">
-                <span class="stat-number" id="stat2FA">0</span>
-                <span class="stat-label">🔐 2FA</span>
-            </div>
-            <div class="stat-card bad">
-                <span class="stat-number" id="statBad">0</span>
-                <span class="stat-label">❌ Invalid</span>
-            </div>
-            <div class="stat-card checked">
-                <span class="stat-number" id="statChecked">0</span>
-                <span class="stat-label">📊 Checked</span>
-            </div>
-            <div class="stat-card total">
-                <span class="stat-number" id="statTotal">0</span>
-                <span class="stat-label">📦 Total</span>
-            </div>
-            <div class="stat-card cpm">
-                <span class="stat-number" id="statCPM">0</span>
-                <span class="stat-label">⚡ CPM</span>
-            </div>
+            <div class="stat-card valid"><span class="stat-number" id="statValid">0</span><span class="stat-label">✅ Valid</span></div>
+            <div class="stat-card inbox"><span class="stat-number" id="statInbox">0</span><span class="stat-label">📬 Inbox Hits</span></div>
+            <div class="stat-card fa"><span class="stat-number" id="stat2FA">0</span><span class="stat-label">🔐 2FA</span></div>
+            <div class="stat-card bad"><span class="stat-number" id="statBad">0</span><span class="stat-label">❌ Invalid</span></div>
+            <div class="stat-card checked"><span class="stat-number" id="statChecked">0</span><span class="stat-label">📊 Checked</span></div>
+            <div class="stat-card total"><span class="stat-number" id="statTotal">0</span><span class="stat-label">📦 Total</span></div>
+            <div class="stat-card cpm"><span class="stat-number" id="statCPM">0</span><span class="stat-label">⚡ CPM</span></div>
         </div>
 
         <!-- MAIN GRID -->
@@ -605,9 +481,7 @@
                     </div>
                     <div class="file-upload-area" id="accountDrop">
                         <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                        <div class="upload-text">
-                            <strong>Click or drag</strong> to upload accounts.txt
-                        </div>
+                        <div class="upload-text"><strong>Click or drag</strong> to upload accounts.txt</div>
                         <input type="file" id="accountFileInput" accept=".txt">
                         <div class="file-info" id="accountFileInfo" style="display:none;">
                             <i class="fas fa-check-circle"></i>
@@ -627,9 +501,7 @@
                     </div>
                     <div class="file-upload-area" id="proxyDrop">
                         <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                        <div class="upload-text">
-                            <strong>Click or drag</strong> to upload proxies.txt
-                        </div>
+                        <div class="upload-text"><strong>Click or drag</strong> to upload proxies.txt</div>
                         <input type="file" id="proxyFileInput" accept=".txt">
                         <div class="file-info" id="proxyFileInfo" style="display:none;">
                             <i class="fas fa-check-circle"></i>
@@ -662,9 +534,24 @@ Security Alert</textarea>
                     <div class="btn-group">
                         <button class="btn btn-primary" id="startBtn" onclick="startCheck()"><i class="fas fa-play"></i> Start</button>
                         <button class="btn btn-danger" id="stopBtn" onclick="stopCheck()" disabled><i class="fas fa-stop"></i> Stop</button>
-                        <button class="btn btn-success" onclick="exportResults()"><i class="fas fa-download"></i> Export</button>
                         <button class="btn btn-warning" onclick="clearLogs()"><i class="fas fa-trash-alt"></i> Clear</button>
                     </div>
+
+                    <!-- EXPORT SECTION -->
+                    <div class="export-section">
+                        <div class="title"><i class="fas fa-download"></i> Export Results</div>
+                        <div class="btn-group-export">
+                            <button class="btn btn-success" onclick="exportAll()"><i class="fas fa-file-archive"></i> All (ZIP)</button>
+                            <button class="btn btn-success" onclick="exportInbox()"><i class="fas fa-inbox"></i> Inbox</button>
+                            <button class="btn btn-success" onclick="exportValid()"><i class="fas fa-check-circle"></i> Valid</button>
+                            <button class="btn btn-success" onclick="export2FA()"><i class="fas fa-lock"></i> 2FA</button>
+                        </div>
+                        <div class="btn-group-export" style="margin-top:5px;">
+                            <button class="btn btn-purple btn-sm" onclick="exportCountry()"><i class="fas fa-flag"></i> By Country</button>
+                            <button class="btn btn-purple btn-sm" onclick="exportKeyword()"><i class="fas fa-tag"></i> By Keyword</button>
+                        </div>
+                    </div>
+
                     <div class="progress-container">
                         <div class="progress-info">
                             <span id="progressText">0 / 0</span>
@@ -699,6 +586,8 @@ Security Alert</textarea>
         // ============================================
         let running = false;
         let updateInterval = null;
+        let countriesList = [];
+        let keywordsList = [];
 
         // ============================================
         // DOM ELEMENTS
@@ -915,6 +804,8 @@ Security Alert</textarea>
                         updateInterval = null;
                     }
                     addLog('✅ Check completed', 'success');
+                    // Cargar listas de países y keywords para export
+                    loadExportLists();
                 }
                 
                 if (data.stats.total > 0 && data.stats.checked >= data.stats.total) {
@@ -927,6 +818,7 @@ Security Alert</textarea>
                         clearInterval(updateInterval);
                         updateInterval = null;
                     }
+                    loadExportLists();
                 }
                 
             } catch (error) {
@@ -934,44 +826,136 @@ Security Alert</textarea>
             }
         }
 
-        async function exportResults() {
+        // ============================================
+        // EXPORT FUNCTIONS
+        // ============================================
+        async function loadExportLists() {
             try {
-                addLog('📤 Exportando resultados...', 'info');
+                // Cargar países
+                const countryRes = await fetch('/api/export/countries/list');
+                const countryData = await countryRes.json();
+                countriesList = countryData.countries || [];
                 
-                const response = await fetch('/api/export', { 
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
+                // Cargar keywords
+                const keywordRes = await fetch('/api/export/keywords/list');
+                const keywordData = await keywordRes.json();
+                keywordsList = keywordData.keywords || [];
+                
+                addLog(`📋 Available exports: ${countriesList.length} countries, ${keywordsList.length} keywords`, 'info');
+            } catch (e) {
+                console.error('Error loading export lists:', e);
+            }
+        }
+
+        async function downloadFile(url, filename) {
+            try {
+                addLog(`📤 Exporting ${filename}...`, 'info');
+                const response = await fetch(url, { method: 'POST' });
                 
                 if (!response.ok) {
-                    throw new Error('Error al exportar');
+                    const error = await response.json();
+                    throw new Error(error.error || 'Export failed');
                 }
                 
                 const blob = await response.blob();
-                const url = URL.createObjectURL(blob);
-                
+                const downloadUrl = URL.createObjectURL(blob);
                 const a = document.createElement('a');
-                a.href = url;
-                a.download = `hotmail_results_${Date.now()}.txt`;
+                a.href = downloadUrl;
+                a.download = filename;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
-                
-                setTimeout(() => URL.revokeObjectURL(url), 5000);
-                
-                addLog('✅ Resultados exportados correctamente', 'success');
-                
+                setTimeout(() => URL.revokeObjectURL(downloadUrl), 5000);
+                addLog(`✅ ${filename} downloaded successfully`, 'success');
             } catch (error) {
-                addLog(`⚠️ Error al exportar: ${error.message}`, 'error');
+                addLog(`⚠️ Export error: ${error.message}`, 'error');
             }
+        }
+
+        function exportAll() {
+            downloadFile('/api/export/all', `hotmail_results_${Date.now()}.zip`);
+        }
+
+        function exportInbox() {
+            downloadFile('/api/export/inbox', 'Inbox.txt');
+        }
+
+        function exportValid() {
+            downloadFile('/api/export/valid', 'Valid.txt');
+        }
+
+        function export2FA() {
+            downloadFile('/api/export/2fa', '2FA.txt');
+        }
+
+        function exportCountry() {
+            if (countriesList.length === 0) {
+                addLog('⚠️ No country results available to export', 'warning');
+                return;
+            }
+            
+            // Crear selector de países
+            const options = countriesList.map(c => `<option value="${c}">${c}</option>`).join('');
+            const html = `
+                <div style="background:rgba(0,0,0,0.5);padding:20px;border-radius:10px;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:999;min-width:300px;border:1px solid var(--border-color);">
+                    <h3 style="color:var(--accent);margin-bottom:15px;">Select Country</h3>
+                    <select id="countrySelect" style="width:100%;padding:10px;background:var(--bg-primary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:8px;margin-bottom:15px;">
+                        ${options}
+                    </select>
+                    <div style="display:flex;gap:10px;">
+                        <button onclick="downloadCountry()" class="btn btn-success" style="flex:1;">Download</button>
+                        <button onclick="this.closest('div[style]').remove()" class="btn btn-danger" style="flex:1;">Cancel</button>
+                    </div>
+                </div>
+            `;
+            const overlay = document.createElement('div');
+            overlay.innerHTML = html;
+            document.body.appendChild(overlay.firstElementChild);
+        }
+
+        function downloadCountry() {
+            const select = document.getElementById('countrySelect');
+            if (!select) return;
+            const country = select.value;
+            downloadFile(`/api/export/country/${country}`, `${country}.txt`);
+            select.closest('div[style]').remove();
+        }
+
+        function exportKeyword() {
+            if (keywordsList.length === 0) {
+                addLog('⚠️ No keyword results available to export', 'warning');
+                return;
+            }
+            
+            const options = keywordsList.map(k => `<option value="${k}">${k}</option>`).join('');
+            const html = `
+                <div style="background:rgba(0,0,0,0.5);padding:20px;border-radius:10px;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:999;min-width:300px;border:1px solid var(--border-color);">
+                    <h3 style="color:var(--accent);margin-bottom:15px;">Select Keyword</h3>
+                    <select id="keywordSelect" style="width:100%;padding:10px;background:var(--bg-primary);color:var(--text-primary);border:1px solid var(--border-color);border-radius:8px;margin-bottom:15px;">
+                        ${options}
+                    </select>
+                    <div style="display:flex;gap:10px;">
+                        <button onclick="downloadKeyword()" class="btn btn-success" style="flex:1;">Download</button>
+                        <button onclick="this.closest('div[style]').remove()" class="btn btn-danger" style="flex:1;">Cancel</button>
+                    </div>
+                </div>
+            `;
+            const overlay = document.createElement('div');
+            overlay.innerHTML = html;
+            document.body.appendChild(overlay.firstElementChild);
+        }
+
+        function downloadKeyword() {
+            const select = document.getElementById('keywordSelect');
+            if (!select) return;
+            const keyword = select.value;
+            downloadFile(`/api/export/keyword/${keyword}`, `${keyword}.txt`);
+            select.closest('div[style]').remove();
         }
 
         function clearLogs() {
             logContainer.innerHTML = '<div class="log-line"><span class="time">●</span><span class="message info">Logs cleared</span></div>';
             document.getElementById('logCount').textContent = '1 entries';
-            addLog('🗑️ Logs cleared', 'info');
         }
 
         // Auto fetch status
@@ -984,6 +968,7 @@ Security Alert</textarea>
         addLog('🔧 Hotmail Checker Pro ready', 'info');
         addLog('💡 Upload accounts.txt or paste credentials', 'info');
         addLog('📁 Drag & drop files supported', 'info');
+        addLog('📤 Use Export buttons to download results', 'info');
     </script>
 </body>
 </html>
