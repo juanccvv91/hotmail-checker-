@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotmail Checker Pro</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0e17;
+            color: #c8d0d9;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .banner {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 20px;
+        }
+        .banner pre {
+            color: #00d4ff;
+            font-size: 14px;
+            font-weight: bold;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+            display: inline-block;
+            text-align: left;
+            line-height: 1.2;
+        }
+        .banner .subtitle {
+            color: #00d4ff;
+            margin-top: 10px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        .card {
+            background: rgba(20, 30, 48, 0.8);
+            border: 1px solid #1a2a44;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .card-title {
+            color: #00d4ff;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .grid-6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        
+        textarea, input[type="number"] {
+            width: 100%;
+            background: rgba(10, 14, 23, 0.8);
+            border: 1px solid #1a2a44;
+            border-radius: 8px;
+            color: #c8d0d9;
+            padding: 12px 15px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+            transition: border-color 0.3s;
+        }
+        textarea { min-height: 120px; resize: vertical; }
+        textarea:focus, input:focus { outline: none; border-color: #00d4ff; }
+        
+        .btn {
+            background: #00d4ff;
+            color: #0a0e17;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .btn:hover {
+            background: #00b8d4;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 25px rgba(0, 212, 255, 0.3);
+        }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-danger { background: #ff4757; }
+        .btn-danger:hover { background: #ff3747; box-shadow: 0 5px 25px rgba(255, 71, 87, 0.3); }
+        .btn-success { background: #2ed573; }
+        .btn-success:hover { background: #26c06a; box-shadow: 0 5px 25px rgba(46, 213, 115, 0.3); }
+        .btn-warning { background: #ffa502; }
+        .btn-warning:hover { background: #e09400; }
+        
+        .stat-box {
+            background: rgba(10, 14, 23, 0.6);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+        .stat-box .number {
+            font-size: 22px;
+            font-weight: 700;
+            color: #00d4ff;
+            display: block;
+        }
+        .stat-box .label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #6a7a8f;
+            margin-top: 3px;
+        }
+        .stat-box.valid .number { color: #2ed573; }
+        .stat-box.inbox .number { color: #ffa502; }
+        .stat-box.fa .number { color: #e056a0; }
+        .stat-box.bad .number { color: #ff4757; }
+        .stat-box.checked .number { color: #00d4ff; }
+        .stat-box.cpm .number { color: #a29bfe; }
+        .stat-box.total .number { color: #6c5ce7; }
+        
+        .log-container {
+            background: rgba(10, 14, 23, 0.9);
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 250px;
+            overflow-y: auto;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.8;
+        }
+        .log-container::-webkit-scrollbar { width: 6px; }
+        .log-container::-webkit-scrollbar-track { background: rgba(10, 14, 23, 0.5); }
+        .log-container::-webkit-scrollbar-thumb { background: #1a2a44; border-radius: 3px; }
+        
+        .log-line { padding: 2px 0; border-bottom: 1px solid rgba(26, 42, 68, 0.2); }
+        .log-line .time { color: #6a7a8f; margin-right: 10px; }
+        .log-line .success { color: #2ed573; }
+        .log-line .error { color: #ff4757; }
+        .log-line .warning { color: #ffa502; }
+        .log-line .info { color: #6a7a8f; }
+        
+        .settings-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .settings-row label { font-size: 13px; color: #6a7a8f; }
+        .settings-row input[type="number"] { width: 80px; padding: 8px 12px; }
+        
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #1a2a44;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        .progress-bar .fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00d4ff, #2ed573);
+            transition: width 0.3s;
+            width: 0%;
+        }
+        
+        .flex { display: flex; gap: 15px; flex-wrap: wrap; align-items: center; }
+        .mt-10 { margin-top: 10px; }
+        .text-center { text-align: center; }
+        
+        .status-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-dot.running { background: #2ed573; animation: pulse 1s infinite; }
+        .status-dot.stopped { background: #ff4757; }
+        .status-dot.ready { background: #6a7a8f; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        @media (max-width: 768px) {
+            .grid-2, .grid-6, .grid-3 { grid-template-columns: 1fr; }
+            .banner pre { font-size: 10px; }
+            .settings-row { flex-direction: column; align-items: stretch; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Banner -->
+        <div class="banner">
+            <pre>
+██╗   ██╗██████╗ ██████╗ ██╗  ██╗
+██║   ██║██╔══██╗██╔══██╗██║  ██║
+██║   ██║██████╔╝██║  ██║███████║
+██║   ██║██╔═══╝ ██║  ██║██╔══██║
+╚██████╔╝██║     ██████╔╝██║  ██║
+ ╚═════╝ ╚═╝     ╚═════╝ ╚═╝  ╚═╝
+            </pre>
+            <div class="subtitle">⚡ Real Microsoft Account Checker (Graph API)</div>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid-6">
+            <div class="stat-box valid"><span class="number" id="statValid">0</span><span class="label">✅ Valid</span></div>
+            <div class="stat-box inbox"><span class="number" id="statInbox">0</span><span class="label">📬 Inbox</span></div>
+            <div class="stat-box fa"><span class="number" id="stat2FA">0</span><span class="label">🔐 2FA</span></div>
+            <div class="stat-box bad"><span class="number" id="statBad">0</span><span class="label">❌ Invalid</span></div>
+            <div class="stat-box checked"><span class="number" id="statChecked">0</span><span class="label">📊 Checked</span></div>
+            <div class="stat-box total"><span class="number" id="statTotal">0</span><span class="label">📦 Total</span></div>
+            <div class="stat-box cpm"><span class="number" id="statCPM">0</span><span class="label">⚡ CPM</span></div>
+        </div>
+
+        <!-- Input -->
+        <div class="card">
+            <div class="card-title">📁 Input</div>
+            <div class="grid-2">
+                <div>
+                    <label style="color:#6a7a8f;font-size:13px;display:block;margin-bottom:5px;">Accounts (email:password)</label>
+                    <textarea id="accountsInput" placeholder="email1:password1&#10;email2:password2">user1@gmail.com:password123
+user2@outlook.com:SecurePass
+user3@hotmail.com:MySecret123</textarea>
+                </div>
+                <div>
+                    <label style="color:#6a7a8f;font-size:13px;display:block;margin-bottom:5px;">Keywords (one per line)</label>
+                    <textarea id="keywordsInput">Steam
+Netflix
+PayPal
+Amazon
+Security Alert
+Bank
+Invoice
+Receipt
+Order</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings -->
+        <div class="card">
+            <div class="card-title">⚙️ Settings</div>
+            <div class="settings-row">
+                <label>Threads:</label>
+                <input type="number" id="threadCount" value="50" min="1" max="200">
+                <label>Proxies (optional):</label>
+                <textarea id="proxiesInput" style="min-height:40px;flex:1;" placeholder="proxy1:8080&#10;proxy2:3128"></textarea>
+                <button class="btn btn-success" onclick="loadExample()">📥 Example</button>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="flex" style="margin-bottom:20px;">
+            <button class="btn" id="startBtn" onclick="startCheck()">▶️ Start</button>
+            <button class="btn btn-danger" id="stopBtn" onclick="stopCheck()" disabled>⏹️ Stop</button>
+            <button class="btn btn-success" onclick="exportResults()">💾 Export</button>
+            <button class="btn btn-warning" onclick="clearLogs()">🗑️ Clear</button>
+            <span style="color:#6a7a8f;font-size:13px;display:flex;align-items:center;">
+                <span class="status-dot ready" id="statusDot"></span>
+                <span id="statusText">Ready</span>
+            </span>
+        </div>
+
+        <!-- Progress -->
+        <div class="card">
+            <div style="display:flex;justify-content:space-between;font-size:13px;">
+                <span id="progressText">0 / 0</span>
+                <span id="progressPercent">0%</span>
+            </div>
+            <div class="progress-bar"><div class="fill" id="progressFill"></div></div>
+        </div>
+
+        <!-- Logs -->
+        <div class="card">
+            <div class="card-title">📋 Live Log</div>
+            <div class="log-container" id="logContainer">
+                <div class="log-line"><span class="time">●</span> <span class="info">Ready to check accounts...</span></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Estado
+        let running = false;
+        let updateInterval = null;
+
+        // Elementos
+        const accountsInput = document.getElementById('accountsInput');
+        const keywordsInput = document.getElementById('keywordsInput');
+        const proxiesInput = document.getElementById('proxiesInput');
+        const logContainer = document.getElementById('logContainer');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const statusText = document.getElementById('statusText');
+        const statusDot = document.getElementById('statusDot');
+
+        function addLog(message, level = 'info') {
+            const div = document.createElement('div');
+            div.className = 'log-line';
+            const time = new Date().toLocaleTimeString();
+            const levelMap = {
+                'success': 'success',
+                'error': 'error',
+                'warning': 'warning',
+                'info': 'info'
+            };
+            div.innerHTML = `<span class="time">${time}</span> <span class="${levelMap[level] || 'info'}">${message}</span>`;
+            logContainer.appendChild(div);
+            logContainer.scrollTop = 0;
+            if (logContainer.children.length > 200) {
+                logContainer.removeChild(logContainer.children[logContainer.children.length - 1]);
+            }
+        }
+
+        function updateStats(stats) {
+            document.getElementById('statValid').textContent = stats.valid || 0;
+            document.getElementById('statInbox').textContent = stats.inbox || 0;
+            document.getElementById('stat2FA').textContent = stats['2fa'] || 0;
+            document.getElementById('statBad').textContent = stats.bad || 0;
+            document.getElementById('statChecked').textContent = stats.checked || 0;
+            document.getElementById('statTotal').textContent = stats.total || 0;
+            document.getElementById('statCPM').textContent = stats.cpm || 0;
+            
+            const progress = stats.total > 0 ? (stats.checked / stats.total * 100) : 0;
+            document.getElementById('progressFill').style.width = Math.min(progress, 100) + '%';
+            document.getElementById('progressText').textContent = `${stats.checked || 0} / ${stats.total || 0}`;
+            document.getElementById('progressPercent').textContent = Math.min(progress, 100).toFixed(1) + '%';
+        }
+
+        function loadExample() {
+            accountsInput.value = `john.doe@gmail.com:password123
+jane.smith@outlook.com:SecurePass!
+mike.brown@hotmail.com:MySecret123
+sarah.wilson@live.com:Welcome2024
+david.jones@yahoo.com:SuperStrong!`;
+            addLog('📥 Example accounts loaded', 'info');
+        }
+
+        function clearLogs() {
+            logContainer.innerHTML = '<div class="log-line"><span class="time">●</span> <span class="info">Logs cleared</span></div>';
+            addLog('🗑️ Logs cleared', 'info');
+        }
+
+        async function startCheck() {
+            if (running) return;
+
+            const accounts = accountsInput.value;
+            const keywords = keywordsInput.value;
+            const proxies = proxiesInput.value;
+            const threads = parseInt(document.getElementById('threadCount').value) || 50;
+
+            if (!accounts.trim()) {
+                addLog('⚠️ Please enter accounts', 'warning');
+                return;
+            }
+
+            running = true;
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            statusDot.className = 'status-dot running';
+            statusText.textContent = 'Running...';
+
+            addLog('🚀 Starting check...', 'info');
+
+            try {
+                const response = await fetch('/api/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ accounts, keywords, proxies, threads })
+                });
+
+                const data = await response.json();
+                if (data.error) {
+                    addLog(`⚠️ ${data.error}`, 'error');
+                    running = false;
+                    startBtn.disabled = false;
+                    stopBtn.disabled = true;
+                    statusDot.className = 'status-dot stopped';
+                    statusText.textContent = 'Error';
+                    return;
+                }
+
+                addLog(`✅ Started: ${data.total} accounts`, 'success');
+                
+                // Iniciar polling de estado
+                if (updateInterval) clearInterval(updateInterval);
+                updateInterval = setInterval(fetchStatus, 1500);
+
+            } catch (error) {
+                addLog(`⚠️ Error: ${error.message}`, 'error');
+                running = false;
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+                statusDot.className = 'status-dot stopped';
+                statusText.textContent = 'Error';
+            }
+        }
+
+        async function stopCheck() {
+            if (!running) return;
+            
+            try {
+                await fetch('/api/stop', { method: 'POST' });
+                addLog('⏹️ Stopping...', 'warning');
+            } catch (error) {
+                addLog(`⚠️ Stop error: ${error.message}`, 'error');
+            }
+        }
+
+        async function fetchStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+                
+                updateStats(data.stats);
+                
+                // Actualizar logs
+                if (data.logs && data.logs.length > 0) {
+                    const currentLogs = logContainer.children.length;
+                    if (currentLogs < 50) {
+                        data.logs.reverse().forEach(log => {
+                            addLog(log.message, log.level);
+                        });
+                    }
+                }
+                
+                // Actualizar estado
+                if (!data.running && running) {
+                    running = false;
+                    startBtn.disabled = false;
+                    stopBtn.disabled = true;
+                    statusDot.className = 'status-dot stopped';
+                    statusText.textContent = 'Stopped';
+                    if (updateInterval) {
+                        clearInterval(updateInterval);
+                        updateInterval = null;
+                    }
+                    addLog('✅ Check completed', 'success');
+                }
+                
+                if (data.stats.total > 0 && data.stats.checked >= data.stats.total) {
+                    running = false;
+                    startBtn.disabled = false;
+                    stopBtn.disabled = true;
+                    statusDot.className = 'status-dot stopped';
+                    statusText.textContent = 'Complete';
+                    if (updateInterval) {
+                        clearInterval(updateInterval);
+                        updateInterval = null;
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Status fetch error:', error);
+            }
+        }
+
+        async function exportResults() {
+            try {
+                const response = await fetch('/api/export', { method: 'POST' });
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `hotmail_results_${Date.now()}.txt`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    addLog('💾 Results exported', 'success');
+                }
+            } catch (error) {
+                addLog(`⚠️ Export error: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-fetch status al cargar
+        setInterval(() => {
+            if (!running) {
+                fetchStatus();
+            }
+        }, 5000);
+
+        addLog('🔧 Hotmail Checker Pro ready', 'info');
+        addLog('💡 Enter accounts and click Start', 'info');
+    </script>
+</body>
+</html>
