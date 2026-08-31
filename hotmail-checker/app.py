@@ -9,7 +9,6 @@ import urllib3
 import uuid
 import json
 import zipfile
-import io
 import shutil
 from datetime import datetime
 from urllib.parse import urlparse, parse_qs
@@ -65,17 +64,17 @@ checker_state = {
         'total': 0
     },
     'results': {
-        'valid': [],      # email:pass | País
-        'inbox': [],      # email:pass | País | total | [keyword1: count1 | keyword2: count2]
-        '2fa': [],        # email:pass
-        'bad': [],        # No se exporta
+        'valid': [],
+        'inbox': [],
+        '2fa': [],
+        'bad': [],
         'errors': []
     },
-    'countries': {},      # { 'US': ['email:pass', ...], 'GB': ['email:pass', ...] }
-    'keywords': {},       # { 'Netflix': ['email:pass | País | count', ...], 'Steam': [...] }
     'logs': [],
     'start_time': None,
-    'session_folder': None
+    'session_folder': None,
+    'export_ready': False,
+    'export_files': []
 }
 
 # ============================================
@@ -176,11 +175,6 @@ def save_country_result(country, email, password):
     path = os.path.join(folder, f"{country}.txt")
     with open(path, 'a', encoding='utf-8') as f:
         f.write(f"{email}:{password}\n")
-    
-    # Guardar en memoria para export
-    if country not in checker_state['countries']:
-        checker_state['countries'][country] = []
-    checker_state['countries'][country].append(f"{email}:{password}")
 
 def save_keyword_result(keyword, content):
     safe_name = re.sub(r'[<>:"/\\|?*]', '_', keyword.strip()) or 'keyword'
@@ -188,11 +182,6 @@ def save_keyword_result(keyword, content):
     path = os.path.join(folder, f"{safe_name}.txt")
     with open(path, 'a', encoding='utf-8') as f:
         f.write(content + '\n')
-    
-    # Guardar en memoria para export
-    if keyword not in checker_state['keywords']:
-        checker_state['keywords'][keyword] = []
-    checker_state['keywords'][keyword].append(content)
 
 def create_optimized_session():
     session = requests.Session()
@@ -228,7 +217,7 @@ def update_stats():
             stats['cpm'] = int(stats['checked'] / elapsed * 60)
 
 # ============================================
-# CLASE MICROSOFT INBOX CHECKER (COMPLETA)
+# CLASE MICROSOFT INBOX CHECKER
 # ============================================
 class MicrosoftInboxChecker:
     def __init__(self, email, password, proxy=None, inbox_keywords=None):
@@ -661,7 +650,6 @@ def check_account(email, password, keywords, proxies):
         else:
             with threading.Lock():
                 checker_state['stats']['bad'] += 1
-            # NO se guardan en ningún archivo de export
             checker_state['results']['bad'].append(f"{email}:{password}")
             add_log(f"❌ {email} - INVALID", 'error')
     
@@ -708,11 +696,11 @@ def start_checking():
         'total': len(accounts)
     }
     checker_state['results'] = {'valid': [], 'inbox': [], '2fa': [], 'bad': [], 'errors': []}
-    checker_state['countries'] = {}
-    checker_state['keywords'] = {}
     checker_state['logs'] = []
     checker_state['start_time'] = time.time()
     checker_state['session_folder'] = None
+    checker_state['export_ready'] = False
+    checker_state['export_files'] = []
     
     get_session_folder()
     
@@ -756,6 +744,50 @@ def run_checker(accounts, keywords, proxies, max_threads):
         add_log(f"✅ Verificación completada en {int(elapsed)}s", 'success')
         add_log(f"📊 Válidos: {checker_state['stats']['valid']} | Inbox: {checker_state['stats']['inbox']} | 2FA: {checker_state['stats']['2fa']} | Inválidos: {checker_state['stats']['bad']}", 'info')
         add_log(f"📁 Resultados guardados en: {get_session_folder()}", 'info')
+        checker_state['export_ready'] = True
+        update_export_files_list()
+
+def update_export_files_list():
+    """Actualiza la lista de archivos disponibles para exportar"""
+    folder = get_session_folder()
+    files = []
+    
+    # Archivos principales
+    for f in ['Inbox.txt', 'Valid.txt', '2FA.txt']:
+        path = os.path.join(folder, f)
+        if os.path.exists(path):
+            files.append({
+                'name': f,
+                'path': path,
+                'size': os.path.getsize(path)
+            })
+    
+    # Archivos de Countries
+    countries_folder = os.path.join(folder, 'Countries')
+    if os.path.exists(countries_folder):
+        for f in os.listdir(countries_folder):
+            if f.endswith('.txt'):
+                path = os.path.join(countries_folder, f)
+                files.append({
+                    'name': f'Countries/{f}',
+                    'path': path,
+                    'size': os.path.getsize(path)
+                })
+    
+    # Archivos de Keywords
+    keywords_folder = os.path.join(folder, 'Keywords')
+    if os.path.exists(keywords_folder):
+        for f in os.listdir(keywords_folder):
+            if f.endswith('.txt'):
+                path = os.path.join(keywords_folder, f)
+                files.append({
+                    'name': f'Keywords/{f}',
+                    'path': path,
+                    'size': os.path.getsize(path)
+                })
+    
+    checker_state['export_files'] = files
+    add_log(f"📋 {len(files)} archivos disponibles para exportar", 'info')
 
 @app.route('/api/stop', methods=['POST'])
 def stop_checking():
@@ -770,131 +802,90 @@ def get_status():
         'running': checker_state['running'],
         'stats': checker_state['stats'],
         'logs': checker_state['logs'][:30],
-        'results': {
-            'valid': checker_state['results']['valid'],
-            'inbox': checker_state['results']['inbox'],
-            '2fa': checker_state['results']['2fa']
-        },
-        'session_folder': get_session_folder()
+        'results': checker_state['results'],
+        'session_folder': get_session_folder(),
+        'export_ready': checker_state['export_ready'],
+        'export_files': checker_state['export_files']
     })
 
 # ============================================
-# MÚLTIPLES MÉTODOS DE EXPORT
+# RUTAS DE EXPORT - DESCARGAS DIRECTAS
 # ============================================
 
-@app.route('/api/export/all', methods=['POST'])
-def export_all():
-    """Exporta TODO: Inbox.txt, Valid.txt, 2FA.txt, Countries/, Keywords/"""
+@app.route('/api/download/<path:filename>', methods=['GET'])
+def download_file(filename):
+    """Descarga un archivo específico de la sesión"""
     folder = get_session_folder()
     
-    # Crear estructura de carpetas en un directorio temporal
-    temp_dir = f"export_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-    os.makedirs(temp_dir, exist_ok=True)
+    # Buscar en la carpeta principal
+    path = os.path.join(folder, filename)
+    if os.path.exists(path):
+        return send_file(path, as_attachment=True, download_name=os.path.basename(filename))
     
-    # Copiar archivos principales
-    for filename in ['Inbox.txt', 'Valid.txt', '2FA.txt']:
-        src = os.path.join(folder, filename)
-        if os.path.exists(src):
-            shutil.copy2(src, os.path.join(temp_dir, filename))
+    # Buscar en Countries
+    path = os.path.join(folder, 'Countries', filename)
+    if os.path.exists(path):
+        return send_file(path, as_attachment=True, download_name=os.path.basename(filename))
     
-    # Copiar carpetas Countries y Keywords
-    for subfolder in ['Countries', 'Keywords']:
-        src = os.path.join(folder, subfolder)
-        if os.path.exists(src) and os.listdir(src):
-            dst = os.path.join(temp_dir, subfolder)
-            shutil.copytree(src, dst)
+    # Buscar en Keywords
+    path = os.path.join(folder, 'Keywords', filename)
+    if os.path.exists(path):
+        return send_file(path, as_attachment=True, download_name=os.path.basename(filename))
     
-    # Crear ZIP
+    return jsonify({'error': 'File not found'}), 404
+
+@app.route('/api/download/inbox', methods=['GET'])
+def download_inbox():
+    """Descarga Inbox.txt"""
+    folder = get_session_folder()
+    path = os.path.join(folder, 'Inbox.txt')
+    if not os.path.exists(path):
+        return jsonify({'error': 'No inbox results found'}), 404
+    return send_file(path, as_attachment=True, download_name='Inbox.txt')
+
+@app.route('/api/download/valid', methods=['GET'])
+def download_valid():
+    """Descarga Valid.txt"""
+    folder = get_session_folder()
+    path = os.path.join(folder, 'Valid.txt')
+    if not os.path.exists(path):
+        return jsonify({'error': 'No valid results found'}), 404
+    return send_file(path, as_attachment=True, download_name='Valid.txt')
+
+@app.route('/api/download/2fa', methods=['GET'])
+def download_2fa():
+    """Descarga 2FA.txt"""
+    folder = get_session_folder()
+    path = os.path.join(folder, '2FA.txt')
+    if not os.path.exists(path):
+        return jsonify({'error': 'No 2FA results found'}), 404
+    return send_file(path, as_attachment=True, download_name='2FA.txt')
+
+@app.route('/api/download/all', methods=['GET'])
+def download_all():
+    """Descarga todo como ZIP"""
+    folder = get_session_folder()
     zip_filename = f"hotmail_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
+    
     with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for root, dirs, files in os.walk(temp_dir):
+        for root, dirs, files in os.walk(folder):
             for file in files:
                 file_path = os.path.join(root, file)
-                arcname = os.path.relpath(file_path, temp_dir)
+                arcname = os.path.relpath(file_path, folder)
                 zipf.write(file_path, arcname)
-    
-    # Limpiar temp
-    shutil.rmtree(temp_dir)
     
     return send_file(zip_filename, as_attachment=True, download_name=zip_filename)
 
-@app.route('/api/export/inbox', methods=['POST'])
-def export_inbox():
-    """Exporta solo Inbox.txt"""
-    folder = get_session_folder()
-    path = os.path.join(folder, 'Inbox.txt')
-    
-    if not os.path.exists(path):
-        return jsonify({'error': 'No inbox results found'}), 404
-    
-    return send_file(path, as_attachment=True, download_name='Inbox.txt')
+@app.route('/api/files', methods=['GET'])
+def list_files():
+    """Lista todos los archivos disponibles para descargar"""
+    update_export_files_list()
+    return jsonify({
+        'files': checker_state['export_files'],
+        'session_folder': get_session_folder()
+    })
 
-@app.route('/api/export/valid', methods=['POST'])
-def export_valid():
-    """Exporta solo Valid.txt"""
-    folder = get_session_folder()
-    path = os.path.join(folder, 'Valid.txt')
-    
-    if not os.path.exists(path):
-        return jsonify({'error': 'No valid results found'}), 404
-    
-    return send_file(path, as_attachment=True, download_name='Valid.txt')
-
-@app.route('/api/export/2fa', methods=['POST'])
-def export_2fa():
-    """Exporta solo 2FA.txt"""
-    folder = get_session_folder()
-    path = os.path.join(folder, '2FA.txt')
-    
-    if not os.path.exists(path):
-        return jsonify({'error': 'No 2FA results found'}), 404
-    
-    return send_file(path, as_attachment=True, download_name='2FA.txt')
-
-@app.route('/api/export/country/<country>', methods=['POST'])
-def export_country(country):
-    """Exporta archivo de un país específico"""
-    folder = os.path.join(get_session_folder(), 'Countries')
-    path = os.path.join(folder, f"{country}.txt")
-    
-    if not os.path.exists(path):
-        return jsonify({'error': f'No results for country {country}'}), 404
-    
-    return send_file(path, as_attachment=True, download_name=f"{country}.txt")
-
-@app.route('/api/export/keyword/<keyword>', methods=['POST'])
-def export_keyword(keyword):
-    """Exporta archivo de una keyword específica"""
-    safe_name = re.sub(r'[<>:"/\\|?*]', '_', keyword.strip()) or 'keyword'
-    folder = os.path.join(get_session_folder(), 'Keywords')
-    path = os.path.join(folder, f"{safe_name}.txt")
-    
-    if not os.path.exists(path):
-        return jsonify({'error': f'No results for keyword {keyword}'}), 404
-    
-    return send_file(path, as_attachment=True, download_name=f"{safe_name}.txt")
-
-@app.route('/api/export/countries/list', methods=['GET'])
-def list_countries():
-    """Lista todos los países disponibles para export"""
-    folder = os.path.join(get_session_folder(), 'Countries')
-    if not os.path.exists(folder):
-        return jsonify({'countries': []})
-    
-    countries = [f.replace('.txt', '') for f in os.listdir(folder) if f.endswith('.txt')]
-    return jsonify({'countries': countries})
-
-@app.route('/api/export/keywords/list', methods=['GET'])
-def list_keywords():
-    """Lista todas las keywords disponibles para export"""
-    folder = os.path.join(get_session_folder(), 'Keywords')
-    if not os.path.exists(folder):
-        return jsonify({'keywords': []})
-    
-    keywords = [f.replace('.txt', '') for f in os.listdir(folder) if f.endswith('.txt')]
-    return jsonify({'keywords': keywords})
-
-@app.route('/api/export/config', methods=['GET'])
+@app.route('/api/config', methods=['GET'])
 def get_config():
     return jsonify(CONFIG)
 
