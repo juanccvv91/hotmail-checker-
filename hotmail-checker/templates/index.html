@@ -269,8 +269,8 @@
             <div class="card-title"><i class="fas fa-cog"></i> Configuración del Bot</div>
             <div class="grid-2">
                 <div>
-                    <label><i class="fas fa-key"></i> Token del Bot (de @BotFather)</label>
-                    <input type="text" id="tokenInput" placeholder="1234567890:ABCdefGHIjklMNOpqrsTUVwxyz">
+                    <label><i class="fas fa-key"></i> Token del Bot</label>
+                    <input type="text" id="tokenInput" placeholder="Token ya configurado" value="8780478988:AAEgEU2q5kLo1vZ5deOkn_U3quhPQVx8dno">
                 </div>
                 <div>
                     <label><i class="fas fa-clock"></i> Duración</label>
@@ -310,9 +310,6 @@
     <div class="toast" id="toast"></div>
 
     <script>
-        // ============================================
-        // TOAST
-        // ============================================
         function showToast(message, type = 'info') {
             const el = document.getElementById('toast');
             el.textContent = message;
@@ -321,22 +318,14 @@
             el._timeout = setTimeout(() => el.classList.remove('show'), 3000);
         }
 
-        // ============================================
-        // CARGA DE DATOS
-        // ============================================
         async function loadData() {
             try {
-                // Cargar configuración
                 const configRes = await fetch('/api/config');
                 const config = await configRes.json();
                 
-                document.getElementById('tokenInput').value = config.token || '';
                 document.getElementById('durationSelect').value = config.duration || 'infinito';
-                
-                // Actualizar estado
                 updateStatus(config.status, config.started_at, config.expires_at);
                 
-                // Cargar usuarios
                 const usersRes = await fetch('/api/users');
                 const usersData = await usersRes.json();
                 updateUsers(usersData.users, usersData.total_commands);
@@ -346,9 +335,6 @@
             }
         }
 
-        // ============================================
-        // ACTUALIZAR ESTADO
-        // ============================================
         function updateStatus(status, startedAt, expiresAt) {
             const badge = document.getElementById('statusBadge');
             const text = document.getElementById('statusText');
@@ -407,16 +393,10 @@
             }
         }
 
-        // ============================================
-        // ACTUALIZAR USUARIOS
-        // ============================================
         function updateUsers(users, totalCommands) {
             const list = document.getElementById('usersList');
-            const count = document.getElementById('statUsers');
-            const cmds = document.getElementById('statCommands');
-            
-            count.textContent = users.length;
-            cmds.textContent = totalCommands || 0;
+            document.getElementById('statUsers').textContent = users.length;
+            document.getElementById('statCommands').textContent = totalCommands || 0;
             document.getElementById('userCount').textContent = `${users.length} usuarios`;
             
             if (users.length === 0) {
@@ -449,9 +429,6 @@
             list.innerHTML = html;
         }
 
-        // ============================================
-        // ACCIONES
-        // ============================================
         async function saveConfig() {
             const token = document.getElementById('tokenInput').value.trim();
             const duration = document.getElementById('durationSelect').value;
@@ -480,7 +457,6 @@
         }
 
         async function startBot() {
-            // Guardar configuración primero
             await saveConfig();
             
             try {
@@ -524,9 +500,6 @@
             }
         }
 
-        // ============================================
-        // AUTO ACTUALIZACIÓN
-        // ============================================
         setInterval(() => {
             fetch('/api/status')
                 .then(res => res.json())
@@ -534,11 +507,8 @@
                     updateStatus(data.status, data.started_at, data.expires_at);
                 })
                 .catch(() => {});
-        }, 5000); // Cada 5 segundos
+        }, 5000);
 
-        // ============================================
-        // INICIO
-        // ============================================
         loadData();
         showToast('🤖 Panel de control cargado', 'info');
     </script>
