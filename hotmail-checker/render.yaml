@@ -6,7 +6,7 @@ services:
       pip install -r requirements.txt
       apt-get update
       apt-get install -y chromium-browser chromium-driver
-    startCommand: python app.py
+    startCommand: gunicorn app:app
     plan: free
     envVars:
       - key: PYTHON_VERSION
