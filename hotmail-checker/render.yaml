@@ -1,19 +1,13 @@
 services:
   - type: web
-    name: checker-pro
+    name: kick-bot-pro
     runtime: python
     buildCommand: |
       pip install -r requirements.txt
-      apt-get update
-      apt-get install -y chromium-browser chromium-driver
-    startCommand: gunicorn app:app
+    startCommand: python app.py
     plan: free
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
-      - key: CHROME_BIN
-        value: /usr/bin/chromium-browser
-      - key: CHROMEDRIVER_PATH
-        value: /usr/bin/chromedriver
     healthCheckPath: /
     autoDeploy: true
