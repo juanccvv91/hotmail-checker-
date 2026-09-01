@@ -9,5 +9,3 @@ results_*.txt
 *.log
 .DS_Store
 Results/
-export_/
-*.zip
