@@ -1,12 +1,19 @@
 services:
   - type: web
-    name: hotmail-checker
+    name: checker-pro
     runtime: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app
+    buildCommand: |
+      pip install -r requirements.txt
+      apt-get update
+      apt-get install -y chromium-browser chromium-driver
+    startCommand: python app.py
     plan: free
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
+      - key: CHROME_BIN
+        value: /usr/bin/chromium-browser
+      - key: CHROMEDRIVER_PATH
+        value: /usr/bin/chromedriver
     healthCheckPath: /
     autoDeploy: true
