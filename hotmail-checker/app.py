@@ -2,7 +2,6 @@ import os
 import json
 import time
 import threading
-import requests
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
@@ -13,6 +12,11 @@ app = Flask(__name__)
 CORS(app)
 
 PORT = int(os.environ.get('PORT', 5000))
+
+# ============================================
+# TU TOKEN - PUESTO DIRECTAMENTE
+# ============================================
+TOKEN = "8780478988:AAEgEU2q5kLo1vZ5deOkn_U3quhPQVx8dno"
 
 # ============================================
 # DATOS PERSISTENTES
@@ -28,7 +32,7 @@ def load_config():
         with open(CONFIG_FILE, 'r') as f:
             return json.load(f)
     return {
-        'token': '',
+        'token': TOKEN,
         'status': 'stopped',
         'duration': 'infinito',
         'started_at': None,
@@ -53,15 +57,15 @@ config = load_config()
 users_data = load_users()
 
 # ============================================
-# VARIABLES GLOBALES DEL BOT
+# VARIABLES DEL BOT
 # ============================================
 bot_application = None
 bot_thread = None
 bot_running = False
-start_time = None
+bot_start_time = None
 
 # ============================================
-# FUNCIONES DEL BOT DE TELEGRAM
+# FUNCIONES DEL BOT
 # ============================================
 
 def get_duration_seconds(duration):
@@ -75,8 +79,6 @@ def get_duration_seconds(duration):
     return durations.get(duration, None)
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Comando /start"""
-    global start_time
     user = update.effective_user
     chat = update.effective_chat
     
@@ -106,14 +108,17 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Calcular tiempo restante
     time_msg = ""
     if config.get('expires_at'):
-        expires = datetime.fromisoformat(config['expires_at'])
-        remaining = (expires - datetime.now()).total_seconds()
-        if remaining > 0:
-            hours = int(remaining // 3600)
-            minutes = int((remaining % 3600) // 60)
-            time_msg = f"\n⏱️ Tiempo restante: {hours}h {minutes}m"
-        else:
-            time_msg = "\n⚠️ El bot está por expirar"
+        try:
+            expires = datetime.fromisoformat(config['expires_at'])
+            remaining = (expires - datetime.now()).total_seconds()
+            if remaining > 0:
+                hours = int(remaining // 3600)
+                minutes = int((remaining % 3600) // 60)
+                time_msg = f"\n⏱️ Tiempo restante: {hours}h {minutes}m"
+            else:
+                time_msg = "\n⚠️ El bot está por expirar"
+        except:
+            pass
     
     await update.message.reply_text(
         f"👋 ¡Hola {user.first_name}!\n\n"
@@ -130,7 +135,6 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def me_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Comando /me"""
     user = update.effective_user
     chat = update.effective_chat
     
@@ -145,7 +149,6 @@ async def me_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def id_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Comando /id"""
     user = update.effective_user
     chat = update.effective_chat
     
@@ -155,37 +158,31 @@ async def id_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode='Markdown'
     )
 
-def run_telegram_bot():
-    """Ejecuta el bot de Telegram en un hilo separado"""
-    global bot_application, bot_running, start_time
+def run_bot():
+    global bot_application, bot_running, bot_start_time
     
-    token = config.get('token', '')
+    token = TOKEN
     if not token:
         print("❌ No hay token configurado")
         return
     
     print("🤖 Iniciando bot de Telegram...")
+    print(f"🔑 Token: {token[:10]}...")
     
     try:
-        # Crear aplicación
         bot_application = Application.builder().token(token).build()
         
-        # Registrar comandos
         bot_application.add_handler(CommandHandler("start", start_command))
         bot_application.add_handler(CommandHandler("me", me_command))
         bot_application.add_handler(CommandHandler("id", id_command))
         
         print("✅ Comandos registrados: /start, /me, /id")
-        print("📱 Bot iniciado, esperando mensajes...")
         
         bot_running = True
-        start_time = datetime.now()
-        
-        # Actualizar estado en config
+        bot_start_time = datetime.now()
         config['status'] = 'running'
         config['started_at'] = datetime.now().isoformat()
         
-        # Calcular expiración
         duration = config.get('duration', 'infinito')
         seconds = get_duration_seconds(duration)
         if seconds:
@@ -194,7 +191,8 @@ def run_telegram_bot():
             config['expires_at'] = None
         save_config(config)
         
-        # Iniciar polling (esto bloquea el hilo)
+        print("📱 Bot iniciado, esperando mensajes...")
+        
         bot_application.run_polling(allowed_updates=Update.ALL_TYPES)
         
     except Exception as e:
@@ -205,8 +203,7 @@ def run_telegram_bot():
     
     bot_running = False
 
-def stop_telegram_bot():
-    """Detiene el bot de Telegram"""
+def stop_bot():
     global bot_application, bot_running
     
     if bot_application:
@@ -218,7 +215,6 @@ def stop_telegram_bot():
     
     bot_running = False
     config['status'] = 'stopped'
-    config['bot_pid'] = None
     save_config(config)
     print("⏹️ Bot detenido")
 
@@ -233,7 +229,7 @@ def index():
 @app.route('/api/config', methods=['GET'])
 def get_config():
     return jsonify({
-        'token': config.get('token', ''),
+        'token': '••••••••••' if config.get('token') else '',
         'status': config.get('status', 'stopped'),
         'duration': config.get('duration', 'infinito'),
         'started_at': config.get('started_at'),
@@ -256,42 +252,39 @@ def update_config():
     return jsonify({'success': True})
 
 @app.route('/api/start', methods=['POST'])
-def start_bot():
+def start_bot_route():
     global bot_thread
-    
-    if not config.get('token'):
-        return jsonify({'error': 'Token no configurado'}), 400
     
     if bot_running:
         return jsonify({'error': 'El bot ya está en ejecución'}), 400
     
-    # Detener si estaba corriendo
-    stop_telegram_bot()
+    stop_bot()
     
-    # Iniciar en hilo separado
-    bot_thread = threading.Thread(target=run_telegram_bot, daemon=True)
+    bot_thread = threading.Thread(target=run_bot, daemon=True)
     bot_thread.start()
     
-    # Esperar un momento para ver si arrancó
     time.sleep(2)
     
     if bot_running:
         return jsonify({'success': True, 'status': 'running'})
     else:
-        return jsonify({'error': 'Error al iniciar el bot'}), 500
+        status = config.get('status', 'error')
+        return jsonify({'error': f'Error al iniciar el bot (estado: {status})'}), 500
 
 @app.route('/api/stop', methods=['POST'])
 def stop_bot_route():
-    stop_telegram_bot()
+    stop_bot()
     return jsonify({'success': True})
 
 @app.route('/api/status', methods=['GET'])
 def get_status():
-    # Verificar si el bot sigue vivo
     if bot_running and config.get('expires_at'):
-        expires = datetime.fromisoformat(config['expires_at'])
-        if datetime.now() >= expires:
-            stop_telegram_bot()
+        try:
+            expires = datetime.fromisoformat(config['expires_at'])
+            if datetime.now() >= expires:
+                stop_bot()
+        except:
+            pass
     
     return jsonify({
         'status': config.get('status', 'stopped'),
@@ -344,6 +337,6 @@ def receive_user():
     return jsonify({'success': True})
 
 if __name__ == '__main__':
-    # Iniciar app web
     print(f"🌐 Servidor web iniciado en puerto {PORT}")
+    print(f"🤖 Token configurado: {TOKEN[:10]}...")
     app.run(host='0.0.0.0', port=PORT, debug=False, threaded=True)
