@@ -1,12 +1,16 @@
 services:
   - type: web
-    name: hotmail-checker
+    name: telegram-bot-manager
     runtime: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn --bind 0.0.0.0:$PORT app:app
+    buildCommand: |
+      pip install -r requirements.txt
+      mkdir -p data
+    startCommand: python app.py
     plan: free
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
+      - key: FLASK_ENV
+        value: production
     healthCheckPath: /
     autoDeploy: true

@@ -3,467 +3,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotmail Checker Pro</title>
+    <title>Bot Manager - Telegram</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        :root {
-            --bg-primary: #0a0e17;
-            --bg-secondary: #111927;
-            --bg-card: rgba(17, 25, 45, 0.85);
-            --border-color: #1a2a44;
-            --text-primary: #e8edf5;
-            --text-secondary: #8899b4;
-            --accent: #00d4ff;
-            --success: #2ed573;
-            --warning: #ffa502;
-            --danger: #ff4757;
-            --purple: #a29bfe;
-            --pink: #e056a0;
-        }
-
         body {
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0e17;
+            color: #e8edf5;
+            font-family: 'Segoe UI', sans-serif;
+            padding: 20px;
             min-height: 100vh;
-            padding: 15px;
-            background-image: 
-                radial-gradient(ellipse at 10% 20%, rgba(0, 212, 255, 0.03) 0%, transparent 50%),
-                radial-gradient(ellipse at 90% 80%, rgba(0, 212, 255, 0.03) 0%, transparent 50%);
         }
-
-        .container { max-width: 1440px; margin: 0 auto; }
-
+        .container { max-width: 1000px; margin: 0 auto; }
+        
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 20px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
+            padding: 20px 25px;
+            background: rgba(17,25,45,0.85);
+            border: 1px solid #1a2a44;
             border-radius: 12px;
-            margin-bottom: 15px;
-            backdrop-filter: blur(20px);
+            margin-bottom: 25px;
             flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--accent), #0088cc);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            font-weight: 900;
-            color: #fff;
-        }
-
-        .logo-text h1 {
-            font-size: 18px;
-            font-weight: 700;
-            background: linear-gradient(90deg, var(--accent), #66e0ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .logo-text span { font-size: 11px; color: var(--text-secondary); }
-
-        .header-status {
-            display: flex;
-            align-items: center;
             gap: 15px;
-            flex-wrap: wrap;
         }
-
+        .header h1 { color: #00d4ff; font-size: 24px; }
+        .header h1 i { margin-right: 10px; }
+        .header .subtitle { color: #8899b4; font-size: 14px; }
+        
         .status-badge {
-            display: flex;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+            display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border-color);
         }
-
-        .status-dot {
+        .status-badge.running { background: #2ed573; color: #0a0e17; }
+        .status-badge.stopped { background: #ff4757; color: #fff; }
+        .status-badge.error { background: #ffa502; color: #0a0e17; }
+        .status-badge .dot {
             width: 10px;
             height: 10px;
             border-radius: 50%;
             display: inline-block;
         }
-
-        .status-dot.ready { background: var(--text-secondary); }
-        .status-dot.running { background: var(--success); animation: pulse 1s infinite; }
-        .status-dot.stopped { background: var(--danger); }
-        .status-dot.complete { background: var(--accent); }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(0.9); }
+        .status-badge.running .dot { background: #0a0e17; }
+        .status-badge.stopped .dot { background: #fff; }
+        .status-badge.error .dot { background: #0a0e17; }
+        
+        .card {
+            background: rgba(17,25,45,0.85);
+            border: 1px solid #1a2a44;
+            border-radius: 12px;
+            padding: 20px 25px;
+            margin-bottom: 20px;
         }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-            gap: 8px;
+        .card-title {
+            color: #00d4ff;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
             margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-
-        .stat-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 10px;
-            text-align: center;
-            transition: all 0.3s;
-        }
-
-        .stat-card:hover {
-            border-color: var(--accent);
-            transform: translateY(-2px);
-        }
-
-        .stat-number { font-size: 20px; font-weight: 700; display: block; line-height: 1.2; }
-        .stat-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin-top: 3px; }
-
-        .stat-card.valid .stat-number { color: var(--success); }
-        .stat-card.inbox .stat-number { color: var(--warning); }
-        .stat-card.fa .stat-number { color: var(--pink); }
-        .stat-card.bad .stat-number { color: var(--danger); }
-        .stat-card.checked .stat-number { color: var(--accent); }
-        .stat-card.total .stat-number { color: var(--purple); }
-        .stat-card.cpm .stat-number { color: #ff6b6b; }
-
-        .main-grid {
+        .card-title i { font-size: 16px; }
+        
+        .grid-2 {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 15px;
+            gap: 20px;
         }
-
-        .card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 15px 18px;
-            backdrop-filter: blur(20px);
+        
+        label {
+            display: block;
+            color: #8899b4;
+            font-size: 13px;
+            margin-bottom: 5px;
         }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .card-title {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--accent);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .card-title i { font-size: 14px; }
-        .card-badge {
-            font-size: 10px;
-            padding: 3px 10px;
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border-color);
-            color: var(--text-secondary);
-        }
-
-        .file-upload-area {
-            border: 2px dashed var(--border-color);
-            border-radius: 10px;
-            padding: 12px;
-            text-align: center;
-            transition: all 0.3s;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .file-upload-area:hover {
-            border-color: var(--accent);
-            background: rgba(0, 212, 255, 0.03);
-        }
-
-        .file-upload-area.dragover {
-            border-color: var(--accent);
-            background: rgba(0, 212, 255, 0.08);
-        }
-
-        .file-upload-area input[type="file"] {
-            position: absolute;
-            inset: 0;
-            opacity: 0;
-            cursor: pointer;
-        }
-
-        .file-upload-area .upload-icon { font-size: 22px; color: var(--text-secondary); margin-bottom: 4px; }
-        .file-upload-area .upload-text { color: var(--text-secondary); font-size: 11px; }
-        .file-upload-area .upload-text strong { color: var(--accent); }
-
-        .file-info {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 5px 10px;
-            background: rgba(0, 212, 255, 0.08);
-            border-radius: 6px;
-            margin-top: 6px;
-            font-size: 11px;
-        }
-
-        .file-info i { color: var(--success); }
-        .file-info .file-name { color: var(--text-primary); font-weight: 500; }
-        .file-info .file-size { color: var(--text-secondary); margin-left: auto; font-size: 10px; }
-
-        .btn-remove {
-            background: var(--danger);
-            border: none;
-            color: #fff;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 10px;
-            cursor: pointer;
-        }
-
-        textarea {
+        
+        input[type="text"], input[type="password"], select {
             width: 100%;
-            background: rgba(10, 14, 23, 0.8);
-            border: 1px solid var(--border-color);
+            background: rgba(10,14,23,0.8);
+            border: 1px solid #1a2a44;
             border-radius: 8px;
-            color: var(--text-primary);
-            padding: 8px 12px;
-            font-family: 'Consolas', 'Courier New', monospace;
-            font-size: 12px;
+            color: #e8edf5;
+            padding: 10px 14px;
+            font-size: 14px;
             transition: border-color 0.3s;
-            resize: vertical;
-            min-height: 80px;
         }
-
-        textarea:focus { outline: none; border-color: var(--accent); }
-
-        .settings-row {
+        input:focus, select:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+        select option { background: #0a0e17; }
+        
+        .btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary { background: #00d4ff; color: #0a0e17; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,212,255,0.3); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        
+        .btn-success { background: #2ed573; color: #0a0e17; }
+        .btn-success:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(46,213,115,0.3); }
+        
+        .btn-danger { background: #ff4757; color: #fff; }
+        .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255,71,87,0.3); }
+        .btn-danger:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        
+        .btn-warning { background: #ffa502; color: #0a0e17; }
+        .btn-warning:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255,165,2,0.3); }
+        
+        .btn-sm { padding: 6px 14px; font-size: 12px; }
+        
+        .btn-group {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
-            align-items: center;
+            margin-top: 15px;
         }
-
-        .settings-row label { font-size: 11px; color: var(--text-secondary); }
-
-        .settings-row input[type="number"] {
-            width: 60px;
-            background: rgba(10, 14, 23, 0.8);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            color: var(--text-primary);
-            padding: 5px 8px;
-            font-size: 12px;
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
         }
-
-        .settings-row input[type="number"]:focus { outline: none; border-color: var(--accent); }
-
-        .settings-row textarea.small {
-            min-height: 30px;
-            flex: 1;
-            font-size: 11px;
-            padding: 5px 8px;
+        .stat-box {
+            background: rgba(17,25,45,0.85);
+            border: 1px solid #1a2a44;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
         }
-
-        .btn {
-            padding: 8px 18px;
-            border: none;
-            border-radius: 8px;
+        .stat-number {
+            font-size: 28px;
             font-weight: 700;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.3s;
+            display: block;
+        }
+        .stat-number.green { color: #2ed573; }
+        .stat-number.blue { color: #00d4ff; }
+        .stat-number.orange { color: #ffa502; }
+        .stat-number.red { color: #ff4757; }
+        .stat-label {
+            font-size: 11px;
+            color: #8899b4;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+            margin-top: 4px;
         }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--accent), #0088cc);
-            color: #0a0e17;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(0, 212, 255, 0.3);
-        }
-
-        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-        .btn-danger { background: var(--danger); color: #fff; }
-        .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255, 71, 87, 0.3); }
-        .btn-danger:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-        .btn-success { background: var(--success); color: #0a0e17; }
-        .btn-success:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(46, 213, 115, 0.3); }
-
-        .btn-warning { background: var(--warning); color: #0a0e17; }
-        .btn-warning:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255, 165, 2, 0.3); }
-
-        .btn-sm { padding: 4px 10px; font-size: 10px; }
-
-        .btn-group {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin: 8px 0;
-        }
-
-        .progress-container { margin: 10px 0 4px 0; }
-
-        .progress-info {
-            display: flex;
-            justify-content: space-between;
-            font-size: 11px;
-            color: var(--text-secondary);
-            margin-bottom: 3px;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 4px;
-            background: var(--border-color);
-            border-radius: 3px;
-            overflow: hidden;
-        }
-
-        .progress-bar .fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--accent), var(--success));
-            border-radius: 3px;
-            transition: width 0.4s ease;
-            width: 0%;
-        }
-
-        .log-container {
-            background: rgba(10, 14, 23, 0.9);
-            border-radius: 8px;
-            padding: 10px;
-            max-height: 220px;
-            overflow-y: auto;
-            font-family: 'Consolas', 'Courier New', monospace;
-            font-size: 11px;
-            line-height: 1.6;
-            border: 1px solid var(--border-color);
-        }
-
-        .log-container::-webkit-scrollbar { width: 4px; }
-        .log-container::-webkit-scrollbar-track { background: rgba(10, 14, 23, 0.5); }
-        .log-container::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
-
-        .log-line {
-            padding: 2px 0;
-            border-bottom: 1px solid rgba(26, 42, 68, 0.15);
-            display: flex;
-            gap: 8px;
-        }
-
-        .log-line .time { color: var(--text-secondary); min-width: 50px; font-size: 10px; }
-        .log-line .message { word-break: break-all; }
-        .log-line .message.success { color: var(--success); }
-        .log-line .message.error { color: var(--danger); }
-        .log-line .message.warning { color: var(--warning); }
-        .log-line .message.info { color: var(--text-secondary); }
-
-        .export-section {
-            background: rgba(0, 212, 255, 0.05);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 10px 12px;
-            margin-top: 8px;
-        }
-
-        .export-section .title {
-            font-size: 11px;
-            color: var(--text-secondary);
-            margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .export-section .title i { color: var(--accent); }
-
-        .file-list {
-            margin-top: 8px;
-            max-height: 80px;
+        
+        .users-list {
+            max-height: 300px;
             overflow-y: auto;
         }
-
-        .file-list::-webkit-scrollbar { width: 3px; }
-        .file-list::-webkit-scrollbar-track { background: rgba(10, 14, 23, 0.5); }
-        .file-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
-
-        .file-item {
+        .users-list::-webkit-scrollbar { width: 4px; }
+        .users-list::-webkit-scrollbar-track { background: rgba(10,14,23,0.5); }
+        .users-list::-webkit-scrollbar-thumb { background: #1a2a44; border-radius: 3px; }
+        
+        .user-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 3px 6px;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 4px;
-            margin-bottom: 2px;
-            font-size: 10px;
-            cursor: pointer;
-            transition: background 0.2s;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid #1a2a44;
+            border-radius: 6px;
+            margin-bottom: 4px;
         }
-
-        .file-item:hover { background: rgba(0, 212, 255, 0.08); }
-
-        .file-item .name { color: var(--text-primary); font-family: monospace; }
-        .file-item .size { color: var(--text-secondary); font-size: 9px; }
-        .file-item .download-btn {
-            background: var(--success);
-            border: none;
-            color: #0a0e17;
-            padding: 1px 8px;
-            border-radius: 3px;
-            font-size: 9px;
-            cursor: pointer;
-            font-weight: 700;
+        .user-item .name { font-weight: 600; }
+        .user-item .id { color: #8899b4; font-size: 12px; font-family: monospace; }
+        .user-item .commands { color: #00d4ff; font-size: 12px; }
+        .user-item .last-seen { color: #8899b4; font-size: 11px; }
+        
+        .empty-state {
+            text-align: center;
+            color: #8899b4;
+            padding: 30px;
         }
-
-        .file-item .download-btn:hover { opacity: 0.8; }
-
-        @media (max-width: 1024px) { .main-grid { grid-template-columns: 1fr; } }
-
+        .empty-state i { font-size: 40px; margin-bottom: 10px; display: block; }
+        
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #1a2a44;
+            color: #e8edf5;
+            padding: 15px 25px;
+            border-radius: 10px;
+            border-left: 4px solid #00d4ff;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.5s;
+            z-index: 1000;
+            max-width: 400px;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { border-left-color: #2ed573; }
+        .toast.error { border-left-color: #ff4757; }
+        .toast.warning { border-left-color: #ffa502; }
+        
         @media (max-width: 768px) {
+            .grid-2 { grid-template-columns: 1fr; }
             .header { flex-direction: column; align-items: stretch; text-align: center; }
-            .header-status { justify-content: center; }
-            .stats-grid { grid-template-columns: repeat(4, 1fr); }
-            .settings-row { flex-direction: column; align-items: stretch; }
-            .btn-group { justify-content: center; }
-        }
-
-        @media (max-width: 480px) {
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
-            .card { padding: 12px; }
         }
     </style>
 </head>
@@ -471,475 +227,315 @@
     <div class="container">
         <!-- HEADER -->
         <header class="header">
-            <div class="logo">
-                <div class="logo-icon">📧</div>
-                <div class="logo-text">
-                    <h1>Hotmail Checker</h1>
-                    <span>Microsoft Account Validator</span>
-                </div>
+            <div>
+                <h1><i class="fas fa-robot"></i> Bot Manager</h1>
+                <span class="subtitle">Controla tu bot de Telegram desde la web</span>
             </div>
-            <div class="header-status">
-                <div class="status-badge">
-                    <span class="status-dot ready" id="statusDot"></span>
-                    <span id="statusText">Ready</span>
-                </div>
-                <span style="color:var(--text-secondary);font-size:11px;" id="uptimeText">● Online</span>
+            <div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap;">
+                <span class="status-badge stopped" id="statusBadge">
+                    <span class="dot"></span> <span id="statusText">Detenido</span>
+                </span>
+                <span style="color:#8899b4;font-size:12px;" id="uptimeText">● Offline</span>
             </div>
         </header>
 
         <!-- STATS -->
         <div class="stats-grid">
-            <div class="stat-card valid"><span class="stat-number" id="statValid">0</span><span class="stat-label">✅ Valid</span></div>
-            <div class="stat-card inbox"><span class="stat-number" id="statInbox">0</span><span class="stat-label">📬 Inbox Hits</span></div>
-            <div class="stat-card fa"><span class="stat-number" id="stat2FA">0</span><span class="stat-label">🔐 2FA</span></div>
-            <div class="stat-card bad"><span class="stat-number" id="statBad">0</span><span class="stat-label">❌ Invalid</span></div>
-            <div class="stat-card checked"><span class="stat-number" id="statChecked">0</span><span class="stat-label">📊 Checked</span></div>
-            <div class="stat-card total"><span class="stat-number" id="statTotal">0</span><span class="stat-label">📦 Total</span></div>
-            <div class="stat-card cpm"><span class="stat-number" id="statCPM">0</span><span class="stat-label">⚡ CPM</span></div>
+            <div class="stat-box">
+                <span class="stat-number blue" id="statUsers">0</span>
+                <span class="stat-label">👥 Usuarios</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number green" id="statCommands">0</span>
+                <span class="stat-label">📊 Comandos</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number orange" id="statUptime">-</span>
+                <span class="stat-label">⏱️ Tiempo activo</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number red" id="statExpires">-</span>
+                <span class="stat-label">⏳ Expira</span>
+            </div>
         </div>
 
-        <!-- MAIN GRID -->
-        <div class="main-grid">
-            <!-- LEFT COLUMN -->
-            <div>
-                <!-- Accounts -->
-                <div class="card" style="margin-bottom:12px;">
-                    <div class="card-header">
-                        <div class="card-title"><i class="fas fa-users"></i> Accounts</div>
-                        <span class="card-badge" id="accountCount">0 loaded</span>
-                    </div>
-                    <div class="file-upload-area" id="accountDrop">
-                        <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                        <div class="upload-text"><strong>Click or drag</strong> to upload accounts.txt</div>
-                        <input type="file" id="accountFileInput" accept=".txt">
-                        <div class="file-info" id="accountFileInfo" style="display:none;">
-                            <i class="fas fa-check-circle"></i>
-                            <span class="file-name" id="accountFileName">accounts.txt</span>
-                            <span class="file-size" id="accountFileSize">0 KB</span>
-                            <button class="btn-remove" onclick="clearAccounts()">✕</button>
-                        </div>
-                    </div>
-                    <textarea id="accountsInput" placeholder="email1:password1&#10;email2:password2" style="margin-top:6px;min-height:80px;"></textarea>
+        <!-- CONFIGURACIÓN -->
+        <div class="card">
+            <div class="card-title"><i class="fas fa-cog"></i> Configuración del Bot</div>
+            <div class="grid-2">
+                <div>
+                    <label><i class="fas fa-key"></i> Token del Bot (de @BotFather)</label>
+                    <input type="text" id="tokenInput" placeholder="1234567890:ABCdefGHIjklMNOpqrsTUVwxyz">
                 </div>
-
-                <!-- Proxies -->
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title"><i class="fas fa-shield-alt"></i> Proxies</div>
-                        <span class="card-badge" id="proxyCount">0 loaded</span>
-                    </div>
-                    <div class="file-upload-area" id="proxyDrop">
-                        <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                        <div class="upload-text"><strong>Click or drag</strong> to upload proxies.txt</div>
-                        <input type="file" id="proxyFileInput" accept=".txt">
-                        <div class="file-info" id="proxyFileInfo" style="display:none;">
-                            <i class="fas fa-check-circle"></i>
-                            <span class="file-name" id="proxyFileName">proxies.txt</span>
-                            <span class="file-size" id="proxyFileSize">0 KB</span>
-                            <button class="btn-remove" onclick="clearProxies()">✕</button>
-                        </div>
-                    </div>
-                    <textarea id="proxiesInput" placeholder="proxy1:8080&#10;proxy2:3128" style="margin-top:6px;min-height:40px;"></textarea>
+                <div>
+                    <label><i class="fas fa-clock"></i> Duración</label>
+                    <select id="durationSelect">
+                        <option value="1h">1 Hora</option>
+                        <option value="6h">6 Horas</option>
+                        <option value="12h">12 Horas</option>
+                        <option value="24h">24 Horas</option>
+                        <option value="infinito" selected>♾️ Infinito</option>
+                    </select>
                 </div>
             </div>
+            <div class="btn-group">
+                <button class="btn btn-success" id="startBtn" onclick="startBot()"><i class="fas fa-play"></i> Iniciar Bot</button>
+                <button class="btn btn-danger" id="stopBtn" onclick="stopBot()" disabled><i class="fas fa-stop"></i> Detener Bot</button>
+                <button class="btn btn-warning" onclick="saveConfig()"><i class="fas fa-save"></i> Guardar Configuración</button>
+            </div>
+        </div>
 
-            <!-- RIGHT COLUMN -->
-            <div>
-                <!-- Settings & Controls -->
-                <div class="card" style="margin-bottom:12px;">
-                    <div class="card-header">
-                        <div class="card-title"><i class="fas fa-sliders-h"></i> Controls</div>
-                    </div>
-                    <div class="settings-row" style="margin-bottom:8px;">
-                        <label>Threads:</label>
-                        <input type="number" id="threadCount" value="50" min="1" max="200">
-                        <label style="margin-left:6px;">Keywords:</label>
-                        <textarea id="keywordsInput" class="small" style="min-height:30px;flex:1;font-size:11px;padding:4px 8px;" placeholder="Steam&#10;Netflix&#10;PayPal">Steam
-Netflix
-PayPal
-Amazon
-Security Alert</textarea>
-                    </div>
-                    <div class="btn-group">
-                        <button class="btn btn-primary" id="startBtn" onclick="startCheck()"><i class="fas fa-play"></i> Start</button>
-                        <button class="btn btn-danger" id="stopBtn" onclick="stopCheck()" disabled><i class="fas fa-stop"></i> Stop</button>
-                        <button class="btn btn-warning" onclick="clearLogs()"><i class="fas fa-trash-alt"></i> Clear</button>
-                    </div>
-                    <div class="export-section">
-                        <div class="title"><i class="fas fa-download"></i> Export Results</div>
-                        <div class="btn-group" style="margin:4px 0;">
-                            <button class="btn btn-success btn-sm" onclick="downloadAll()"><i class="fas fa-file-archive"></i> All (ZIP)</button>
-                            <button class="btn btn-success btn-sm" onclick="downloadFile('inbox')"><i class="fas fa-inbox"></i> Inbox</button>
-                            <button class="btn btn-success btn-sm" onclick="downloadFile('valid')"><i class="fas fa-check-circle"></i> Valid</button>
-                        </div>
-                        <div class="file-list" id="fileList">
-                            <div style="color:var(--text-secondary);font-size:10px;text-align:center;padding:4px;">
-                                <i class="fas fa-spinner fa-spin"></i> Loading files...
-                            </div>
-                        </div>
-                    </div>
-                    <div class="progress-container">
-                        <div class="progress-info">
-                            <span id="progressText">0 / 0</span>
-                            <span id="progressPercent">0%</span>
-                        </div>
-                        <div class="progress-bar"><div class="fill" id="progressFill"></div></div>
-                    </div>
-                </div>
-
-                <!-- Logs -->
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title"><i class="fas fa-terminal"></i> Live Log</div>
-                        <span class="card-badge" id="logCount">0 entries</span>
-                    </div>
-                    <div class="log-container" id="logContainer">
-                        <div class="log-line"><span class="time">●</span><span class="message info">Ready to check accounts...</span></div>
-                    </div>
+        <!-- USUARIOS -->
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-users"></i> Usuarios Activos
+                <span style="margin-left:auto;font-size:12px;color:#8899b4;font-weight:400;" id="userCount">0 usuarios</span>
+                <button class="btn btn-sm btn-danger" onclick="clearUsers()" style="margin-left:10px;"><i class="fas fa-trash"></i> Limpiar</button>
+            </div>
+            <div class="users-list" id="usersList">
+                <div class="empty-state">
+                    <i class="fas fa-user-slash"></i>
+                    <p>No hay usuarios registrados aún.<br>Envía /start al bot para aparecer aquí.</p>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+
     <script>
         // ============================================
-        // STATE
+        // TOAST
         // ============================================
-        let running = false;
-        let updateInterval = null;
+        function showToast(message, type = 'info') {
+            const el = document.getElementById('toast');
+            el.textContent = message;
+            el.className = `toast show ${type}`;
+            clearTimeout(el._timeout);
+            el._timeout = setTimeout(() => el.classList.remove('show'), 3000);
+        }
 
         // ============================================
-        // DOM ELEMENTS
+        // CARGA DE DATOS
         // ============================================
-        const accountsInput = document.getElementById('accountsInput');
-        const proxiesInput = document.getElementById('proxiesInput');
-        const keywordsInput = document.getElementById('keywordsInput');
-        const logContainer = document.getElementById('logContainer');
-        const startBtn = document.getElementById('startBtn');
-        const stopBtn = document.getElementById('stopBtn');
-        const statusText = document.getElementById('statusText');
-        const statusDot = document.getElementById('statusDot');
-        const accountFileInput = document.getElementById('accountFileInput');
-        const proxyFileInput = document.getElementById('proxyFileInput');
-        const fileList = document.getElementById('fileList');
-
-        // ============================================
-        // FILE UPLOAD HANDLERS
-        // ============================================
-        function setupFileUpload(input, textarea, infoDiv, nameSpan, sizeSpan, countEl, clearFn) {
-            input.addEventListener('change', function(e) {
-                const file = this.files[0];
-                if (!file) return;
+        async function loadData() {
+            try {
+                // Cargar configuración
+                const configRes = await fetch('/api/config');
+                const config = await configRes.json();
                 
-                const reader = new FileReader();
-                reader.onload = function(ev) {
-                    textarea.value = ev.target.result;
-                    infoDiv.style.display = 'flex';
-                    nameSpan.textContent = file.name;
-                    sizeSpan.textContent = (file.size / 1024).toFixed(1) + ' KB';
-                    if (countEl) {
-                        const lines = ev.target.result.split('\n').filter(l => l.trim());
-                        countEl.textContent = lines.length + ' loaded';
-                    }
-                    addLog(`📁 Loaded ${file.name} (${(file.size/1024).toFixed(1)} KB)`, 'info');
-                };
-                reader.readAsText(file);
-            });
-
-            const dropArea = input.parentElement;
-            dropArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                dropArea.classList.add('dragover');
-            });
-            dropArea.addEventListener('dragleave', () => {
-                dropArea.classList.remove('dragover');
-            });
-            dropArea.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dropArea.classList.remove('dragover');
-                const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    input.files = files;
-                    input.dispatchEvent(new Event('change'));
-                }
-            });
-        }
-
-        setupFileUpload(
-            accountFileInput,
-            accountsInput,
-            document.getElementById('accountFileInfo'),
-            document.getElementById('accountFileName'),
-            document.getElementById('accountFileSize'),
-            document.getElementById('accountCount'),
-            clearAccounts
-        );
-
-        setupFileUpload(
-            proxyFileInput,
-            proxiesInput,
-            document.getElementById('proxyFileInfo'),
-            document.getElementById('proxyFileName'),
-            document.getElementById('proxyFileSize'),
-            document.getElementById('proxyCount'),
-            clearProxies
-        );
-
-        function clearAccounts() {
-            accountsInput.value = '';
-            document.getElementById('accountFileInfo').style.display = 'none';
-            document.getElementById('accountCount').textContent = '0 loaded';
-            accountFileInput.value = '';
-        }
-
-        function clearProxies() {
-            proxiesInput.value = '';
-            document.getElementById('proxyFileInfo').style.display = 'none';
-            document.getElementById('proxyCount').textContent = '0 loaded';
-            proxyFileInput.value = '';
-        }
-
-        // ============================================
-        // LOGGING
-        // ============================================
-        function addLog(message, level = 'info') {
-            const div = document.createElement('div');
-            div.className = 'log-line';
-            const time = new Date().toLocaleTimeString();
-            div.innerHTML = `<span class="time">${time}</span><span class="message ${level}">${message}</span>`;
-            logContainer.prepend(div);
-            if (logContainer.children.length > 200) {
-                logContainer.removeChild(logContainer.children[logContainer.children.length - 1]);
+                document.getElementById('tokenInput').value = config.token || '';
+                document.getElementById('durationSelect').value = config.duration || 'infinito';
+                
+                // Actualizar estado
+                updateStatus(config.status, config.started_at, config.expires_at);
+                
+                // Cargar usuarios
+                const usersRes = await fetch('/api/users');
+                const usersData = await usersRes.json();
+                updateUsers(usersData.users, usersData.total_commands);
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
             }
-            document.getElementById('logCount').textContent = logContainer.children.length + ' entries';
         }
 
         // ============================================
-        // STATS UPDATE
+        // ACTUALIZAR ESTADO
         // ============================================
-        function updateStats(stats) {
-            document.getElementById('statValid').textContent = stats.valid || 0;
-            document.getElementById('statInbox').textContent = stats.inbox || 0;
-            document.getElementById('stat2FA').textContent = stats['2fa'] || 0;
-            document.getElementById('statBad').textContent = stats.bad || 0;
-            document.getElementById('statChecked').textContent = stats.checked || 0;
-            document.getElementById('statTotal').textContent = stats.total || 0;
-            document.getElementById('statCPM').textContent = stats.cpm || 0;
+        function updateStatus(status, startedAt, expiresAt) {
+            const badge = document.getElementById('statusBadge');
+            const text = document.getElementById('statusText');
+            const uptime = document.getElementById('statUptime');
+            const expires = document.getElementById('statExpires');
             
-            const progress = stats.total > 0 ? (stats.checked / stats.total * 100) : 0;
-            document.getElementById('progressFill').style.width = Math.min(progress, 100) + '%';
-            document.getElementById('progressText').textContent = `${stats.checked || 0} / ${stats.total || 0}`;
-            document.getElementById('progressPercent').textContent = Math.min(progress, 100).toFixed(1) + '%';
+            badge.className = `status-badge ${status}`;
+            
+            if (status === 'running') {
+                text.textContent = '🟢 En ejecución';
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('stopBtn').disabled = false;
+                document.getElementById('uptimeText').textContent = '● Activo';
+                document.getElementById('uptimeText').style.color = '#2ed573';
+                
+                if (startedAt) {
+                    const start = new Date(startedAt);
+                    const now = new Date();
+                    const diff = Math.floor((now - start) / 1000);
+                    const hours = Math.floor(diff / 3600);
+                    const minutes = Math.floor((diff % 3600) / 60);
+                    uptime.textContent = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+                }
+                
+                if (expiresAt) {
+                    const exp = new Date(expiresAt);
+                    const now = new Date();
+                    const diff = Math.floor((exp - now) / 1000);
+                    if (diff > 0) {
+                        const hours = Math.floor(diff / 3600);
+                        const minutes = Math.floor((diff % 3600) / 60);
+                        expires.textContent = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+                    } else {
+                        expires.textContent = 'Expirado';
+                    }
+                } else {
+                    expires.textContent = '♾️ Infinito';
+                }
+                
+            } else if (status === 'error') {
+                text.textContent = '⚠️ Error';
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('stopBtn').disabled = true;
+                document.getElementById('uptimeText').textContent = '● Error';
+                document.getElementById('uptimeText').style.color = '#ffa502';
+                uptime.textContent = '-';
+                expires.textContent = '-';
+            } else {
+                text.textContent = '⏹️ Detenido';
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('stopBtn').disabled = true;
+                document.getElementById('uptimeText').textContent = '● Offline';
+                document.getElementById('uptimeText').style.color = '#8899b4';
+                uptime.textContent = '-';
+                expires.textContent = '-';
+            }
         }
 
         // ============================================
-        // FILE LIST
+        // ACTUALIZAR USUARIOS
         // ============================================
-        function updateFileList(files) {
-            if (!files || files.length === 0) {
-                fileList.innerHTML = `<div style="color:var(--text-secondary);font-size:10px;text-align:center;padding:4px;">
-                    <i class="fas fa-info-circle"></i> No files available yet
-                </div>`;
+        function updateUsers(users, totalCommands) {
+            const list = document.getElementById('usersList');
+            const count = document.getElementById('statUsers');
+            const cmds = document.getElementById('statCommands');
+            
+            count.textContent = users.length;
+            cmds.textContent = totalCommands || 0;
+            document.getElementById('userCount').textContent = `${users.length} usuarios`;
+            
+            if (users.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-user-slash"></i>
+                        <p>No hay usuarios registrados aún.<br>Envía /start al bot para aparecer aquí.</p>
+                    </div>
+                `;
                 return;
             }
-
+            
             let html = '';
-            files.forEach(file => {
-                const size = file.size > 1024 * 1024 
-                    ? (file.size / (1024 * 1024)).toFixed(2) + ' MB'
-                    : (file.size / 1024).toFixed(1) + ' KB';
-                const name = file.name;
+            users.forEach(user => {
+                const lastSeen = user.last_seen ? new Date(user.last_seen).toLocaleString() : 'Nunca';
                 html += `
-                    <div class="file-item">
-                        <span class="name">${name}</span>
-                        <span class="size">${size}</span>
-                        <button class="download-btn" onclick="downloadSpecificFile('${name}')">⬇️</button>
+                    <div class="user-item">
+                        <div>
+                            <span class="name">${user.first_name || 'Usuario'}</span>
+                            ${user.username ? `@${user.username}` : ''}
+                            <span class="id">(${user.id})</span>
+                        </div>
+                        <div style="display:flex;gap:15px;align-items:center;">
+                            <span class="commands">📊 ${user.commands_count || 0}</span>
+                            <span class="last-seen">${lastSeen}</span>
+                        </div>
                     </div>
                 `;
             });
-            
-            fileList.innerHTML = html;
+            list.innerHTML = html;
         }
 
         // ============================================
-        // MAIN FUNCTIONS
+        // ACCIONES
         // ============================================
-        async function startCheck() {
-            if (running) return;
-
-            const accounts = accountsInput.value;
-            const keywords = keywordsInput.value;
-            const proxies = proxiesInput.value;
-            const threads = parseInt(document.getElementById('threadCount').value) || 50;
-
-            if (!accounts.trim()) {
-                addLog('⚠️ Please enter accounts or upload a file', 'warning');
+        async function saveConfig() {
+            const token = document.getElementById('tokenInput').value.trim();
+            const duration = document.getElementById('durationSelect').value;
+            
+            if (!token) {
+                showToast('⚠️ Ingresa el token del bot', 'warning');
                 return;
             }
-
-            running = true;
-            startBtn.disabled = true;
-            stopBtn.disabled = false;
-            statusDot.className = 'status-dot running';
-            statusText.textContent = 'Running...';
-
-            addLog('🚀 Starting check...', 'info');
-
+            
             try {
-                const response = await fetch('/api/start', {
+                const response = await fetch('/api/config', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ accounts, keywords, proxies, threads })
+                    body: JSON.stringify({ token, duration })
                 });
-
-                const data = await response.json();
-                if (data.error) {
-                    addLog(`⚠️ ${data.error}`, 'error');
-                    running = false;
-                    startBtn.disabled = false;
-                    stopBtn.disabled = true;
-                    statusDot.className = 'status-dot stopped';
-                    statusText.textContent = 'Error';
-                    return;
-                }
-
-                addLog(`✅ Started: ${data.total} accounts`, 'success');
                 
-                if (updateInterval) clearInterval(updateInterval);
-                updateInterval = setInterval(fetchStatus, 1500);
-
+                const data = await response.json();
+                if (data.success) {
+                    showToast('✅ Configuración guardada', 'success');
+                } else {
+                    showToast('❌ Error al guardar', 'error');
+                }
             } catch (error) {
-                addLog(`⚠️ Error: ${error.message}`, 'error');
-                running = false;
-                startBtn.disabled = false;
-                stopBtn.disabled = true;
-                statusDot.className = 'status-dot stopped';
-                statusText.textContent = 'Error';
+                showToast('❌ Error de conexión', 'error');
             }
         }
 
-        async function stopCheck() {
-            if (!running) return;
+        async function startBot() {
+            // Guardar configuración primero
+            await saveConfig();
             
             try {
-                await fetch('/api/stop', { method: 'POST' });
-                addLog('⏹️ Stopping...', 'warning');
-            } catch (error) {
-                addLog(`⚠️ Stop error: ${error.message}`, 'error');
-            }
-        }
-
-        async function fetchStatus() {
-            try {
-                const response = await fetch('/api/status');
+                const response = await fetch('/api/start', { method: 'POST' });
                 const data = await response.json();
                 
-                updateStats(data.stats);
-                
-                if (data.logs && data.logs.length > 0) {
-                    data.logs.reverse().forEach(log => {
-                        addLog(log.message, log.level);
-                    });
+                if (data.success) {
+                    showToast('✅ Bot iniciado correctamente', 'success');
+                    loadData();
+                } else {
+                    showToast('❌ ' + (data.error || 'Error al iniciar'), 'error');
                 }
-                
-                if (data.export_ready && data.export_files) {
-                    updateFileList(data.export_files);
-                }
-                
-                if (!data.running && running) {
-                    running = false;
-                    startBtn.disabled = false;
-                    stopBtn.disabled = true;
-                    statusDot.className = 'status-dot stopped';
-                    statusText.textContent = 'Stopped';
-                    if (updateInterval) {
-                        clearInterval(updateInterval);
-                        updateInterval = null;
-                    }
-                    addLog('✅ Check completed', 'success');
-                }
-                
-                if (data.stats.total > 0 && data.stats.checked >= data.stats.total) {
-                    running = false;
-                    startBtn.disabled = false;
-                    stopBtn.disabled = true;
-                    statusDot.className = 'status-dot complete';
-                    statusText.textContent = 'Complete';
-                    if (updateInterval) {
-                        clearInterval(updateInterval);
-                        updateInterval = null;
-                    }
-                }
-                
             } catch (error) {
-                console.error('Status fetch error:', error);
+                showToast('❌ Error de conexión', 'error');
             }
         }
 
-        // ============================================
-        // DOWNLOAD FUNCTIONS
-        // ============================================
-        function downloadSpecificFile(filename) {
-            const url = `/api/download/${encodeURIComponent(filename)}`;
-            window.open(url, '_blank');
-            addLog(`📤 Downloading: ${filename}`, 'info');
-        }
-
-        function downloadFile(type) {
-            const endpoints = {
-                'inbox': '/api/download/inbox',
-                'valid': '/api/download/valid'
-            };
-            
-            const url = endpoints[type];
-            if (!url) {
-                addLog('⚠️ Invalid file type', 'warning');
-                return;
-            }
-            
-            window.open(url, '_blank');
-            addLog(`📤 Downloading ${type}.txt...`, 'info');
-        }
-
-        function downloadAll() {
-            window.open('/api/download/all', '_blank');
-            addLog('📤 Downloading all results as ZIP...', 'info');
-        }
-
-        function clearLogs() {
-            logContainer.innerHTML = '<div class="log-line"><span class="time">●</span><span class="message info">Logs cleared</span></div>';
-            document.getElementById('logCount').textContent = '1 entries';
-            addLog('🗑️ Logs cleared', 'info');
-        }
-
-        // ============================================
-        // LOAD FILES ON STARTUP
-        // ============================================
-        async function loadFiles() {
+        async function stopBot() {
             try {
-                const response = await fetch('/api/files');
+                const response = await fetch('/api/stop', { method: 'POST' });
                 const data = await response.json();
-                if (data.files) {
-                    updateFileList(data.files);
+                
+                if (data.success) {
+                    showToast('⏹️ Bot detenido', 'warning');
+                    loadData();
                 }
-            } catch (e) {
-                console.error('Error loading files:', e);
+            } catch (error) {
+                showToast('❌ Error de conexión', 'error');
             }
         }
 
-        // Auto fetch status and files
+        async function clearUsers() {
+            if (!confirm('¿Eliminar historial de usuarios?')) return;
+            
+            try {
+                await fetch('/api/clear_users', { method: 'POST' });
+                showToast('🗑️ Historial limpiado', 'warning');
+                loadData();
+            } catch (error) {
+                showToast('❌ Error', 'error');
+            }
+        }
+
+        // ============================================
+        // AUTO ACTUALIZACIÓN
+        // ============================================
         setInterval(() => {
-            if (!running) {
-                fetchStatus();
-            }
-        }, 5000);
+            fetch('/api/status')
+                .then(res => res.json())
+                .then(data => {
+                    updateStatus(data.status, data.started_at, data.expires_at);
+                })
+                .catch(() => {});
+        }, 10000); // Cada 10 segundos
 
-        loadFiles();
-
-        addLog('🔧 Hotmail Checker Pro ready', 'info');
-        addLog('💡 Upload accounts.txt or paste credentials', 'info');
-        addLog('📁 Drag & drop files supported', 'info');
-        addLog('📤 Results are automatically saved', 'info');
+        // ============================================
+        // INICIO
+        // ============================================
+        loadData();
+        showToast('🤖 Panel de control cargado', 'info');
     </script>
 </body>
 </html>
