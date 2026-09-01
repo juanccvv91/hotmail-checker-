@@ -1,16 +1,15 @@
 services:
   - type: web
-    name: telegram-bot-manager
+    name: checker-unificado
     runtime: python
+    plan: free
     buildCommand: |
       pip install -r requirements.txt
-      mkdir -p data
     startCommand: gunicorn --bind 0.0.0.0:$PORT app:app
-    plan: free
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
-      - key: FLASK_ENV
-        value: production
-    healthCheckPath: /
+      - key: PYTHONUNBUFFERED
+        value: 1
+    healthCheckPath: /health
     autoDeploy: true
