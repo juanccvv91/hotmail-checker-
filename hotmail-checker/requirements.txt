@@ -3,4 +3,3 @@ flask-cors==4.0.0
 requests==2.31.0
 websocket-client==1.6.4
 fake-useragent==1.4.0
-gunicorn==22.0.0
