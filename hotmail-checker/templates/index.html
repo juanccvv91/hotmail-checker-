@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotmail & Card Checker Pro</title>
+    <title>Checker Pro - 5 Checkers</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -22,6 +22,11 @@
             --purple: #a29bfe;
             --pink: #e056a0;
             --gold: #ffd700;
+            --cyan: #00d4ff;
+            --orange: #ff6b35;
+            --green: #2ed573;
+            --red: #ff4757;
+            --blue: #3742fa;
         }
 
         body {
@@ -29,7 +34,7 @@
             color: var(--text-primary);
             font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
             min-height: 100vh;
-            padding: 20px;
+            padding: 15px;
         }
 
         .container { max-width: 1440px; margin: 0 auto; }
@@ -39,49 +44,49 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 25px;
+            padding: 12px 20px;
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            border-radius: 16px;
-            margin-bottom: 25px;
+            border-radius: 12px;
+            margin-bottom: 15px;
             backdrop-filter: blur(20px);
             flex-wrap: wrap;
-            gap: 15px;
+            gap: 10px;
         }
 
         .logo {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
         }
 
         .logo-icon {
-            width: 45px;
-            height: 45px;
+            width: 40px;
+            height: 40px;
             background: linear-gradient(135deg, var(--accent), #0088cc);
-            border-radius: 12px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 22px;
+            font-size: 18px;
             font-weight: 900;
             color: #fff;
         }
 
         .logo-text h1 {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 700;
             background: linear-gradient(90deg, var(--accent), #66e0ff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        .logo-text span { font-size: 12px; color: var(--text-secondary); }
+        .logo-text span { font-size: 11px; color: var(--text-secondary); }
 
         .header-status {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 15px;
             flex-wrap: wrap;
         }
 
@@ -89,9 +94,9 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 8px 16px;
+            padding: 6px 14px;
             border-radius: 20px;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--border-color);
@@ -117,26 +122,28 @@
         /* TABS */
         .tabs {
             display: flex;
-            gap: 5px;
-            margin-bottom: 20px;
+            gap: 4px;
+            margin-bottom: 15px;
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 12px;
-            padding: 5px;
+            padding: 4px;
+            flex-wrap: wrap;
         }
 
         .tab-btn {
-            padding: 12px 30px;
+            padding: 10px 18px;
             border: none;
             border-radius: 8px;
             background: transparent;
             color: var(--text-secondary);
             font-weight: 600;
-            font-size: 14px;
+            font-size: 12px;
             cursor: pointer;
             transition: all 0.3s;
             flex: 1;
             text-align: center;
+            min-width: 80px;
         }
 
         .tab-btn:hover {
@@ -149,6 +156,8 @@
             color: #0a0e17;
         }
 
+        .tab-btn i { margin-right: 5px; }
+
         .tab-content {
             display: none;
         }
@@ -160,16 +169,16 @@
         /* STATS */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 10px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 8px;
+            margin-bottom: 15px;
         }
 
         .stat-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 12px 15px;
+            border-radius: 10px;
+            padding: 10px 12px;
             text-align: center;
             transition: all 0.3s;
         }
@@ -179,8 +188,8 @@
             transform: translateY(-2px);
         }
 
-        .stat-number { font-size: 24px; font-weight: 700; display: block; line-height: 1.2; }
-        .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin-top: 3px; }
+        .stat-number { font-size: 20px; font-weight: 700; display: block; line-height: 1.2; }
+        .stat-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin-top: 3px; }
 
         .stat-card.valid .stat-number { color: var(--success); }
         .stat-card.inbox .stat-number { color: var(--warning); }
@@ -191,20 +200,22 @@
         .stat-card.cpm .stat-number { color: var(--gold); }
         .stat-card.approved .stat-number { color: var(--success); }
         .stat-card.declined .stat-number { color: var(--danger); }
+        .stat-card.invalid .stat-number { color: var(--warning); }
+        .stat-card.pending .stat-number { color: var(--gold); }
 
         /* CARDS */
         .main-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
+            gap: 15px;
+            margin-bottom: 15px;
         }
 
         .card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 20px 22px;
+            border-radius: 12px;
+            padding: 15px 18px;
             backdrop-filter: blur(20px);
         }
 
@@ -212,25 +223,25 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
 
         .card-title {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             color: var(--accent);
             text-transform: uppercase;
             letter-spacing: 0.5px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
-        .card-title i { font-size: 15px; }
+        .card-title i { font-size: 14px; }
         .card-badge {
-            font-size: 11px;
-            padding: 4px 12px;
-            border-radius: 12px;
+            font-size: 10px;
+            padding: 3px 10px;
+            border-radius: 10px;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--border-color);
             color: var(--text-secondary);
@@ -239,8 +250,8 @@
         /* FILE UPLOAD */
         .file-upload-area {
             border: 2px dashed var(--border-color);
-            border-radius: 12px;
-            padding: 15px;
+            border-radius: 10px;
+            padding: 12px;
             text-align: center;
             transition: all 0.3s;
             cursor: pointer;
@@ -264,32 +275,32 @@
             cursor: pointer;
         }
 
-        .file-upload-area .upload-icon { font-size: 28px; color: var(--text-secondary); margin-bottom: 5px; }
-        .file-upload-area .upload-text { color: var(--text-secondary); font-size: 12px; }
+        .file-upload-area .upload-icon { font-size: 22px; color: var(--text-secondary); margin-bottom: 4px; }
+        .file-upload-area .upload-text { color: var(--text-secondary); font-size: 11px; }
         .file-upload-area .upload-text strong { color: var(--accent); }
 
         .file-info {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 6px 12px;
+            gap: 8px;
+            padding: 5px 10px;
             background: rgba(0, 212, 255, 0.08);
-            border-radius: 8px;
-            margin-top: 8px;
-            font-size: 12px;
+            border-radius: 6px;
+            margin-top: 6px;
+            font-size: 11px;
         }
 
         .file-info i { color: var(--success); }
         .file-info .file-name { color: var(--text-primary); font-weight: 500; }
-        .file-info .file-size { color: var(--text-secondary); margin-left: auto; font-size: 11px; }
+        .file-info .file-size { color: var(--text-secondary); margin-left: auto; font-size: 10px; }
 
         .btn-remove {
             background: var(--danger);
             border: none;
             color: #fff;
-            padding: 2px 10px;
-            border-radius: 6px;
-            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
             cursor: pointer;
         }
 
@@ -297,60 +308,60 @@
             width: 100%;
             background: rgba(10, 14, 23, 0.8);
             border: 1px solid var(--border-color);
-            border-radius: 10px;
+            border-radius: 8px;
             color: var(--text-primary);
-            padding: 10px 14px;
+            padding: 8px 12px;
             font-family: 'Consolas', 'Courier New', monospace;
-            font-size: 13px;
+            font-size: 12px;
             transition: border-color 0.3s;
             resize: vertical;
-            min-height: 90px;
+            min-height: 70px;
         }
 
         textarea:focus { outline: none; border-color: var(--accent); }
 
         .settings-row {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             flex-wrap: wrap;
             align-items: center;
         }
 
-        .settings-row label { font-size: 12px; color: var(--text-secondary); }
+        .settings-row label { font-size: 11px; color: var(--text-secondary); }
 
         .settings-row input[type="number"] {
-            width: 70px;
+            width: 60px;
             background: rgba(10, 14, 23, 0.8);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
+            border-radius: 6px;
             color: var(--text-primary);
-            padding: 6px 10px;
-            font-size: 13px;
+            padding: 5px 8px;
+            font-size: 12px;
         }
 
         .settings-row input[type="number"]:focus { outline: none; border-color: var(--accent); }
 
         .settings-row textarea.small {
-            min-height: 36px;
+            min-height: 30px;
             flex: 1;
-            font-size: 12px;
-            padding: 6px 10px;
+            font-size: 11px;
+            padding: 5px 8px;
         }
 
         /* BUTTONS */
         .btn {
-            padding: 10px 24px;
+            padding: 8px 18px;
             border: none;
-            border-radius: 10px;
+            border-radius: 8px;
             font-weight: 700;
-            font-size: 13px;
+            font-size: 12px;
             cursor: pointer;
             transition: all 0.3s;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .btn-primary {
@@ -381,38 +392,44 @@
         .btn-gold { background: var(--gold); color: #0a0e17; }
         .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255, 215, 0, 0.3); }
 
-        .btn-sm { padding: 5px 12px; font-size: 11px; }
+        .btn-cyan { background: var(--cyan); color: #0a0e17; }
+        .btn-cyan:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0, 212, 255, 0.3); }
+
+        .btn-orange { background: var(--orange); color: #fff; }
+        .btn-orange:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255, 107, 53, 0.3); }
+
+        .btn-sm { padding: 4px 10px; font-size: 10px; }
 
         .btn-group {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
-            margin: 10px 0;
+            margin: 8px 0;
         }
 
         /* PROGRESS */
-        .progress-container { margin: 12px 0 5px 0; }
+        .progress-container { margin: 10px 0 4px 0; }
 
         .progress-info {
             display: flex;
             justify-content: space-between;
-            font-size: 12px;
+            font-size: 11px;
             color: var(--text-secondary);
-            margin-bottom: 4px;
+            margin-bottom: 3px;
         }
 
         .progress-bar {
             width: 100%;
-            height: 5px;
+            height: 4px;
             background: var(--border-color);
-            border-radius: 4px;
+            border-radius: 3px;
             overflow: hidden;
         }
 
         .progress-bar .fill {
             height: 100%;
             background: linear-gradient(90deg, var(--accent), var(--success));
-            border-radius: 4px;
+            border-radius: 3px;
             transition: width 0.4s ease;
             width: 0%;
         }
@@ -420,17 +437,17 @@
         /* LOGS */
         .log-container {
             background: rgba(10, 14, 23, 0.9);
-            border-radius: 10px;
-            padding: 12px;
-            max-height: 260px;
+            border-radius: 8px;
+            padding: 10px;
+            max-height: 200px;
             overflow-y: auto;
             font-family: 'Consolas', 'Courier New', monospace;
-            font-size: 12px;
-            line-height: 1.8;
+            font-size: 11px;
+            line-height: 1.6;
             border: 1px solid var(--border-color);
         }
 
-        .log-container::-webkit-scrollbar { width: 6px; }
+        .log-container::-webkit-scrollbar { width: 4px; }
         .log-container::-webkit-scrollbar-track { background: rgba(10, 14, 23, 0.5); }
         .log-container::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
 
@@ -438,10 +455,10 @@
             padding: 2px 0;
             border-bottom: 1px solid rgba(26, 42, 68, 0.15);
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
 
-        .log-line .time { color: var(--text-secondary); min-width: 55px; font-size: 11px; }
+        .log-line .time { color: var(--text-secondary); min-width: 50px; font-size: 10px; }
         .log-line .message { word-break: break-all; }
         .log-line .message.success { color: var(--success); }
         .log-line .message.error { color: var(--danger); }
@@ -452,29 +469,29 @@
         .export-section {
             background: rgba(0, 212, 255, 0.05);
             border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 12px 15px;
-            margin-top: 10px;
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-top: 8px;
         }
 
         .export-section .title {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--text-secondary);
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .export-section .title i { color: var(--accent); }
 
         .file-list {
-            margin-top: 10px;
-            max-height: 120px;
+            margin-top: 8px;
+            max-height: 100px;
             overflow-y: auto;
         }
 
-        .file-list::-webkit-scrollbar { width: 4px; }
+        .file-list::-webkit-scrollbar { width: 3px; }
         .file-list::-webkit-scrollbar-track { background: rgba(10, 14, 23, 0.5); }
         .file-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
 
@@ -482,11 +499,11 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 4px 8px;
+            padding: 3px 6px;
             background: rgba(255, 255, 255, 0.03);
-            border-radius: 6px;
-            margin-bottom: 3px;
-            font-size: 12px;
+            border-radius: 4px;
+            margin-bottom: 2px;
+            font-size: 11px;
             cursor: pointer;
             transition: background 0.2s;
         }
@@ -494,14 +511,14 @@
         .file-item:hover { background: rgba(0, 212, 255, 0.08); }
 
         .file-item .name { color: var(--text-primary); font-family: monospace; }
-        .file-item .size { color: var(--text-secondary); font-size: 10px; }
+        .file-item .size { color: var(--text-secondary); font-size: 9px; }
         .file-item .download-btn {
             background: var(--success);
             border: none;
             color: #0a0e17;
-            padding: 2px 10px;
-            border-radius: 4px;
-            font-size: 10px;
+            padding: 1px 8px;
+            border-radius: 3px;
+            font-size: 9px;
             cursor: pointer;
             font-weight: 700;
         }
@@ -510,10 +527,10 @@
 
         .result-card {
             background: rgba(255, 255, 255, 0.03);
-            border-radius: 6px;
-            padding: 6px 10px;
-            margin-bottom: 4px;
-            font-size: 12px;
+            border-radius: 4px;
+            padding: 4px 8px;
+            margin-bottom: 3px;
+            font-size: 11px;
             font-family: monospace;
             border-left: 3px solid var(--text-secondary);
         }
@@ -522,6 +539,21 @@
         .result-card.declined { border-left-color: var(--danger); }
         .result-card.invalid { border-left-color: var(--warning); }
         .result-card.pending { border-left-color: var(--gold); }
+        .result-card.error { border-left-color: var(--red); }
+
+        .checker-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: 700;
+            margin-left: 5px;
+        }
+
+        .checker-badge.authorize { background: #ff6b35; color: #fff; }
+        .checker-badge.braintree { background: #00d4ff; color: #0a0e17; }
+        .checker-badge.stripe { background: #3742fa; color: #fff; }
+        .checker-badge.payflow { background: #2ed573; color: #0a0e17; }
 
         /* RESPONSIVE */
         @media (max-width: 1024px) { .main-grid { grid-template-columns: 1fr; } }
@@ -532,13 +564,14 @@
             .stats-grid { grid-template-columns: repeat(4, 1fr); }
             .settings-row { flex-direction: column; align-items: stretch; }
             .btn-group { justify-content: center; }
-            .tab-btn { font-size: 12px; padding: 10px 15px; }
+            .tab-btn { font-size: 10px; padding: 8px 10px; min-width: 60px; }
         }
 
         @media (max-width: 480px) {
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
-            .card { padding: 14px; }
-            .tab-btn { font-size: 10px; padding: 8px 10px; }
+            .card { padding: 12px; }
+            .tab-btn { font-size: 9px; padding: 6px 8px; min-width: 50px; }
+            .tab-btn i { margin-right: 3px; }
         }
     </style>
 </head>
@@ -547,10 +580,10 @@
         <!-- HEADER -->
         <header class="header">
             <div class="logo">
-                <div class="logo-icon">📧</div>
+                <div class="logo-icon">⚡</div>
                 <div class="logo-text">
                     <h1>Checker Pro</h1>
-                    <span>Microsoft & Authorize.net Validator</span>
+                    <span>5 Checkers en 1</span>
                 </div>
             </div>
             <div class="header-status">
@@ -558,7 +591,8 @@
                     <span class="status-dot ready" id="statusDot"></span>
                     <span id="statusText">Ready</span>
                 </div>
-                <span style="color:var(--text-secondary);font-size:12px;" id="uptimeText">● Online</span>
+                <span style="color:var(--text-secondary);font-size:11px;" id="uptimeText">● Online</span>
+                <span style="color:var(--text-secondary);font-size:10px;" id="seleniumStatus">🧪 Selenium: ✓</span>
             </div>
         </header>
 
@@ -571,19 +605,28 @@
             <div class="stat-card checked"><span class="stat-number" id="statChecked">0</span><span class="stat-label">📊 Checked</span></div>
             <div class="stat-card total"><span class="stat-number" id="statTotal">0</span><span class="stat-label">📦 Total</span></div>
             <div class="stat-card cpm"><span class="stat-number" id="statCPM">0</span><span class="stat-label">⚡ CPM</span></div>
+            <div class="stat-card approved"><span class="stat-number" id="statApproved">0</span><span class="stat-label">✅ Approved</span></div>
+            <div class="stat-card declined"><span class="stat-number" id="statDeclined">0</span><span class="stat-label">❌ Declined</span></div>
+            <div class="stat-card invalid"><span class="stat-number" id="statInvalid">0</span><span class="stat-label">⚠️ Invalid</span></div>
+            <div class="stat-card pending"><span class="stat-number" id="statPending">0</span><span class="stat-label">⏳ Pending</span></div>
         </div>
 
         <!-- TABS -->
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('email')"><i class="fas fa-envelope"></i> Email Checker</button>
-            <button class="tab-btn" onclick="switchTab('card')"><i class="fas fa-credit-card"></i> Authorize.net Checker</button>
+            <button class="tab-btn active" onclick="switchTab('email')"><i class="fas fa-envelope"></i> Email</button>
+            <button class="tab-btn" onclick="switchTab('authorize')"><i class="fas fa-credit-card"></i> Authorize</button>
+            <button class="tab-btn" onclick="switchTab('braintree')"><i class="fas fa-brain"></i> Braintree</button>
+            <button class="tab-btn" onclick="switchTab('stripe')"><i class="fas fa-bolt"></i> Stripe</button>
+            <button class="tab-btn" onclick="switchTab('payflow')"><i class="fas fa-money-bill-wave"></i> Payflow</button>
         </div>
 
+        <!-- ========================================================= -->
         <!-- TAB 1: EMAIL CHECKER -->
+        <!-- ========================================================= -->
         <div class="tab-content active" id="tabEmail">
             <div class="main-grid">
                 <div>
-                    <div class="card" style="margin-bottom:18px;">
+                    <div class="card" style="margin-bottom:12px;">
                         <div class="card-header">
                             <div class="card-title"><i class="fas fa-users"></i> Accounts</div>
                             <span class="card-badge" id="accountCount">0 loaded</span>
@@ -599,7 +642,7 @@
                                 <button class="btn-remove" onclick="clearAccounts()">✕</button>
                             </div>
                         </div>
-                        <textarea id="accountsInput" placeholder="email1:password1&#10;email2:password2" style="margin-top:8px;min-height:100px;"></textarea>
+                        <textarea id="accountsInput" placeholder="email1:password1&#10;email2:password2" style="margin-top:6px;min-height:70px;"></textarea>
                     </div>
                     <div class="card">
                         <div class="card-header">
@@ -617,19 +660,19 @@
                                 <button class="btn-remove" onclick="clearProxies()">✕</button>
                             </div>
                         </div>
-                        <textarea id="proxiesInput" placeholder="proxy1:8080&#10;proxy2:3128" style="margin-top:8px;min-height:50px;"></textarea>
+                        <textarea id="proxiesInput" placeholder="proxy1:8080&#10;proxy2:3128" style="margin-top:6px;min-height:40px;"></textarea>
                     </div>
                 </div>
                 <div>
-                    <div class="card" style="margin-bottom:18px;">
+                    <div class="card" style="margin-bottom:12px;">
                         <div class="card-header">
                             <div class="card-title"><i class="fas fa-sliders-h"></i> Controls</div>
                         </div>
-                        <div class="settings-row" style="margin-bottom:12px;">
+                        <div class="settings-row" style="margin-bottom:8px;">
                             <label>Threads:</label>
                             <input type="number" id="threadCount" value="50" min="1" max="200">
-                            <label style="margin-left:8px;">Keywords:</label>
-                            <textarea id="keywordsInput" class="small" style="min-height:36px;flex:1;font-size:12px;padding:6px 10px;" placeholder="Steam&#10;Netflix&#10;PayPal">Steam
+                            <label style="margin-left:6px;">Keywords:</label>
+                            <textarea id="keywordsInput" class="small" style="min-height:30px;flex:1;font-size:11px;padding:4px 8px;" placeholder="Steam&#10;Netflix&#10;PayPal">Steam
 Netflix
 PayPal
 Amazon
@@ -642,13 +685,13 @@ Security Alert</textarea>
                         </div>
                         <div class="export-section">
                             <div class="title"><i class="fas fa-download"></i> Export Results</div>
-                            <div class="btn-group" style="margin:5px 0;">
+                            <div class="btn-group" style="margin:4px 0;">
                                 <button class="btn btn-success btn-sm" onclick="downloadAll()"><i class="fas fa-file-archive"></i> All (ZIP)</button>
                                 <button class="btn btn-success btn-sm" onclick="downloadFile('inbox')"><i class="fas fa-inbox"></i> Inbox</button>
                                 <button class="btn btn-success btn-sm" onclick="downloadFile('valid')"><i class="fas fa-check-circle"></i> Valid</button>
                             </div>
                             <div class="file-list" id="fileList">
-                                <div style="color:var(--text-secondary);font-size:11px;text-align:center;padding:5px;">
+                                <div style="color:var(--text-secondary);font-size:10px;text-align:center;padding:4px;">
                                     <i class="fas fa-spinner fa-spin"></i> Loading files...
                                 </div>
                             </div>
@@ -674,68 +717,70 @@ Security Alert</textarea>
             </div>
         </div>
 
+        <!-- ========================================================= -->
         <!-- TAB 2: AUTHORIZE.NET CHECKER -->
-        <div class="tab-content" id="tabCard">
+        <!-- ========================================================= -->
+        <div class="tab-content" id="tabAuthorize">
             <div class="main-grid">
                 <div>
-                    <div class="card" style="margin-bottom:18px;">
+                    <div class="card" style="margin-bottom:12px;">
                         <div class="card-header">
-                            <div class="card-title"><i class="fas fa-credit-card"></i> Cards</div>
-                            <span class="card-badge" id="cardCount">0 loaded</span>
+                            <div class="card-title"><i class="fas fa-credit-card"></i> Cards <span class="checker-badge authorize">Authorize.net</span></div>
+                            <span class="card-badge" id="authCardCount">0 loaded</span>
                         </div>
-                        <div class="file-upload-area" id="cardDrop">
+                        <div class="file-upload-area" id="authCardDrop">
                             <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
                             <div class="upload-text"><strong>Click or drag</strong> to upload cards.txt</div>
-                            <input type="file" id="cardFileInput" accept=".txt">
-                            <div class="file-info" id="cardFileInfo" style="display:none;">
+                            <input type="file" id="authCardFileInput" accept=".txt">
+                            <div class="file-info" id="authCardFileInfo" style="display:none;">
                                 <i class="fas fa-check-circle"></i>
-                                <span class="file-name" id="cardFileName">cards.txt</span>
-                                <span class="file-size" id="cardFileSize">0 KB</span>
-                                <button class="btn-remove" onclick="clearCards()">✕</button>
+                                <span class="file-name" id="authCardFileName">cards.txt</span>
+                                <span class="file-size" id="authCardFileSize">0 KB</span>
+                                <button class="btn-remove" onclick="clearAuthCards()">✕</button>
                             </div>
                         </div>
-                        <textarea id="cardsInput" placeholder="4111111111111111|12|26|123&#10;5111111111111111|10|27|456" style="margin-top:8px;min-height:100px;"></textarea>
-                        <div style="font-size:11px;color:var(--text-secondary);margin-top:5px;">
-                            <i class="fas fa-info-circle"></i> Format: CC|MM|YY|CVV or CC|MM|YY|CVV|Name
+                        <textarea id="authCardsInput" placeholder="4111111111111111|12|26|123&#10;5111111111111111|10|27|456" style="margin-top:6px;min-height:70px;"></textarea>
+                        <div style="font-size:10px;color:var(--text-secondary);margin-top:4px;">
+                            <i class="fas fa-info-circle"></i> Format: CC|MM|YY|CVV
                         </div>
                     </div>
                     <div class="card">
                         <div class="card-header">
                             <div class="card-title"><i class="fas fa-shield-alt"></i> Proxies</div>
-                            <span class="card-badge" id="cardProxyCount">0 loaded</span>
+                            <span class="card-badge" id="authProxyCount">0 loaded</span>
                         </div>
-                        <div class="file-upload-area" id="cardProxyDrop">
+                        <div class="file-upload-area" id="authProxyDrop">
                             <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
                             <div class="upload-text"><strong>Click or drag</strong> to upload proxies.txt</div>
-                            <input type="file" id="cardProxyFileInput" accept=".txt">
-                            <div class="file-info" id="cardProxyFileInfo" style="display:none;">
+                            <input type="file" id="authProxyFileInput" accept=".txt">
+                            <div class="file-info" id="authProxyFileInfo" style="display:none;">
                                 <i class="fas fa-check-circle"></i>
-                                <span class="file-name" id="cardProxyFileName">proxies.txt</span>
-                                <span class="file-size" id="cardProxyFileSize">0 KB</span>
-                                <button class="btn-remove" onclick="clearCardProxies()">✕</button>
+                                <span class="file-name" id="authProxyFileName">proxies.txt</span>
+                                <span class="file-size" id="authProxyFileSize">0 KB</span>
+                                <button class="btn-remove" onclick="clearAuthProxies()">✕</button>
                             </div>
                         </div>
-                        <textarea id="cardProxiesInput" placeholder="proxy1:8080&#10;proxy2:3128" style="margin-top:8px;min-height:50px;"></textarea>
+                        <textarea id="authProxiesInput" placeholder="proxy1:8080&#10;proxy2:3128" style="margin-top:6px;min-height:40px;"></textarea>
                     </div>
                 </div>
                 <div>
-                    <div class="card" style="margin-bottom:18px;">
+                    <div class="card" style="margin-bottom:12px;">
                         <div class="card-header">
                             <div class="card-title"><i class="fas fa-sliders-h"></i> Card Controls</div>
                         </div>
-                        <div class="settings-row" style="margin-bottom:12px;">
+                        <div class="settings-row" style="margin-bottom:8px;">
                             <label>Threads:</label>
-                            <input type="number" id="cardThreadCount" value="5" min="1" max="20">
-                            <label style="margin-left:8px;color:var(--warning);"><i class="fas fa-exclamation-triangle"></i> Use fewer threads for Selenium</label>
+                            <input type="number" id="authThreadCount" value="3" min="1" max="10">
+                            <label style="margin-left:6px;color:var(--warning);font-size:10px;"><i class="fas fa-exclamation-triangle"></i> Use fewer threads</label>
                         </div>
                         <div class="btn-group">
-                            <button class="btn btn-gold" id="cardStartBtn" onclick="startCheck('card')"><i class="fas fa-play"></i> Check Cards</button>
-                            <button class="btn btn-danger" id="cardStopBtn" onclick="stopCheck()" disabled><i class="fas fa-stop"></i> Stop</button>
-                            <button class="btn btn-warning" onclick="clearCardResults()"><i class="fas fa-trash-alt"></i> Clear Results</button>
+                            <button class="btn btn-orange" id="authStartBtn" onclick="startCardCheck('authorize')"><i class="fas fa-play"></i> Check Cards</button>
+                            <button class="btn btn-danger" id="authStopBtn" onclick="stopCheck()" disabled><i class="fas fa-stop"></i> Stop</button>
+                            <button class="btn btn-warning" onclick="clearCardResults()"><i class="fas fa-trash-alt"></i> Clear</button>
                         </div>
                         <div class="export-section">
-                            <div class="title"><i class="fas fa-download"></i> Export Card Results</div>
-                            <div class="btn-group" style="margin:5px 0;">
+                            <div class="title"><i class="fas fa-download"></i> Export Results</div>
+                            <div class="btn-group" style="margin:4px 0;">
                                 <button class="btn btn-success btn-sm" onclick="downloadAll()"><i class="fas fa-file-archive"></i> All (ZIP)</button>
                                 <button class="btn btn-success btn-sm" onclick="downloadFile('approved')"><i class="fas fa-check-circle"></i> Approved</button>
                                 <button class="btn btn-danger btn-sm" onclick="downloadFile('declined')"><i class="fas fa-times-circle"></i> Declined</button>
@@ -743,24 +788,292 @@ Security Alert</textarea>
                         </div>
                         <div class="progress-container">
                             <div class="progress-info">
-                                <span id="cardProgressText">0 / 0</span>
-                                <span id="cardProgressPercent">0%</span>
+                                <span id="authProgressText">0 / 0</span>
+                                <span id="authProgressPercent">0%</span>
                             </div>
-                            <div class="progress-bar"><div class="fill" id="cardProgressFill"></div></div>
+                            <div class="progress-bar"><div class="fill" id="authProgressFill"></div></div>
                         </div>
                     </div>
                     <div class="card">
                         <div class="card-header">
-                            <div class="card-title"><i class="fas fa-list"></i> Card Results</div>
-                            <span class="card-badge" id="cardResultCount">0 results</span>
+                            <div class="card-title"><i class="fas fa-list"></i> Results</div>
+                            <span class="card-badge" id="authResultCount">0 results</span>
                         </div>
-                        <div class="log-container" id="cardResultsContainer" style="max-height:200px;">
+                        <div class="log-container" id="authResultsContainer" style="max-height:180px;">
                             <div class="log-line"><span class="time">●</span><span class="message info">No cards checked yet...</span></div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- ========================================================= -->
+        <!-- TAB 3: BRAINTREE CHECKER -->
+        <!-- ========================================================= -->
+        <div class="tab-content" id="tabBraintree">
+            <div class="main-grid">
+                <div>
+                    <div class="card" style="margin-bottom:12px;">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fas fa-brain"></i> Cards <span class="checker-badge braintree">Braintree</span></div>
+                            <span class="card-badge" id="btCardCount">0 loaded</span>
+                        </div>
+                        <div class="file-upload-area" id="btCardDrop">
+                            <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                            <div class="upload-text"><strong>Click or drag</strong> to upload cards.txt</div>
+                            <input type="file" id="btCardFileInput" accept=".txt">
+                            <div class="file-info" id="btCardFileInfo" style="display:none;">
+                                <i class="fas fa-check-circle"></i>
+                                <span class="file-name" id="btCardFileName">cards.txt</span>
+                                <span class="file-size" id="btCardFileSize">0 KB</span>
+                                <button class="btn-remove" onclick="clearBtCards()">✕</button>
+                            </div>
+                        </div>
+                        <textarea id="btCardsInput" placeholder="4111111111111111|12|26|123&#10;5111111111111111|10|27|456" style="margin-top:6px;min-height:70px;"></textarea>
+                        <div style="font-size:10px;color:var(--text-secondary);margin-top:4px;">
+                            <i class="fas fa-info-circle"></i> Format: CC|MM|YY|CVV
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fas fa-shield-alt"></i> Proxies</div>
+                            <span class="card-badge" id="btProxyCount">0 loaded</span>
+                        </div>
+                        <div class="file-upload-area" id="btProxyDrop">
+                            <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                            <div class="upload-text"><strong>Click or drag</strong> to upload proxies.txt</div>
+                            <input type="file" id="btProxyFileInput" accept=".txt">
+                            <div class="file-info" id="btProxyFileInfo" style="display:none;">
+                                <i class="fas fa-check-circle"></i>
+                                <span class="file-name" id="btProxyFileName">proxies.txt</span>
+                                <span class="file-size" id="btProxyFileSize">0 KB</span>
+                                <button class="btn-remove" onclick="clearBtProxies()">✕</button>
+                            </div>
+                        </div>
+                        <textarea id="btProxiesInput" placeholder="proxy1:8080&#10;proxy2:3128" style="margin-top:6px;min-height:40px;"></textarea>
+                    </div>
+                </div>
+                <div>
+                    <div class="card" style="margin-bottom:12px;">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fas fa-sliders-h"></i> Card Controls</div>
+                        </div>
+                        <div class="settings-row" style="margin-bottom:8px;">
+                            <label>Threads:</label>
+                            <input type="number" id="btThreadCount" value="5" min="1" max="15">
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-cyan" id="btStartBtn" onclick="startCardCheck('braintree')"><i class="fas fa-play"></i> Check Cards</button>
+                            <button class="btn btn-danger" id="btStopBtn" onclick="stopCheck()" disabled><i class="fas fa-stop"></i> Stop</button>
+                            <button class="btn btn-warning" onclick="clearCardResults()"><i class="fas fa-trash-alt"></i> Clear</button>
+                        </div>
+                        <div class="export-section">
+                            <div class="title"><i class="fas fa-download"></i> Export Results</div>
+                            <div class="btn-group" style="margin:4px 0;">
+                                <button class="btn btn-success btn-sm" onclick="downloadAll()"><i class="fas fa-file-archive"></i> All (ZIP)</button>
+                                <button class="btn btn-success btn-sm" onclick="downloadFile('approved')"><i class="fas fa-check-circle"></i> Approved</button>
+                                <button class="btn btn-danger btn-sm" onclick="downloadFile('declined')"><i class="fas fa-times-circle"></i> Declined</button>
+                            </div>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-info">
+                                <span id="btProgressText">0 / 0</span>
+                                <span id="btProgressPercent">0%</span>
+                            </div>
+                            <div class="progress-bar"><div class="fill" id="btProgressFill"></div></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fas fa-list"></i> Results</div>
+                            <span class="card-badge" id="btResultCount">0 results</span>
+                        </div>
+                        <div class="log-container" id="btResultsContainer" style="max-height:180px;">
+                            <div class="log-line"><span class="time">●</span><span class="message info">No cards checked yet...</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- TAB 4: STRIPE CHECKER -->
+        <!-- ========================================================= -->
+        <div class="tab-content" id="tabStripe">
+            <div class="main-grid">
+                <div>
+                    <div class="card" style="margin-bottom:12px;">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fas fa-bolt"></i> Cards <span class="checker-badge stripe">Stripe</span></div>
+                            <span class="card-badge" id="stripeCardCount">0 loaded</span>
+                        </div>
+                        <div class="file-upload-area" id="stripeCardDrop">
+                            <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                            <div class="upload-text"><strong>Click or drag</strong> to upload cards.txt</div>
+                            <input type="file" id="stripeCardFileInput" accept=".txt">
+                            <div class="file-info" id="stripeCardFileInfo" style="display:none;">
+                                <i class="fas fa-check-circle"></i>
+                                <span class="file-name" id="stripeCardFileName">cards.txt</span>
+                                <span class="file-size" id="stripeCardFileSize">0 KB</span>
+                                <button class="btn-remove" onclick="clearStripeCards()">✕</button>
+                            </div>
+                        </div>
+                        <textarea id="stripeCardsInput" placeholder="4111111111111111|12|26|123&#10;5111111111111111|10|27|456" style="margin-top:6px;min-height:70px;"></textarea>
+                        <div style="font-size:10px;color:var(--text-secondary);margin-top:4px;">
+                            <i class="fas fa-info-circle"></i> Format: CC|MM|YY|CVV
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fas fa-shield-alt"></i> Proxies</div>
+                            <span class="card-badge" id="stripeProxyCount">0 loaded</span>
+                        </div>
+                        <div class="file-upload-area" id="stripeProxyDrop">
+                            <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                            <div class="upload-text"><strong>Click or drag</strong> to upload proxies.txt</div>
+                            <input type="file" id="stripeProxyFileInput" accept=".txt">
+                            <div class="file-info" id="stripeProxyFileInfo" style="display:none;">
+                                <i class="fas fa-check-circle"></i>
+                                <span class="file-name" id="stripeProxyFileName">proxies.txt</span>
+                                <span class="file-size" id="stripeProxyFileSize">0 KB</span>
+                                <button class="btn-remove" onclick="clearStripeProxies()">✕</button>
+                            </div>
+                        </div>
+                        <textarea id="stripeProxiesInput" placeholder="proxy1:8080&#10;proxy2:3128" style="margin-top:6px;min-height:40px;"></textarea>
+                    </div>
+                </div>
+                <div>
+                    <div class="card" style="margin-bottom:12px;">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fas fa-sliders-h"></i> Card Controls</div>
+                        </div>
+                        <div class="settings-row" style="margin-bottom:8px;">
+                            <label>Threads:</label>
+                            <input type="number" id="stripeThreadCount" value="5" min="1" max="15">
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-blue" id="stripeStartBtn" onclick="startCardCheck('stripe')" style="background:#3742fa;color:#fff;"><i class="fas fa-play"></i> Check Cards</button>
+                            <button class="btn btn-danger" id="stripeStopBtn" onclick="stopCheck()" disabled><i class="fas fa-stop"></i> Stop</button>
+                            <button class="btn btn-warning" onclick="clearCardResults()"><i class="fas fa-trash-alt"></i> Clear</button>
+                        </div>
+                        <div class="export-section">
+                            <div class="title"><i class="fas fa-download"></i> Export Results</div>
+                            <div class="btn-group" style="margin:4px 0;">
+                                <button class="btn btn-success btn-sm" onclick="downloadAll()"><i class="fas fa-file-archive"></i> All (ZIP)</button>
+                                <button class="btn btn-success btn-sm" onclick="downloadFile('approved')"><i class="fas fa-check-circle"></i> Approved</button>
+                                <button class="btn btn-danger btn-sm" onclick="downloadFile('declined')"><i class="fas fa-times-circle"></i> Declined</button>
+                            </div>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-info">
+                                <span id="stripeProgressText">0 / 0</span>
+                                <span id="stripeProgressPercent">0%</span>
+                            </div>
+                            <div class="progress-bar"><div class="fill" id="stripeProgressFill"></div></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fas fa-list"></i> Results</div>
+                            <span class="card-badge" id="stripeResultCount">0 results</span>
+                        </div>
+                        <div class="log-container" id="stripeResultsContainer" style="max-height:180px;">
+                            <div class="log-line"><span class="time">●</span><span class="message info">No cards checked yet...</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- TAB 5: PAYFLOW CHECKER -->
+        <!-- ========================================================= -->
+        <div class="tab-content" id="tabPayflow">
+            <div class="main-grid">
+                <div>
+                    <div class="card" style="margin-bottom:12px;">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fas fa-money-bill-wave"></i> Cards <span class="checker-badge payflow">Payflow</span></div>
+                            <span class="card-badge" id="payflowCardCount">0 loaded</span>
+                        </div>
+                        <div class="file-upload-area" id="payflowCardDrop">
+                            <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                            <div class="upload-text"><strong>Click or drag</strong> to upload cards.txt</div>
+                            <input type="file" id="payflowCardFileInput" accept=".txt">
+                            <div class="file-info" id="payflowCardFileInfo" style="display:none;">
+                                <i class="fas fa-check-circle"></i>
+                                <span class="file-name" id="payflowCardFileName">cards.txt</span>
+                                <span class="file-size" id="payflowCardFileSize">0 KB</span>
+                                <button class="btn-remove" onclick="clearPayflowCards()">✕</button>
+                            </div>
+                        </div>
+                        <textarea id="payflowCardsInput" placeholder="4111111111111111|12|26|123&#10;5111111111111111|10|27|456" style="margin-top:6px;min-height:70px;"></textarea>
+                        <div style="font-size:10px;color:var(--text-secondary);margin-top:4px;">
+                            <i class="fas fa-info-circle"></i> Format: CC|MM|YY|CVV
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fas fa-shield-alt"></i> Proxies</div>
+                            <span class="card-badge" id="payflowProxyCount">0 loaded</span>
+                        </div>
+                        <div class="file-upload-area" id="payflowProxyDrop">
+                            <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                            <div class="upload-text"><strong>Click or drag</strong> to upload proxies.txt</div>
+                            <input type="file" id="payflowProxyFileInput" accept=".txt">
+                            <div class="file-info" id="payflowProxyFileInfo" style="display:none;">
+                                <i class="fas fa-check-circle"></i>
+                                <span class="file-name" id="payflowProxyFileName">proxies.txt</span>
+                                <span class="file-size" id="payflowProxyFileSize">0 KB</span>
+                                <button class="btn-remove" onclick="clearPayflowProxies()">✕</button>
+                            </div>
+                        </div>
+                        <textarea id="payflowProxiesInput" placeholder="proxy1:8080&#10;proxy2:3128" style="margin-top:6px;min-height:40px;"></textarea>
+                    </div>
+                </div>
+                <div>
+                    <div class="card" style="margin-bottom:12px;">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fas fa-sliders-h"></i> Card Controls</div>
+                        </div>
+                        <div class="settings-row" style="margin-bottom:8px;">
+                            <label>Threads:</label>
+                            <input type="number" id="payflowThreadCount" value="5" min="1" max="15">
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-success" id="payflowStartBtn" onclick="startCardCheck('payflow')"><i class="fas fa-play"></i> Check Cards</button>
+                            <button class="btn btn-danger" id="payflowStopBtn" onclick="stopCheck()" disabled><i class="fas fa-stop"></i> Stop</button>
+                            <button class="btn btn-warning" onclick="clearCardResults()"><i class="fas fa-trash-alt"></i> Clear</button>
+                        </div>
+                        <div class="export-section">
+                            <div class="title"><i class="fas fa-download"></i> Export Results</div>
+                            <div class="btn-group" style="margin:4px 0;">
+                                <button class="btn btn-success btn-sm" onclick="downloadAll()"><i class="fas fa-file-archive"></i> All (ZIP)</button>
+                                <button class="btn btn-success btn-sm" onclick="downloadFile('approved')"><i class="fas fa-check-circle"></i> Approved</button>
+                                <button class="btn btn-danger btn-sm" onclick="downloadFile('declined')"><i class="fas fa-times-circle"></i> Declined</button>
+                            </div>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-info">
+                                <span id="payflowProgressText">0 / 0</span>
+                                <span id="payflowProgressPercent">0%</span>
+                            </div>
+                            <div class="progress-bar"><div class="fill" id="payflowProgressFill"></div></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fas fa-list"></i> Results</div>
+                            <span class="card-badge" id="payflowResultCount">0 results</span>
+                        </div>
+                        <div class="log-container" id="payflowResultsContainer" style="max-height:180px;">
+                            <div class="log-line"><span class="time">●</span><span class="message info">No cards checked yet...</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -770,6 +1083,7 @@ Security Alert</textarea>
         let running = false;
         let updateInterval = null;
         let currentTab = 'email';
+        let currentCheckerType = 'email';
 
         // ============================================
         // DOM ELEMENTS
@@ -777,17 +1091,32 @@ Security Alert</textarea>
         const accountsInput = document.getElementById('accountsInput');
         const proxiesInput = document.getElementById('proxiesInput');
         const keywordsInput = document.getElementById('keywordsInput');
-        const cardsInput = document.getElementById('cardsInput');
-        const cardProxiesInput = document.getElementById('cardProxiesInput');
         const logContainer = document.getElementById('logContainer');
-        const cardResultsContainer = document.getElementById('cardResultsContainer');
         const startBtn = document.getElementById('startBtn');
         const stopBtn = document.getElementById('stopBtn');
-        const cardStartBtn = document.getElementById('cardStartBtn');
-        const cardStopBtn = document.getElementById('cardStopBtn');
         const statusText = document.getElementById('statusText');
         const statusDot = document.getElementById('statusDot');
         const fileList = document.getElementById('fileList');
+
+        // Auth elements
+        const authCardsInput = document.getElementById('authCardsInput');
+        const authProxiesInput = document.getElementById('authProxiesInput');
+        const authResultsContainer = document.getElementById('authResultsContainer');
+
+        // Braintree elements
+        const btCardsInput = document.getElementById('btCardsInput');
+        const btProxiesInput = document.getElementById('btProxiesInput');
+        const btResultsContainer = document.getElementById('btResultsContainer');
+
+        // Stripe elements
+        const stripeCardsInput = document.getElementById('stripeCardsInput');
+        const stripeProxiesInput = document.getElementById('stripeProxiesInput');
+        const stripeResultsContainer = document.getElementById('stripeResultsContainer');
+
+        // Payflow elements
+        const payflowCardsInput = document.getElementById('payflowCardsInput');
+        const payflowProxiesInput = document.getElementById('payflowProxiesInput');
+        const payflowResultsContainer = document.getElementById('payflowResultsContainer');
 
         // ============================================
         // TAB SWITCHING
@@ -797,13 +1126,16 @@ Security Alert</textarea>
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             
-            if (tab === 'email') {
-                document.querySelector('.tab-btn:first-child').classList.add('active');
-                document.getElementById('tabEmail').classList.add('active');
-            } else {
-                document.querySelector('.tab-btn:last-child').classList.add('active');
-                document.getElementById('tabCard').classList.add('active');
-            }
+            const tabMap = {
+                'email': 0,
+                'authorize': 1,
+                'braintree': 2,
+                'stripe': 3,
+                'payflow': 4
+            };
+            
+            document.querySelectorAll('.tab-btn')[tabMap[tab]].classList.add('active');
+            document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
         }
 
         // ============================================
@@ -869,27 +1201,6 @@ Security Alert</textarea>
             clearProxies
         );
 
-        // Card file uploads
-        setupFileUpload(
-            document.getElementById('cardFileInput'),
-            cardsInput,
-            document.getElementById('cardFileInfo'),
-            document.getElementById('cardFileName'),
-            document.getElementById('cardFileSize'),
-            document.getElementById('cardCount'),
-            clearCards
-        );
-
-        setupFileUpload(
-            document.getElementById('cardProxyFileInput'),
-            cardProxiesInput,
-            document.getElementById('cardProxyFileInfo'),
-            document.getElementById('cardProxyFileName'),
-            document.getElementById('cardProxyFileSize'),
-            document.getElementById('cardProxyCount'),
-            clearCardProxies
-        );
-
         function clearAccounts() {
             accountsInput.value = '';
             document.getElementById('accountFileInfo').style.display = 'none';
@@ -904,18 +1215,144 @@ Security Alert</textarea>
             document.getElementById('proxyFileInput').value = '';
         }
 
-        function clearCards() {
-            cardsInput.value = '';
-            document.getElementById('cardFileInfo').style.display = 'none';
-            document.getElementById('cardCount').textContent = '0 loaded';
-            document.getElementById('cardFileInput').value = '';
+        // Auth file uploads
+        setupFileUpload(
+            document.getElementById('authCardFileInput'),
+            authCardsInput,
+            document.getElementById('authCardFileInfo'),
+            document.getElementById('authCardFileName'),
+            document.getElementById('authCardFileSize'),
+            document.getElementById('authCardCount'),
+            clearAuthCards
+        );
+
+        setupFileUpload(
+            document.getElementById('authProxyFileInput'),
+            authProxiesInput,
+            document.getElementById('authProxyFileInfo'),
+            document.getElementById('authProxyFileName'),
+            document.getElementById('authProxyFileSize'),
+            document.getElementById('authProxyCount'),
+            clearAuthProxies
+        );
+
+        function clearAuthCards() {
+            authCardsInput.value = '';
+            document.getElementById('authCardFileInfo').style.display = 'none';
+            document.getElementById('authCardCount').textContent = '0 loaded';
+            document.getElementById('authCardFileInput').value = '';
         }
 
-        function clearCardProxies() {
-            cardProxiesInput.value = '';
-            document.getElementById('cardProxyFileInfo').style.display = 'none';
-            document.getElementById('cardProxyCount').textContent = '0 loaded';
-            document.getElementById('cardProxyFileInput').value = '';
+        function clearAuthProxies() {
+            authProxiesInput.value = '';
+            document.getElementById('authProxyFileInfo').style.display = 'none';
+            document.getElementById('authProxyCount').textContent = '0 loaded';
+            document.getElementById('authProxyFileInput').value = '';
+        }
+
+        // Braintree file uploads
+        setupFileUpload(
+            document.getElementById('btCardFileInput'),
+            btCardsInput,
+            document.getElementById('btCardFileInfo'),
+            document.getElementById('btCardFileName'),
+            document.getElementById('btCardFileSize'),
+            document.getElementById('btCardCount'),
+            clearBtCards
+        );
+
+        setupFileUpload(
+            document.getElementById('btProxyFileInput'),
+            btProxiesInput,
+            document.getElementById('btProxyFileInfo'),
+            document.getElementById('btProxyFileName'),
+            document.getElementById('btProxyFileSize'),
+            document.getElementById('btProxyCount'),
+            clearBtProxies
+        );
+
+        function clearBtCards() {
+            btCardsInput.value = '';
+            document.getElementById('btCardFileInfo').style.display = 'none';
+            document.getElementById('btCardCount').textContent = '0 loaded';
+            document.getElementById('btCardFileInput').value = '';
+        }
+
+        function clearBtProxies() {
+            btProxiesInput.value = '';
+            document.getElementById('btProxyFileInfo').style.display = 'none';
+            document.getElementById('btProxyCount').textContent = '0 loaded';
+            document.getElementById('btProxyFileInput').value = '';
+        }
+
+        // Stripe file uploads
+        setupFileUpload(
+            document.getElementById('stripeCardFileInput'),
+            stripeCardsInput,
+            document.getElementById('stripeCardFileInfo'),
+            document.getElementById('stripeCardFileName'),
+            document.getElementById('stripeCardFileSize'),
+            document.getElementById('stripeCardCount'),
+            clearStripeCards
+        );
+
+        setupFileUpload(
+            document.getElementById('stripeProxyFileInput'),
+            stripeProxiesInput,
+            document.getElementById('stripeProxyFileInfo'),
+            document.getElementById('stripeProxyFileName'),
+            document.getElementById('stripeProxyFileSize'),
+            document.getElementById('stripeProxyCount'),
+            clearStripeProxies
+        );
+
+        function clearStripeCards() {
+            stripeCardsInput.value = '';
+            document.getElementById('stripeCardFileInfo').style.display = 'none';
+            document.getElementById('stripeCardCount').textContent = '0 loaded';
+            document.getElementById('stripeCardFileInput').value = '';
+        }
+
+        function clearStripeProxies() {
+            stripeProxiesInput.value = '';
+            document.getElementById('stripeProxyFileInfo').style.display = 'none';
+            document.getElementById('stripeProxyCount').textContent = '0 loaded';
+            document.getElementById('stripeProxyFileInput').value = '';
+        }
+
+        // Payflow file uploads
+        setupFileUpload(
+            document.getElementById('payflowCardFileInput'),
+            payflowCardsInput,
+            document.getElementById('payflowCardFileInfo'),
+            document.getElementById('payflowCardFileName'),
+            document.getElementById('payflowCardFileSize'),
+            document.getElementById('payflowCardCount'),
+            clearPayflowCards
+        );
+
+        setupFileUpload(
+            document.getElementById('payflowProxyFileInput'),
+            payflowProxiesInput,
+            document.getElementById('payflowProxyFileInfo'),
+            document.getElementById('payflowProxyFileName'),
+            document.getElementById('payflowProxyFileSize'),
+            document.getElementById('payflowProxyCount'),
+            clearPayflowProxies
+        );
+
+        function clearPayflowCards() {
+            payflowCardsInput.value = '';
+            document.getElementById('payflowCardFileInfo').style.display = 'none';
+            document.getElementById('payflowCardCount').textContent = '0 loaded';
+            document.getElementById('payflowCardFileInput').value = '';
+        }
+
+        function clearPayflowProxies() {
+            payflowProxiesInput.value = '';
+            document.getElementById('payflowProxyFileInfo').style.display = 'none';
+            document.getElementById('payflowProxyCount').textContent = '0 loaded';
+            document.getElementById('payflowProxyFileInput').value = '';
         }
 
         // ============================================
@@ -936,7 +1373,7 @@ Security Alert</textarea>
         // ============================================
         // CARD RESULTS
         // ============================================
-        function addCardResult(card) {
+        function addCardResult(container, card) {
             const div = document.createElement('div');
             div.className = `result-card ${card.status.toLowerCase()}`;
             const time = new Date().toLocaleTimeString();
@@ -949,16 +1386,22 @@ Security Alert</textarea>
             };
             const icon = statusIcons[card.status] || '❓';
             div.innerHTML = `<span style="color:var(--text-secondary);font-size:10px;">${time}</span> ${icon} <strong>${card.card}</strong> | ${card.brand} | ${card.status} | ${card.reason}`;
-            cardResultsContainer.prepend(div);
-            if (cardResultsContainer.children.length > 100) {
-                cardResultsContainer.removeChild(cardResultsContainer.children[cardResultsContainer.children.length - 1]);
+            container.prepend(div);
+            if (container.children.length > 100) {
+                container.removeChild(container.children[container.children.length - 1]);
             }
-            document.getElementById('cardResultCount').textContent = cardResultsContainer.children.length + ' results';
         }
 
         function clearCardResults() {
-            cardResultsContainer.innerHTML = '<div class="log-line"><span class="time">●</span><span class="message info">Results cleared</span></div>';
-            document.getElementById('cardResultCount').textContent = '0 results';
+            const containers = [
+                authResultsContainer,
+                btResultsContainer,
+                stripeResultsContainer,
+                payflowResultsContainer
+            ];
+            containers.forEach(c => {
+                c.innerHTML = '<div class="log-line"><span class="time">●</span><span class="message info">Results cleared</span></div>';
+            });
         }
 
         // ============================================
@@ -972,17 +1415,37 @@ Security Alert</textarea>
             document.getElementById('statChecked').textContent = stats.checked || 0;
             document.getElementById('statTotal').textContent = stats.total || 0;
             document.getElementById('statCPM').textContent = stats.cpm || 0;
+            document.getElementById('statApproved').textContent = stats.approved || 0;
+            document.getElementById('statDeclined').textContent = stats.declined || 0;
+            document.getElementById('statInvalid').textContent = stats.invalid || 0;
+            document.getElementById('statPending').textContent = stats.pending || 0;
             
             const progress = stats.total > 0 ? (stats.checked / stats.total * 100) : 0;
+            
+            // Email progress
             document.getElementById('progressFill').style.width = Math.min(progress, 100) + '%';
             document.getElementById('progressText').textContent = `${stats.checked || 0} / ${stats.total || 0}`;
             document.getElementById('progressPercent').textContent = Math.min(progress, 100).toFixed(1) + '%';
             
-            // Card progress
-            const cardProgress = stats.total > 0 ? (stats.checked / stats.total * 100) : 0;
-            document.getElementById('cardProgressFill').style.width = Math.min(cardProgress, 100) + '%';
-            document.getElementById('cardProgressText').textContent = `${stats.checked || 0} / ${stats.total || 0}`;
-            document.getElementById('cardProgressPercent').textContent = Math.min(cardProgress, 100).toFixed(1) + '%';
+            // Auth progress
+            document.getElementById('authProgressFill').style.width = Math.min(progress, 100) + '%';
+            document.getElementById('authProgressText').textContent = `${stats.checked || 0} / ${stats.total || 0}`;
+            document.getElementById('authProgressPercent').textContent = Math.min(progress, 100).toFixed(1) + '%';
+            
+            // Braintree progress
+            document.getElementById('btProgressFill').style.width = Math.min(progress, 100) + '%';
+            document.getElementById('btProgressText').textContent = `${stats.checked || 0} / ${stats.total || 0}`;
+            document.getElementById('btProgressPercent').textContent = Math.min(progress, 100).toFixed(1) + '%';
+            
+            // Stripe progress
+            document.getElementById('stripeProgressFill').style.width = Math.min(progress, 100) + '%';
+            document.getElementById('stripeProgressText').textContent = `${stats.checked || 0} / ${stats.total || 0}`;
+            document.getElementById('stripeProgressPercent').textContent = Math.min(progress, 100).toFixed(1) + '%';
+            
+            // Payflow progress
+            document.getElementById('payflowProgressFill').style.width = Math.min(progress, 100) + '%';
+            document.getElementById('payflowProgressText').textContent = `${stats.checked || 0} / ${stats.total || 0}`;
+            document.getElementById('payflowProgressPercent').textContent = Math.min(progress, 100).toFixed(1) + '%';
         }
 
         // ============================================
@@ -991,57 +1454,31 @@ Security Alert</textarea>
         async function startCheck(type) {
             if (running) return;
 
-            let accounts, keywords, proxies, threads, cards;
+            const accounts = accountsInput.value;
+            const keywords = keywordsInput.value;
+            const proxies = proxiesInput.value;
+            const threads = parseInt(document.getElementById('threadCount').value) || 50;
 
-            if (type === 'email') {
-                accounts = accountsInput.value;
-                keywords = keywordsInput.value;
-                proxies = proxiesInput.value;
-                threads = parseInt(document.getElementById('threadCount').value) || 50;
-
-                if (!accounts.trim()) {
-                    addLog('⚠️ Please enter accounts or upload a file', 'warning');
-                    return;
-                }
-            } else {
-                cards = cardsInput.value;
-                proxies = cardProxiesInput.value;
-                threads = parseInt(document.getElementById('cardThreadCount').value) || 5;
-
-                if (!cards.trim()) {
-                    addLog('⚠️ Please enter cards or upload a file', 'warning');
-                    return;
-                }
+            if (!accounts.trim()) {
+                addLog('⚠️ Please enter accounts or upload a file', 'warning');
+                return;
             }
 
             running = true;
+            currentCheckerType = 'email';
             startBtn.disabled = true;
             stopBtn.disabled = false;
-            cardStartBtn.disabled = true;
-            cardStopBtn.disabled = false;
+            document.querySelectorAll('.tab-btn').forEach(b => b.disabled = true);
             statusDot.className = 'status-dot running';
             statusText.textContent = 'Running...';
 
-            addLog(`🚀 Starting ${type} check...`, 'info');
+            addLog('🚀 Starting email check...', 'info');
 
             try {
-                const payload = {
-                    type: type,
-                    proxies: proxies,
-                    threads: threads
-                };
-
-                if (type === 'email') {
-                    payload.accounts = accounts;
-                    payload.keywords = keywords;
-                } else {
-                    payload.cards = cards;
-                }
-
                 const response = await fetch('/api/start', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({ type: 'email', accounts, keywords, proxies, threads })
                 });
 
                 const data = await response.json();
@@ -1050,14 +1487,13 @@ Security Alert</textarea>
                     running = false;
                     startBtn.disabled = false;
                     stopBtn.disabled = true;
-                    cardStartBtn.disabled = false;
-                    cardStopBtn.disabled = true;
+                    document.querySelectorAll('.tab-btn').forEach(b => b.disabled = false);
                     statusDot.className = 'status-dot stopped';
                     statusText.textContent = 'Error';
                     return;
                 }
 
-                addLog(`✅ Started: ${data.total} items`, 'success');
+                addLog(`✅ Started: ${data.total} accounts`, 'success');
                 
                 if (updateInterval) clearInterval(updateInterval);
                 updateInterval = setInterval(fetchStatus, 1500);
@@ -1067,8 +1503,110 @@ Security Alert</textarea>
                 running = false;
                 startBtn.disabled = false;
                 stopBtn.disabled = true;
-                cardStartBtn.disabled = false;
-                cardStopBtn.disabled = true;
+                document.querySelectorAll('.tab-btn').forEach(b => b.disabled = false);
+                statusDot.className = 'status-dot stopped';
+                statusText.textContent = 'Error';
+            }
+        }
+
+        async function startCardCheck(checkerType) {
+            if (running) return;
+
+            let cardsInput, proxiesInput, threadCount, startBtnEl, stopBtnEl, resultsContainer;
+            
+            switch(checkerType) {
+                case 'authorize':
+                    cardsInput = authCardsInput;
+                    proxiesInput = authProxiesInput;
+                    threadCount = document.getElementById('authThreadCount');
+                    startBtnEl = document.getElementById('authStartBtn');
+                    stopBtnEl = document.getElementById('authStopBtn');
+                    resultsContainer = authResultsContainer;
+                    break;
+                case 'braintree':
+                    cardsInput = btCardsInput;
+                    proxiesInput = btProxiesInput;
+                    threadCount = document.getElementById('btThreadCount');
+                    startBtnEl = document.getElementById('btStartBtn');
+                    stopBtnEl = document.getElementById('btStopBtn');
+                    resultsContainer = btResultsContainer;
+                    break;
+                case 'stripe':
+                    cardsInput = stripeCardsInput;
+                    proxiesInput = stripeProxiesInput;
+                    threadCount = document.getElementById('stripeThreadCount');
+                    startBtnEl = document.getElementById('stripeStartBtn');
+                    stopBtnEl = document.getElementById('stripeStopBtn');
+                    resultsContainer = stripeResultsContainer;
+                    break;
+                case 'payflow':
+                    cardsInput = payflowCardsInput;
+                    proxiesInput = payflowProxiesInput;
+                    threadCount = document.getElementById('payflowThreadCount');
+                    startBtnEl = document.getElementById('payflowStartBtn');
+                    stopBtnEl = document.getElementById('payflowStopBtn');
+                    resultsContainer = payflowResultsContainer;
+                    break;
+                default:
+                    return;
+            }
+
+            const cards = cardsInput.value;
+            const proxies = proxiesInput.value;
+            const threads = parseInt(threadCount.value) || 3;
+
+            if (!cards.trim()) {
+                addLog('⚠️ Please enter cards or upload a file', 'warning');
+                return;
+            }
+
+            running = true;
+            currentCheckerType = checkerType;
+            startBtnEl.disabled = true;
+            stopBtnEl.disabled = false;
+            document.querySelectorAll('.tab-btn').forEach(b => b.disabled = true);
+            statusDot.className = 'status-dot running';
+            statusText.textContent = 'Running...';
+
+            const checkerNames = {
+                'authorize': 'Authorize.net',
+                'braintree': 'Braintree',
+                'stripe': 'Stripe',
+                'payflow': 'Payflow'
+            };
+
+            addLog(`🚀 Starting ${checkerNames[checkerType]} card check...`, 'info');
+
+            try {
+                const response = await fetch('/api/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'card', checker_type: checkerType, cards, proxies, threads })
+                });
+
+                const data = await response.json();
+                if (data.error) {
+                    addLog(`⚠️ ${data.error}`, 'error');
+                    running = false;
+                    startBtnEl.disabled = false;
+                    stopBtnEl.disabled = true;
+                    document.querySelectorAll('.tab-btn').forEach(b => b.disabled = false);
+                    statusDot.className = 'status-dot stopped';
+                    statusText.textContent = 'Error';
+                    return;
+                }
+
+                addLog(`✅ Started: ${data.total} cards`, 'success');
+                
+                if (updateInterval) clearInterval(updateInterval);
+                updateInterval = setInterval(fetchStatus, 1500);
+
+            } catch (error) {
+                addLog(`⚠️ Error: ${error.message}`, 'error');
+                running = false;
+                startBtnEl.disabled = false;
+                stopBtnEl.disabled = true;
+                document.querySelectorAll('.tab-btn').forEach(b => b.disabled = false);
                 statusDot.className = 'status-dot stopped';
                 statusText.textContent = 'Error';
             }
@@ -1101,8 +1639,15 @@ Security Alert</textarea>
                 
                 // Update card results
                 if (data.card_results && data.card_results.length > 0) {
+                    const containers = {
+                        'authorize': authResultsContainer,
+                        'braintree': btResultsContainer,
+                        'stripe': stripeResultsContainer,
+                        'payflow': payflowResultsContainer
+                    };
+                    const container = containers[data.current_checker] || authResultsContainer;
                     data.card_results.forEach(card => {
-                        addCardResult(card);
+                        addCardResult(container, card);
                     });
                 }
                 
@@ -1111,13 +1656,26 @@ Security Alert</textarea>
                     updateFileList(data.export_files);
                 }
                 
+                // Update selenium status
+                if (data.selenium_available !== undefined) {
+                    document.getElementById('seleniumStatus').textContent = `🧪 Selenium: ${data.selenium_available ? '✓' : '✗'}`;
+                    document.getElementById('seleniumStatus').style.color = data.selenium_available ? 'var(--success)' : 'var(--danger)';
+                }
+                
                 // Update status
                 if (!data.running && running) {
                     running = false;
-                    startBtn.disabled = false;
-                    stopBtn.disabled = true;
-                    cardStartBtn.disabled = false;
-                    cardStopBtn.disabled = true;
+                    document.getElementById('startBtn').disabled = false;
+                    document.getElementById('stopBtn').disabled = true;
+                    document.getElementById('authStartBtn').disabled = false;
+                    document.getElementById('authStopBtn').disabled = true;
+                    document.getElementById('btStartBtn').disabled = false;
+                    document.getElementById('btStopBtn').disabled = true;
+                    document.getElementById('stripeStartBtn').disabled = false;
+                    document.getElementById('stripeStopBtn').disabled = true;
+                    document.getElementById('payflowStartBtn').disabled = false;
+                    document.getElementById('payflowStopBtn').disabled = true;
+                    document.querySelectorAll('.tab-btn').forEach(b => b.disabled = false);
                     statusDot.className = 'status-dot stopped';
                     statusText.textContent = 'Stopped';
                     if (updateInterval) {
@@ -1129,10 +1687,17 @@ Security Alert</textarea>
                 
                 if (data.stats.total > 0 && data.stats.checked >= data.stats.total) {
                     running = false;
-                    startBtn.disabled = false;
-                    stopBtn.disabled = true;
-                    cardStartBtn.disabled = false;
-                    cardStopBtn.disabled = true;
+                    document.getElementById('startBtn').disabled = false;
+                    document.getElementById('stopBtn').disabled = true;
+                    document.getElementById('authStartBtn').disabled = false;
+                    document.getElementById('authStopBtn').disabled = true;
+                    document.getElementById('btStartBtn').disabled = false;
+                    document.getElementById('btStopBtn').disabled = true;
+                    document.getElementById('stripeStartBtn').disabled = false;
+                    document.getElementById('stripeStopBtn').disabled = true;
+                    document.getElementById('payflowStartBtn').disabled = false;
+                    document.getElementById('payflowStopBtn').disabled = true;
+                    document.querySelectorAll('.tab-btn').forEach(b => b.disabled = false);
                     statusDot.className = 'status-dot complete';
                     statusText.textContent = 'Complete';
                     if (updateInterval) {
@@ -1151,7 +1716,7 @@ Security Alert</textarea>
         // ============================================
         function updateFileList(files) {
             if (!files || files.length === 0) {
-                fileList.innerHTML = `<div style="color:var(--text-secondary);font-size:11px;text-align:center;padding:5px;">
+                fileList.innerHTML = `<div style="color:var(--text-secondary);font-size:10px;text-align:center;padding:4px;">
                     <i class="fas fa-info-circle"></i> No files available yet
                 </div>`;
                 return;
@@ -1162,12 +1727,11 @@ Security Alert</textarea>
                 const size = file.size > 1024 * 1024 
                     ? (file.size / (1024 * 1024)).toFixed(2) + ' MB'
                     : (file.size / 1024).toFixed(1) + ' KB';
-                const name = file.name;
                 html += `
                     <div class="file-item">
-                        <span class="name">${name}</span>
+                        <span class="name">${file.name}</span>
                         <span class="size">${size}</span>
-                        <button class="download-btn" onclick="downloadSpecificFile('${name}')">⬇️</button>
+                        <button class="download-btn" onclick="downloadSpecificFile('${file.name}')">⬇️</button>
                     </div>
                 `;
             });
@@ -1236,8 +1800,8 @@ Security Alert</textarea>
         // Load files on startup
         loadFiles();
 
-        addLog('🔧 Checker Pro ready', 'info');
-        addLog('💡 Switch tabs for Email or Card checker', 'info');
+        addLog('🔧 Checker Pro ready - 5 checkers available', 'info');
+        addLog('💡 Switch tabs for different checkers', 'info');
         addLog('📁 Drag & drop files supported', 'info');
         addLog('📤 Results are automatically saved', 'info');
     </script>
