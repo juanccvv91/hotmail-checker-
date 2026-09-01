@@ -2,3 +2,4 @@ flask==2.3.3
 flask-cors==4.0.0
 python-telegram-bot==20.7
 requests==2.31.0
+gunicorn==22.0.0
