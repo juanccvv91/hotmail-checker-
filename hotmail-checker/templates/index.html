@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checker Pro - 5 Checkers</title>
+    <title>Kick Bot Pro</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -22,11 +22,6 @@
             --purple: #a29bfe;
             --pink: #e056a0;
             --gold: #ffd700;
-            --cyan: #00d4ff;
-            --orange: #ff6b35;
-            --green: #2ed573;
-            --red: #ff4757;
-            --blue: #3742fa;
         }
 
         body {
@@ -37,9 +32,8 @@
             padding: 15px;
         }
 
-        .container { max-width: 1440px; margin: 0 auto; }
+        .container { max-width: 1200px; margin: 0 auto; }
 
-        /* HEADER */
         .header {
             display: flex;
             justify-content: space-between;
@@ -49,7 +43,6 @@
             border: 1px solid var(--border-color);
             border-radius: 12px;
             margin-bottom: 15px;
-            backdrop-filter: blur(20px);
             flex-wrap: wrap;
             gap: 10px;
         }
@@ -68,8 +61,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
-            font-weight: 900;
+            font-size: 20px;
             color: #fff;
         }
 
@@ -83,13 +75,6 @@
 
         .logo-text span { font-size: 11px; color: var(--text-secondary); }
 
-        .header-status {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
         .status-badge {
             display: flex;
             align-items: center;
@@ -98,7 +83,7 @@
             border-radius: 20px;
             font-size: 12px;
             font-weight: 600;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255,255,255,0.05);
             border: 1px solid var(--border-color);
         }
 
@@ -108,65 +93,123 @@
             border-radius: 50%;
             display: inline-block;
         }
-
         .status-dot.ready { background: var(--text-secondary); }
         .status-dot.running { background: var(--success); animation: pulse 1s infinite; }
         .status-dot.stopped { background: var(--danger); }
-        .status-dot.complete { background: var(--accent); }
 
         @keyframes pulse {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.5; transform: scale(0.9); }
         }
 
-        /* TABS */
-        .tabs {
-            display: flex;
-            gap: 4px;
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
             margin-bottom: 15px;
+        }
+
+        .card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 12px;
-            padding: 4px;
-            flex-wrap: wrap;
+            padding: 18px;
+            backdrop-filter: blur(20px);
         }
 
-        .tab-btn {
-            padding: 10px 18px;
+        .card-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title i { font-size: 14px; }
+
+        input, select, textarea {
+            width: 100%;
+            background: rgba(10, 14, 23, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            padding: 10px 14px;
+            font-size: 13px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .input-group input { flex: 1; }
+
+        .btn {
+            padding: 10px 20px;
             border: none;
             border-radius: 8px;
-            background: transparent;
-            color: var(--text-secondary);
-            font-weight: 600;
-            font-size: 12px;
+            font-weight: 700;
+            font-size: 13px;
             cursor: pointer;
             transition: all 0.3s;
-            flex: 1;
-            text-align: center;
-            min-width: 80px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .tab-btn:hover {
-            color: var(--text-primary);
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .tab-btn.active {
-            background: var(--accent);
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), #0088cc);
             color: #0a0e17;
         }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,212,255,0.3); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .tab-btn i { margin-right: 5px; }
+        .btn-success {
+            background: var(--success);
+            color: #0a0e17;
+        }
+        .btn-success:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(46,213,115,0.3); }
 
-        .tab-content {
-            display: none;
+        .btn-danger {
+            background: var(--danger);
+            color: #fff;
+        }
+        .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255,71,87,0.3); }
+
+        .btn-warning {
+            background: var(--warning);
+            color: #0a0e17;
+        }
+        .btn-warning:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255,165,2,0.3); }
+
+        .btn-purple {
+            background: var(--purple);
+            color: #0a0e17;
+        }
+        .btn-purple:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(162,155,254,0.3); }
+
+        .btn-sm { padding: 6px 14px; font-size: 11px; }
+
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
         }
 
-        .tab-content.active {
-            display: block;
-        }
-
-        /* STATS */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
@@ -178,268 +221,32 @@
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 10px;
-            padding: 10px 12px;
+            padding: 10px;
             text-align: center;
-            transition: all 0.3s;
         }
 
-        .stat-card:hover {
-            border-color: var(--accent);
-            transform: translateY(-2px);
-        }
-
-        .stat-number { font-size: 20px; font-weight: 700; display: block; line-height: 1.2; }
-        .stat-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin-top: 3px; }
-
-        .stat-card.valid .stat-number { color: var(--success); }
-        .stat-card.inbox .stat-number { color: var(--warning); }
-        .stat-card.fa .stat-number { color: var(--pink); }
-        .stat-card.bad .stat-number { color: var(--danger); }
-        .stat-card.checked .stat-number { color: var(--accent); }
-        .stat-card.total .stat-number { color: var(--purple); }
-        .stat-card.cpm .stat-number { color: var(--gold); }
-        .stat-card.approved .stat-number { color: var(--success); }
-        .stat-card.declined .stat-number { color: var(--danger); }
-        .stat-card.invalid .stat-number { color: var(--warning); }
-        .stat-card.pending .stat-number { color: var(--gold); }
-
-        /* CARDS */
-        .main-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 15px 18px;
-            backdrop-filter: blur(20px);
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .card-title {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--accent);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .card-title i { font-size: 14px; }
-        .card-badge {
-            font-size: 10px;
-            padding: 3px 10px;
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border-color);
-            color: var(--text-secondary);
-        }
-
-        /* FILE UPLOAD */
-        .file-upload-area {
-            border: 2px dashed var(--border-color);
-            border-radius: 10px;
-            padding: 12px;
-            text-align: center;
-            transition: all 0.3s;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .file-upload-area:hover {
-            border-color: var(--accent);
-            background: rgba(0, 212, 255, 0.03);
-        }
-
-        .file-upload-area.dragover {
-            border-color: var(--accent);
-            background: rgba(0, 212, 255, 0.08);
-        }
-
-        .file-upload-area input[type="file"] {
-            position: absolute;
-            inset: 0;
-            opacity: 0;
-            cursor: pointer;
-        }
-
-        .file-upload-area .upload-icon { font-size: 22px; color: var(--text-secondary); margin-bottom: 4px; }
-        .file-upload-area .upload-text { color: var(--text-secondary); font-size: 11px; }
-        .file-upload-area .upload-text strong { color: var(--accent); }
-
-        .file-info {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 5px 10px;
-            background: rgba(0, 212, 255, 0.08);
-            border-radius: 6px;
-            margin-top: 6px;
-            font-size: 11px;
-        }
-
-        .file-info i { color: var(--success); }
-        .file-info .file-name { color: var(--text-primary); font-weight: 500; }
-        .file-info .file-size { color: var(--text-secondary); margin-left: auto; font-size: 10px; }
-
-        .btn-remove {
-            background: var(--danger);
-            border: none;
-            color: #fff;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 10px;
-            cursor: pointer;
-        }
-
-        textarea {
-            width: 100%;
-            background: rgba(10, 14, 23, 0.8);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            color: var(--text-primary);
-            padding: 8px 12px;
-            font-family: 'Consolas', 'Courier New', monospace;
-            font-size: 12px;
-            transition: border-color 0.3s;
-            resize: vertical;
-            min-height: 70px;
-        }
-
-        textarea:focus { outline: none; border-color: var(--accent); }
-
-        .settings-row {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .settings-row label { font-size: 11px; color: var(--text-secondary); }
-
-        .settings-row input[type="number"] {
-            width: 60px;
-            background: rgba(10, 14, 23, 0.8);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            color: var(--text-primary);
-            padding: 5px 8px;
-            font-size: 12px;
-        }
-
-        .settings-row input[type="number"]:focus { outline: none; border-color: var(--accent); }
-
-        .settings-row textarea.small {
-            min-height: 30px;
-            flex: 1;
-            font-size: 11px;
-            padding: 5px 8px;
-        }
-
-        /* BUTTONS */
-        .btn {
-            padding: 8px 18px;
-            border: none;
-            border-radius: 8px;
+        .stat-number {
+            font-size: 22px;
             font-weight: 700;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.3s;
+            display: block;
+        }
+        .stat-label {
+            font-size: 9px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--accent), #0088cc);
-            color: #0a0e17;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(0, 212, 255, 0.3);
-        }
-
-        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-        .btn-danger { background: var(--danger); color: #fff; }
-        .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255, 71, 87, 0.3); }
-        .btn-danger:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-        .btn-success { background: var(--success); color: #0a0e17; }
-        .btn-success:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(46, 213, 115, 0.3); }
-
-        .btn-warning { background: var(--warning); color: #0a0e17; }
-        .btn-warning:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255, 165, 2, 0.3); }
-
-        .btn-purple { background: var(--purple); color: #0a0e17; }
-        .btn-purple:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(162, 155, 254, 0.3); }
-
-        .btn-gold { background: var(--gold); color: #0a0e17; }
-        .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255, 215, 0, 0.3); }
-
-        .btn-cyan { background: var(--cyan); color: #0a0e17; }
-        .btn-cyan:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0, 212, 255, 0.3); }
-
-        .btn-orange { background: var(--orange); color: #fff; }
-        .btn-orange:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255, 107, 53, 0.3); }
-
-        .btn-sm { padding: 4px 10px; font-size: 10px; }
-
-        .btn-group {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin: 8px 0;
-        }
-
-        /* PROGRESS */
-        .progress-container { margin: 10px 0 4px 0; }
-
-        .progress-info {
-            display: flex;
-            justify-content: space-between;
-            font-size: 11px;
             color: var(--text-secondary);
-            margin-bottom: 3px;
+            margin-top: 3px;
         }
+        .stat-card.viewers .stat-number { color: var(--success); }
+        .stat-card.connections .stat-number { color: var(--accent); }
+        .stat-card.target .stat-number { color: var(--gold); }
+        .stat-card.followers .stat-number { color: var(--purple); }
+        .stat-card.live .stat-number { color: var(--danger); }
 
-        .progress-bar {
-            width: 100%;
-            height: 4px;
-            background: var(--border-color);
-            border-radius: 3px;
-            overflow: hidden;
-        }
-
-        .progress-bar .fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--accent), var(--success));
-            border-radius: 3px;
-            transition: width 0.4s ease;
-            width: 0%;
-        }
-
-        /* LOGS */
         .log-container {
             background: rgba(10, 14, 23, 0.9);
             border-radius: 8px;
             padding: 10px;
-            max-height: 200px;
+            max-height: 300px;
             overflow-y: auto;
             font-family: 'Consolas', 'Courier New', monospace;
             font-size: 11px;
@@ -448,12 +255,12 @@
         }
 
         .log-container::-webkit-scrollbar { width: 4px; }
-        .log-container::-webkit-scrollbar-track { background: rgba(10, 14, 23, 0.5); }
+        .log-container::-webkit-scrollbar-track { background: rgba(10,14,23,0.5); }
         .log-container::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
 
         .log-line {
             padding: 2px 0;
-            border-bottom: 1px solid rgba(26, 42, 68, 0.15);
+            border-bottom: 1px solid rgba(26,42,68,0.15);
             display: flex;
             gap: 8px;
         }
@@ -465,113 +272,59 @@
         .log-line .message.warning { color: var(--warning); }
         .log-line .message.info { color: var(--text-secondary); }
 
-        /* EXPORT SECTION */
-        .export-section {
-            background: rgba(0, 212, 255, 0.05);
+        .channel-info {
+            background: rgba(0,212,255,0.05);
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            padding: 10px 12px;
-            margin-top: 8px;
+            padding: 12px;
+            margin-top: 10px;
         }
 
-        .export-section .title {
-            font-size: 11px;
-            color: var(--text-secondary);
-            margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .export-section .title i { color: var(--accent); }
-
-        .file-list {
-            margin-top: 8px;
-            max-height: 100px;
-            overflow-y: auto;
-        }
-
-        .file-list::-webkit-scrollbar { width: 3px; }
-        .file-list::-webkit-scrollbar-track { background: rgba(10, 14, 23, 0.5); }
-        .file-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
-
-        .file-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 3px 6px;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 4px;
-            margin-bottom: 2px;
-            font-size: 11px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .file-item:hover { background: rgba(0, 212, 255, 0.08); }
-
-        .file-item .name { color: var(--text-primary); font-family: monospace; }
-        .file-item .size { color: var(--text-secondary); font-size: 9px; }
-        .file-item .download-btn {
-            background: var(--success);
-            border: none;
-            color: #0a0e17;
-            padding: 1px 8px;
-            border-radius: 3px;
-            font-size: 9px;
-            cursor: pointer;
-            font-weight: 700;
-        }
-
-        .file-item .download-btn:hover { opacity: 0.8; }
-
-        .result-card {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 4px;
-            padding: 4px 8px;
-            margin-bottom: 3px;
-            font-size: 11px;
-            font-family: monospace;
-            border-left: 3px solid var(--text-secondary);
-        }
-
-        .result-card.approved { border-left-color: var(--success); }
-        .result-card.declined { border-left-color: var(--danger); }
-        .result-card.invalid { border-left-color: var(--warning); }
-        .result-card.pending { border-left-color: var(--gold); }
-        .result-card.error { border-left-color: var(--red); }
-
-        .checker-badge {
+        .channel-info .label { color: var(--text-secondary); font-size: 11px; }
+        .channel-info .value { color: var(--text-primary); font-size: 14px; font-weight: 600; }
+        .channel-info .live-tag {
             display: inline-block;
-            padding: 2px 8px;
+            padding: 2px 10px;
             border-radius: 4px;
-            font-size: 9px;
+            font-size: 11px;
             font-weight: 700;
-            margin-left: 5px;
+        }
+        .channel-info .live-tag.live { background: var(--danger); color: #fff; }
+        .channel-info .live-tag.offline { background: var(--text-secondary); color: #fff; }
+
+        .method-selector {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 8px 0;
         }
 
-        .checker-badge.authorize { background: #ff6b35; color: #fff; }
-        .checker-badge.braintree { background: #00d4ff; color: #0a0e17; }
-        .checker-badge.stripe { background: #3742fa; color: #fff; }
-        .checker-badge.payflow { background: #2ed573; color: #0a0e17; }
+        .method-selector label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s;
+        }
 
-        /* RESPONSIVE */
-        @media (max-width: 1024px) { .main-grid { grid-template-columns: 1fr; } }
+        .method-selector label:hover {
+            border-color: var(--accent);
+            background: rgba(0,212,255,0.05);
+        }
+
+        .method-selector input[type="radio"] {
+            width: auto;
+            accent-color: var(--accent);
+        }
 
         @media (max-width: 768px) {
+            .grid-2 { grid-template-columns: 1fr; }
             .header { flex-direction: column; align-items: stretch; text-align: center; }
-            .header-status { justify-content: center; }
-            .stats-grid { grid-template-columns: repeat(4, 1fr); }
-            .settings-row { flex-direction: column; align-items: stretch; }
-            .btn-group { justify-content: center; }
-            .tab-btn { font-size: 10px; padding: 8px 10px; min-width: 60px; }
-        }
-
-        @media (max-width: 480px) {
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
-            .card { padding: 12px; }
-            .tab-btn { font-size: 9px; padding: 6px 8px; min-width: 50px; }
-            .tab-btn i { margin-right: 3px; }
         }
     </style>
 </head>
@@ -580,500 +333,82 @@
         <!-- HEADER -->
         <header class="header">
             <div class="logo">
-                <div class="logo-icon">⚡</div>
+                <div class="logo-icon"><i class="fas fa-bolt"></i></div>
                 <div class="logo-text">
-                    <h1>Checker Pro</h1>
-                    <span>5 Checkers en 1</span>
+                    <h1>Kick Bot Pro</h1>
+                    <span>Channel Info + Viewers Injector</span>
                 </div>
             </div>
-            <div class="header-status">
-                <div class="status-badge">
-                    <span class="status-dot ready" id="statusDot"></span>
-                    <span id="statusText">Ready</span>
-                </div>
-                <span style="color:var(--text-secondary);font-size:11px;" id="uptimeText">● Online</span>
-                <span style="color:var(--text-secondary);font-size:10px;" id="seleniumStatus">🧪 Selenium: ✓</span>
+            <div class="status-badge">
+                <span class="status-dot ready" id="statusDot"></span>
+                <span id="statusText">Ready</span>
             </div>
         </header>
 
         <!-- STATS -->
-        <div class="stats-grid" id="statsGrid">
-            <div class="stat-card valid"><span class="stat-number" id="statValid">0</span><span class="stat-label">✅ Valid</span></div>
-            <div class="stat-card inbox"><span class="stat-number" id="statInbox">0</span><span class="stat-label">📬 Inbox</span></div>
-            <div class="stat-card fa"><span class="stat-number" id="stat2FA">0</span><span class="stat-label">🔐 2FA</span></div>
-            <div class="stat-card bad"><span class="stat-number" id="statBad">0</span><span class="stat-label">❌ Invalid</span></div>
-            <div class="stat-card checked"><span class="stat-number" id="statChecked">0</span><span class="stat-label">📊 Checked</span></div>
-            <div class="stat-card total"><span class="stat-number" id="statTotal">0</span><span class="stat-label">📦 Total</span></div>
-            <div class="stat-card cpm"><span class="stat-number" id="statCPM">0</span><span class="stat-label">⚡ CPM</span></div>
-            <div class="stat-card approved"><span class="stat-number" id="statApproved">0</span><span class="stat-label">✅ Approved</span></div>
-            <div class="stat-card declined"><span class="stat-number" id="statDeclined">0</span><span class="stat-label">❌ Declined</span></div>
-            <div class="stat-card invalid"><span class="stat-number" id="statInvalid">0</span><span class="stat-label">⚠️ Invalid</span></div>
-            <div class="stat-card pending"><span class="stat-number" id="statPending">0</span><span class="stat-label">⏳ Pending</span></div>
+        <div class="stats-grid">
+            <div class="stat-card viewers"><span class="stat-number" id="statViewers">0</span><span class="stat-label">📊 Viewers Inyectados</span></div>
+            <div class="stat-card connections"><span class="stat-number" id="statConnections">0</span><span class="stat-label">🔗 Conexiones Activas</span></div>
+            <div class="stat-card target"><span class="stat-number" id="statTarget">0</span><span class="stat-label">🎯 Objetivo</span></div>
+            <div class="stat-card followers"><span class="stat-number" id="statFollowers">0</span><span class="stat-label">👥 Seguidores</span></div>
+            <div class="stat-card live"><span class="stat-number" id="statLive">⚪</span><span class="stat-label">📡 Estado</span></div>
         </div>
 
-        <!-- TABS -->
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('email')"><i class="fas fa-envelope"></i> Email</button>
-            <button class="tab-btn" onclick="switchTab('authorize')"><i class="fas fa-credit-card"></i> Authorize</button>
-            <button class="tab-btn" onclick="switchTab('braintree')"><i class="fas fa-brain"></i> Braintree</button>
-            <button class="tab-btn" onclick="switchTab('stripe')"><i class="fas fa-bolt"></i> Stripe</button>
-            <button class="tab-btn" onclick="switchTab('payflow')"><i class="fas fa-money-bill-wave"></i> Payflow</button>
-        </div>
-
-        <!-- ========================================================= -->
-        <!-- TAB 1: EMAIL CHECKER -->
-        <!-- ========================================================= -->
-        <div class="tab-content active" id="tabEmail">
-            <div class="main-grid">
-                <div>
-                    <div class="card" style="margin-bottom:12px;">
-                        <div class="card-header">
-                            <div class="card-title"><i class="fas fa-users"></i> Accounts</div>
-                            <span class="card-badge" id="accountCount">0 loaded</span>
-                        </div>
-                        <div class="file-upload-area" id="accountDrop">
-                            <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                            <div class="upload-text"><strong>Click or drag</strong> to upload accounts.txt</div>
-                            <input type="file" id="accountFileInput" accept=".txt">
-                            <div class="file-info" id="accountFileInfo" style="display:none;">
-                                <i class="fas fa-check-circle"></i>
-                                <span class="file-name" id="accountFileName">accounts.txt</span>
-                                <span class="file-size" id="accountFileSize">0 KB</span>
-                                <button class="btn-remove" onclick="clearAccounts()">✕</button>
-                            </div>
-                        </div>
-                        <textarea id="accountsInput" placeholder="email1:password1&#10;email2:password2" style="margin-top:6px;min-height:70px;"></textarea>
+        <!-- MAIN GRID -->
+        <div class="grid-2">
+            <!-- LEFT COLUMN -->
+            <div>
+                <!-- CHANNEL INFO -->
+                <div class="card" style="margin-bottom:15px;">
+                    <div class="card-title"><i class="fas fa-search"></i> Información del Canal</div>
+                    <div class="input-group">
+                        <input type="text" id="channelInput" placeholder="Nombre del canal (ej: xqc)" value="xqc">
+                        <button class="btn btn-primary" onclick="getChannelInfo()"><i class="fas fa-search"></i> Buscar</button>
                     </div>
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title"><i class="fas fa-shield-alt"></i> Proxies</div>
-                            <span class="card-badge" id="proxyCount">0 loaded</span>
+                    <div id="channelInfoContainer">
+                        <div style="color:var(--text-secondary);font-size:12px;text-align:center;padding:10px;">
+                            <i class="fas fa-info-circle"></i> Ingresa un canal para ver su información
                         </div>
-                        <div class="file-upload-area" id="proxyDrop">
-                            <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                            <div class="upload-text"><strong>Click or drag</strong> to upload proxies.txt</div>
-                            <input type="file" id="proxyFileInput" accept=".txt">
-                            <div class="file-info" id="proxyFileInfo" style="display:none;">
-                                <i class="fas fa-check-circle"></i>
-                                <span class="file-name" id="proxyFileName">proxies.txt</span>
-                                <span class="file-size" id="proxyFileSize">0 KB</span>
-                                <button class="btn-remove" onclick="clearProxies()">✕</button>
-                            </div>
-                        </div>
-                        <textarea id="proxiesInput" placeholder="proxy1:8080&#10;proxy2:3128" style="margin-top:6px;min-height:40px;"></textarea>
                     </div>
                 </div>
-                <div>
-                    <div class="card" style="margin-bottom:12px;">
-                        <div class="card-header">
-                            <div class="card-title"><i class="fas fa-sliders-h"></i> Controls</div>
-                        </div>
-                        <div class="settings-row" style="margin-bottom:8px;">
-                            <label>Threads:</label>
-                            <input type="number" id="threadCount" value="50" min="1" max="200">
-                            <label style="margin-left:6px;">Keywords:</label>
-                            <textarea id="keywordsInput" class="small" style="min-height:30px;flex:1;font-size:11px;padding:4px 8px;" placeholder="Steam&#10;Netflix&#10;PayPal">Steam
-Netflix
-PayPal
-Amazon
-Security Alert</textarea>
-                        </div>
-                        <div class="btn-group">
-                            <button class="btn btn-primary" id="startBtn" onclick="startCheck('email')"><i class="fas fa-play"></i> Start</button>
-                            <button class="btn btn-danger" id="stopBtn" onclick="stopCheck()" disabled><i class="fas fa-stop"></i> Stop</button>
-                            <button class="btn btn-warning" onclick="clearLogs()"><i class="fas fa-trash-alt"></i> Clear</button>
-                        </div>
-                        <div class="export-section">
-                            <div class="title"><i class="fas fa-download"></i> Export Results</div>
-                            <div class="btn-group" style="margin:4px 0;">
-                                <button class="btn btn-success btn-sm" onclick="downloadAll()"><i class="fas fa-file-archive"></i> All (ZIP)</button>
-                                <button class="btn btn-success btn-sm" onclick="downloadFile('inbox')"><i class="fas fa-inbox"></i> Inbox</button>
-                                <button class="btn btn-success btn-sm" onclick="downloadFile('valid')"><i class="fas fa-check-circle"></i> Valid</button>
-                            </div>
-                            <div class="file-list" id="fileList">
-                                <div style="color:var(--text-secondary);font-size:10px;text-align:center;padding:4px;">
-                                    <i class="fas fa-spinner fa-spin"></i> Loading files...
-                                </div>
-                            </div>
-                        </div>
-                        <div class="progress-container">
-                            <div class="progress-info">
-                                <span id="progressText">0 / 0</span>
-                                <span id="progressPercent">0%</span>
-                            </div>
-                            <div class="progress-bar"><div class="fill" id="progressFill"></div></div>
-                        </div>
+
+                <!-- VIEWERS INJECTOR -->
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-rocket"></i> Inyección de Viewers</div>
+                    
+                    <div class="input-group">
+                        <input type="text" id="viewerChannel" placeholder="Canal objetivo" value="xqc">
+                        <input type="number" id="viewerCount" placeholder="Cantidad" value="10" min="1" max="10000" style="width:100px;">
                     </div>
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title"><i class="fas fa-terminal"></i> Live Log</div>
-                            <span class="card-badge" id="logCount">0 entries</span>
-                        </div>
-                        <div class="log-container" id="logContainer">
-                            <div class="log-line"><span class="time">●</span><span class="message info">Ready to check accounts...</span></div>
+
+                    <div class="method-selector">
+                        <label><input type="radio" name="method" value="websocket" checked> WebSocket</label>
+                        <label><input type="radio" name="method" value="requests"> HTTP</label>
+                        <label><input type="radio" name="method" value="proxy_websocket"> Proxy + WS</label>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-success" id="startBtn" onclick="startViewers()"><i class="fas fa-play"></i> Iniciar</button>
+                        <button class="btn btn-danger" id="stopBtn" onclick="stopViewers()" disabled><i class="fas fa-stop"></i> Detener</button>
+                        <button class="btn btn-warning" onclick="clearLogs()"><i class="fas fa-trash-alt"></i> Limpiar Logs</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN -->
+            <div>
+                <!-- LOGS -->
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-terminal"></i> Logs <span id="logCount" style="font-size:10px;color:var(--text-secondary);">0 entradas</span></div>
+                    <div class="log-container" id="logContainer">
+                        <div class="log-line">
+                            <span class="time">●</span>
+                            <span class="message info">Sistema listo para usar</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- ========================================================= -->
-        <!-- TAB 2: AUTHORIZE.NET CHECKER -->
-        <!-- ========================================================= -->
-        <div class="tab-content" id="tabAuthorize">
-            <div class="main-grid">
-                <div>
-                    <div class="card" style="margin-bottom:12px;">
-                        <div class="card-header">
-                            <div class="card-title"><i class="fas fa-credit-card"></i> Cards <span class="checker-badge authorize">Authorize.net</span></div>
-                            <span class="card-badge" id="authCardCount">0 loaded</span>
-                        </div>
-                        <div class="file-upload-area" id="authCardDrop">
-                            <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                            <div class="upload-text"><strong>Click or drag</strong> to upload cards.txt</div>
-                            <input type="file" id="authCardFileInput" accept=".txt">
-                            <div class="file-info" id="authCardFileInfo" style="display:none;">
-                                <i class="fas fa-check-circle"></i>
-                                <span class="file-name" id="authCardFileName">cards.txt</span>
-                                <span class="file-size" id="authCardFileSize">0 KB</span>
-                                <button class="btn-remove" onclick="clearAuthCards()">✕</button>
-                            </div>
-                        </div>
-                        <textarea id="authCardsInput" placeholder="4111111111111111|12|26|123&#10;5111111111111111|10|27|456" style="margin-top:6px;min-height:70px;"></textarea>
-                        <div style="font-size:10px;color:var(--text-secondary);margin-top:4px;">
-                            <i class="fas fa-info-circle"></i> Format: CC|MM|YY|CVV
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title"><i class="fas fa-shield-alt"></i> Proxies</div>
-                            <span class="card-badge" id="authProxyCount">0 loaded</span>
-                        </div>
-                        <div class="file-upload-area" id="authProxyDrop">
-                            <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                            <div class="upload-text"><strong>Click or drag</strong> to upload proxies.txt</div>
-                            <input type="file" id="authProxyFileInput" accept=".txt">
-                            <div class="file-info" id="authProxyFileInfo" style="display:none;">
-                                <i class="fas fa-check-circle"></i>
-                                <span class="file-name" id="authProxyFileName">proxies.txt</span>
-                                <span class="file-size" id="authProxyFileSize">0 KB</span>
-                                <button class="btn-remove" onclick="clearAuthProxies()">✕</button>
-                            </div>
-                        </div>
-                        <textarea id="authProxiesInput" placeholder="proxy1:8080&#10;proxy2:3128" style="margin-top:6px;min-height:40px;"></textarea>
-                    </div>
-                </div>
-                <div>
-                    <div class="card" style="margin-bottom:12px;">
-                        <div class="card-header">
-                            <div class="card-title"><i class="fas fa-sliders-h"></i> Card Controls</div>
-                        </div>
-                        <div class="settings-row" style="margin-bottom:8px;">
-                            <label>Threads:</label>
-                            <input type="number" id="authThreadCount" value="3" min="1" max="10">
-                            <label style="margin-left:6px;color:var(--warning);font-size:10px;"><i class="fas fa-exclamation-triangle"></i> Use fewer threads</label>
-                        </div>
-                        <div class="btn-group">
-                            <button class="btn btn-orange" id="authStartBtn" onclick="startCardCheck('authorize')"><i class="fas fa-play"></i> Check Cards</button>
-                            <button class="btn btn-danger" id="authStopBtn" onclick="stopCheck()" disabled><i class="fas fa-stop"></i> Stop</button>
-                            <button class="btn btn-warning" onclick="clearCardResults()"><i class="fas fa-trash-alt"></i> Clear</button>
-                        </div>
-                        <div class="export-section">
-                            <div class="title"><i class="fas fa-download"></i> Export Results</div>
-                            <div class="btn-group" style="margin:4px 0;">
-                                <button class="btn btn-success btn-sm" onclick="downloadAll()"><i class="fas fa-file-archive"></i> All (ZIP)</button>
-                                <button class="btn btn-success btn-sm" onclick="downloadFile('approved')"><i class="fas fa-check-circle"></i> Approved</button>
-                                <button class="btn btn-danger btn-sm" onclick="downloadFile('declined')"><i class="fas fa-times-circle"></i> Declined</button>
-                            </div>
-                        </div>
-                        <div class="progress-container">
-                            <div class="progress-info">
-                                <span id="authProgressText">0 / 0</span>
-                                <span id="authProgressPercent">0%</span>
-                            </div>
-                            <div class="progress-bar"><div class="fill" id="authProgressFill"></div></div>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title"><i class="fas fa-list"></i> Results</div>
-                            <span class="card-badge" id="authResultCount">0 results</span>
-                        </div>
-                        <div class="log-container" id="authResultsContainer" style="max-height:180px;">
-                            <div class="log-line"><span class="time">●</span><span class="message info">No cards checked yet...</span></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ========================================================= -->
-        <!-- TAB 3: BRAINTREE CHECKER -->
-        <!-- ========================================================= -->
-        <div class="tab-content" id="tabBraintree">
-            <div class="main-grid">
-                <div>
-                    <div class="card" style="margin-bottom:12px;">
-                        <div class="card-header">
-                            <div class="card-title"><i class="fas fa-brain"></i> Cards <span class="checker-badge braintree">Braintree</span></div>
-                            <span class="card-badge" id="btCardCount">0 loaded</span>
-                        </div>
-                        <div class="file-upload-area" id="btCardDrop">
-                            <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                            <div class="upload-text"><strong>Click or drag</strong> to upload cards.txt</div>
-                            <input type="file" id="btCardFileInput" accept=".txt">
-                            <div class="file-info" id="btCardFileInfo" style="display:none;">
-                                <i class="fas fa-check-circle"></i>
-                                <span class="file-name" id="btCardFileName">cards.txt</span>
-                                <span class="file-size" id="btCardFileSize">0 KB</span>
-                                <button class="btn-remove" onclick="clearBtCards()">✕</button>
-                            </div>
-                        </div>
-                        <textarea id="btCardsInput" placeholder="4111111111111111|12|26|123&#10;5111111111111111|10|27|456" style="margin-top:6px;min-height:70px;"></textarea>
-                        <div style="font-size:10px;color:var(--text-secondary);margin-top:4px;">
-                            <i class="fas fa-info-circle"></i> Format: CC|MM|YY|CVV
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title"><i class="fas fa-shield-alt"></i> Proxies</div>
-                            <span class="card-badge" id="btProxyCount">0 loaded</span>
-                        </div>
-                        <div class="file-upload-area" id="btProxyDrop">
-                            <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                            <div class="upload-text"><strong>Click or drag</strong> to upload proxies.txt</div>
-                            <input type="file" id="btProxyFileInput" accept=".txt">
-                            <div class="file-info" id="btProxyFileInfo" style="display:none;">
-                                <i class="fas fa-check-circle"></i>
-                                <span class="file-name" id="btProxyFileName">proxies.txt</span>
-                                <span class="file-size" id="btProxyFileSize">0 KB</span>
-                                <button class="btn-remove" onclick="clearBtProxies()">✕</button>
-                            </div>
-                        </div>
-                        <textarea id="btProxiesInput" placeholder="proxy1:8080&#10;proxy2:3128" style="margin-top:6px;min-height:40px;"></textarea>
-                    </div>
-                </div>
-                <div>
-                    <div class="card" style="margin-bottom:12px;">
-                        <div class="card-header">
-                            <div class="card-title"><i class="fas fa-sliders-h"></i> Card Controls</div>
-                        </div>
-                        <div class="settings-row" style="margin-bottom:8px;">
-                            <label>Threads:</label>
-                            <input type="number" id="btThreadCount" value="5" min="1" max="15">
-                        </div>
-                        <div class="btn-group">
-                            <button class="btn btn-cyan" id="btStartBtn" onclick="startCardCheck('braintree')"><i class="fas fa-play"></i> Check Cards</button>
-                            <button class="btn btn-danger" id="btStopBtn" onclick="stopCheck()" disabled><i class="fas fa-stop"></i> Stop</button>
-                            <button class="btn btn-warning" onclick="clearCardResults()"><i class="fas fa-trash-alt"></i> Clear</button>
-                        </div>
-                        <div class="export-section">
-                            <div class="title"><i class="fas fa-download"></i> Export Results</div>
-                            <div class="btn-group" style="margin:4px 0;">
-                                <button class="btn btn-success btn-sm" onclick="downloadAll()"><i class="fas fa-file-archive"></i> All (ZIP)</button>
-                                <button class="btn btn-success btn-sm" onclick="downloadFile('approved')"><i class="fas fa-check-circle"></i> Approved</button>
-                                <button class="btn btn-danger btn-sm" onclick="downloadFile('declined')"><i class="fas fa-times-circle"></i> Declined</button>
-                            </div>
-                        </div>
-                        <div class="progress-container">
-                            <div class="progress-info">
-                                <span id="btProgressText">0 / 0</span>
-                                <span id="btProgressPercent">0%</span>
-                            </div>
-                            <div class="progress-bar"><div class="fill" id="btProgressFill"></div></div>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title"><i class="fas fa-list"></i> Results</div>
-                            <span class="card-badge" id="btResultCount">0 results</span>
-                        </div>
-                        <div class="log-container" id="btResultsContainer" style="max-height:180px;">
-                            <div class="log-line"><span class="time">●</span><span class="message info">No cards checked yet...</span></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ========================================================= -->
-        <!-- TAB 4: STRIPE CHECKER -->
-        <!-- ========================================================= -->
-        <div class="tab-content" id="tabStripe">
-            <div class="main-grid">
-                <div>
-                    <div class="card" style="margin-bottom:12px;">
-                        <div class="card-header">
-                            <div class="card-title"><i class="fas fa-bolt"></i> Cards <span class="checker-badge stripe">Stripe</span></div>
-                            <span class="card-badge" id="stripeCardCount">0 loaded</span>
-                        </div>
-                        <div class="file-upload-area" id="stripeCardDrop">
-                            <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                            <div class="upload-text"><strong>Click or drag</strong> to upload cards.txt</div>
-                            <input type="file" id="stripeCardFileInput" accept=".txt">
-                            <div class="file-info" id="stripeCardFileInfo" style="display:none;">
-                                <i class="fas fa-check-circle"></i>
-                                <span class="file-name" id="stripeCardFileName">cards.txt</span>
-                                <span class="file-size" id="stripeCardFileSize">0 KB</span>
-                                <button class="btn-remove" onclick="clearStripeCards()">✕</button>
-                            </div>
-                        </div>
-                        <textarea id="stripeCardsInput" placeholder="4111111111111111|12|26|123&#10;5111111111111111|10|27|456" style="margin-top:6px;min-height:70px;"></textarea>
-                        <div style="font-size:10px;color:var(--text-secondary);margin-top:4px;">
-                            <i class="fas fa-info-circle"></i> Format: CC|MM|YY|CVV
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title"><i class="fas fa-shield-alt"></i> Proxies</div>
-                            <span class="card-badge" id="stripeProxyCount">0 loaded</span>
-                        </div>
-                        <div class="file-upload-area" id="stripeProxyDrop">
-                            <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                            <div class="upload-text"><strong>Click or drag</strong> to upload proxies.txt</div>
-                            <input type="file" id="stripeProxyFileInput" accept=".txt">
-                            <div class="file-info" id="stripeProxyFileInfo" style="display:none;">
-                                <i class="fas fa-check-circle"></i>
-                                <span class="file-name" id="stripeProxyFileName">proxies.txt</span>
-                                <span class="file-size" id="stripeProxyFileSize">0 KB</span>
-                                <button class="btn-remove" onclick="clearStripeProxies()">✕</button>
-                            </div>
-                        </div>
-                        <textarea id="stripeProxiesInput" placeholder="proxy1:8080&#10;proxy2:3128" style="margin-top:6px;min-height:40px;"></textarea>
-                    </div>
-                </div>
-                <div>
-                    <div class="card" style="margin-bottom:12px;">
-                        <div class="card-header">
-                            <div class="card-title"><i class="fas fa-sliders-h"></i> Card Controls</div>
-                        </div>
-                        <div class="settings-row" style="margin-bottom:8px;">
-                            <label>Threads:</label>
-                            <input type="number" id="stripeThreadCount" value="5" min="1" max="15">
-                        </div>
-                        <div class="btn-group">
-                            <button class="btn btn-blue" id="stripeStartBtn" onclick="startCardCheck('stripe')" style="background:#3742fa;color:#fff;"><i class="fas fa-play"></i> Check Cards</button>
-                            <button class="btn btn-danger" id="stripeStopBtn" onclick="stopCheck()" disabled><i class="fas fa-stop"></i> Stop</button>
-                            <button class="btn btn-warning" onclick="clearCardResults()"><i class="fas fa-trash-alt"></i> Clear</button>
-                        </div>
-                        <div class="export-section">
-                            <div class="title"><i class="fas fa-download"></i> Export Results</div>
-                            <div class="btn-group" style="margin:4px 0;">
-                                <button class="btn btn-success btn-sm" onclick="downloadAll()"><i class="fas fa-file-archive"></i> All (ZIP)</button>
-                                <button class="btn btn-success btn-sm" onclick="downloadFile('approved')"><i class="fas fa-check-circle"></i> Approved</button>
-                                <button class="btn btn-danger btn-sm" onclick="downloadFile('declined')"><i class="fas fa-times-circle"></i> Declined</button>
-                            </div>
-                        </div>
-                        <div class="progress-container">
-                            <div class="progress-info">
-                                <span id="stripeProgressText">0 / 0</span>
-                                <span id="stripeProgressPercent">0%</span>
-                            </div>
-                            <div class="progress-bar"><div class="fill" id="stripeProgressFill"></div></div>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title"><i class="fas fa-list"></i> Results</div>
-                            <span class="card-badge" id="stripeResultCount">0 results</span>
-                        </div>
-                        <div class="log-container" id="stripeResultsContainer" style="max-height:180px;">
-                            <div class="log-line"><span class="time">●</span><span class="message info">No cards checked yet...</span></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ========================================================= -->
-        <!-- TAB 5: PAYFLOW CHECKER -->
-        <!-- ========================================================= -->
-        <div class="tab-content" id="tabPayflow">
-            <div class="main-grid">
-                <div>
-                    <div class="card" style="margin-bottom:12px;">
-                        <div class="card-header">
-                            <div class="card-title"><i class="fas fa-money-bill-wave"></i> Cards <span class="checker-badge payflow">Payflow</span></div>
-                            <span class="card-badge" id="payflowCardCount">0 loaded</span>
-                        </div>
-                        <div class="file-upload-area" id="payflowCardDrop">
-                            <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                            <div class="upload-text"><strong>Click or drag</strong> to upload cards.txt</div>
-                            <input type="file" id="payflowCardFileInput" accept=".txt">
-                            <div class="file-info" id="payflowCardFileInfo" style="display:none;">
-                                <i class="fas fa-check-circle"></i>
-                                <span class="file-name" id="payflowCardFileName">cards.txt</span>
-                                <span class="file-size" id="payflowCardFileSize">0 KB</span>
-                                <button class="btn-remove" onclick="clearPayflowCards()">✕</button>
-                            </div>
-                        </div>
-                        <textarea id="payflowCardsInput" placeholder="4111111111111111|12|26|123&#10;5111111111111111|10|27|456" style="margin-top:6px;min-height:70px;"></textarea>
-                        <div style="font-size:10px;color:var(--text-secondary);margin-top:4px;">
-                            <i class="fas fa-info-circle"></i> Format: CC|MM|YY|CVV
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title"><i class="fas fa-shield-alt"></i> Proxies</div>
-                            <span class="card-badge" id="payflowProxyCount">0 loaded</span>
-                        </div>
-                        <div class="file-upload-area" id="payflowProxyDrop">
-                            <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                            <div class="upload-text"><strong>Click or drag</strong> to upload proxies.txt</div>
-                            <input type="file" id="payflowProxyFileInput" accept=".txt">
-                            <div class="file-info" id="payflowProxyFileInfo" style="display:none;">
-                                <i class="fas fa-check-circle"></i>
-                                <span class="file-name" id="payflowProxyFileName">proxies.txt</span>
-                                <span class="file-size" id="payflowProxyFileSize">0 KB</span>
-                                <button class="btn-remove" onclick="clearPayflowProxies()">✕</button>
-                            </div>
-                        </div>
-                        <textarea id="payflowProxiesInput" placeholder="proxy1:8080&#10;proxy2:3128" style="margin-top:6px;min-height:40px;"></textarea>
-                    </div>
-                </div>
-                <div>
-                    <div class="card" style="margin-bottom:12px;">
-                        <div class="card-header">
-                            <div class="card-title"><i class="fas fa-sliders-h"></i> Card Controls</div>
-                        </div>
-                        <div class="settings-row" style="margin-bottom:8px;">
-                            <label>Threads:</label>
-                            <input type="number" id="payflowThreadCount" value="5" min="1" max="15">
-                        </div>
-                        <div class="btn-group">
-                            <button class="btn btn-success" id="payflowStartBtn" onclick="startCardCheck('payflow')"><i class="fas fa-play"></i> Check Cards</button>
-                            <button class="btn btn-danger" id="payflowStopBtn" onclick="stopCheck()" disabled><i class="fas fa-stop"></i> Stop</button>
-                            <button class="btn btn-warning" onclick="clearCardResults()"><i class="fas fa-trash-alt"></i> Clear</button>
-                        </div>
-                        <div class="export-section">
-                            <div class="title"><i class="fas fa-download"></i> Export Results</div>
-                            <div class="btn-group" style="margin:4px 0;">
-                                <button class="btn btn-success btn-sm" onclick="downloadAll()"><i class="fas fa-file-archive"></i> All (ZIP)</button>
-                                <button class="btn btn-success btn-sm" onclick="downloadFile('approved')"><i class="fas fa-check-circle"></i> Approved</button>
-                                <button class="btn btn-danger btn-sm" onclick="downloadFile('declined')"><i class="fas fa-times-circle"></i> Declined</button>
-                            </div>
-                        </div>
-                        <div class="progress-container">
-                            <div class="progress-info">
-                                <span id="payflowProgressText">0 / 0</span>
-                                <span id="payflowProgressPercent">0%</span>
-                            </div>
-                            <div class="progress-bar"><div class="fill" id="payflowProgressFill"></div></div>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title"><i class="fas fa-list"></i> Results</div>
-                            <span class="card-badge" id="payflowResultCount">0 results</span>
-                        </div>
-                        <div class="log-container" id="payflowResultsContainer" style="max-height:180px;">
-                            <div class="log-line"><span class="time">●</span><span class="message info">No cards checked yet...</span></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
     </div>
 
     <script>
@@ -1082,278 +417,15 @@ Security Alert</textarea>
         // ============================================
         let running = false;
         let updateInterval = null;
-        let currentTab = 'email';
-        let currentCheckerType = 'email';
 
         // ============================================
         // DOM ELEMENTS
         // ============================================
-        const accountsInput = document.getElementById('accountsInput');
-        const proxiesInput = document.getElementById('proxiesInput');
-        const keywordsInput = document.getElementById('keywordsInput');
         const logContainer = document.getElementById('logContainer');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
         const startBtn = document.getElementById('startBtn');
         const stopBtn = document.getElementById('stopBtn');
-        const statusText = document.getElementById('statusText');
-        const statusDot = document.getElementById('statusDot');
-        const fileList = document.getElementById('fileList');
-
-        // Auth elements
-        const authCardsInput = document.getElementById('authCardsInput');
-        const authProxiesInput = document.getElementById('authProxiesInput');
-        const authResultsContainer = document.getElementById('authResultsContainer');
-
-        // Braintree elements
-        const btCardsInput = document.getElementById('btCardsInput');
-        const btProxiesInput = document.getElementById('btProxiesInput');
-        const btResultsContainer = document.getElementById('btResultsContainer');
-
-        // Stripe elements
-        const stripeCardsInput = document.getElementById('stripeCardsInput');
-        const stripeProxiesInput = document.getElementById('stripeProxiesInput');
-        const stripeResultsContainer = document.getElementById('stripeResultsContainer');
-
-        // Payflow elements
-        const payflowCardsInput = document.getElementById('payflowCardsInput');
-        const payflowProxiesInput = document.getElementById('payflowProxiesInput');
-        const payflowResultsContainer = document.getElementById('payflowResultsContainer');
-
-        // ============================================
-        // TAB SWITCHING
-        // ============================================
-        function switchTab(tab) {
-            currentTab = tab;
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            
-            const tabMap = {
-                'email': 0,
-                'authorize': 1,
-                'braintree': 2,
-                'stripe': 3,
-                'payflow': 4
-            };
-            
-            document.querySelectorAll('.tab-btn')[tabMap[tab]].classList.add('active');
-            document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
-        }
-
-        // ============================================
-        // FILE UPLOAD HANDLERS
-        // ============================================
-        function setupFileUpload(input, textarea, infoDiv, nameSpan, sizeSpan, countEl, clearFn) {
-            input.addEventListener('change', function(e) {
-                const file = this.files[0];
-                if (!file) return;
-                
-                const reader = new FileReader();
-                reader.onload = function(ev) {
-                    textarea.value = ev.target.result;
-                    infoDiv.style.display = 'flex';
-                    nameSpan.textContent = file.name;
-                    sizeSpan.textContent = (file.size / 1024).toFixed(1) + ' KB';
-                    if (countEl) {
-                        const lines = ev.target.result.split('\n').filter(l => l.trim());
-                        countEl.textContent = lines.length + ' loaded';
-                    }
-                    addLog(`📁 Loaded ${file.name} (${(file.size/1024).toFixed(1)} KB)`, 'info');
-                };
-                reader.readAsText(file);
-            });
-
-            const dropArea = input.parentElement;
-            dropArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                dropArea.classList.add('dragover');
-            });
-            dropArea.addEventListener('dragleave', () => {
-                dropArea.classList.remove('dragover');
-            });
-            dropArea.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dropArea.classList.remove('dragover');
-                const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    input.files = files;
-                    input.dispatchEvent(new Event('change'));
-                }
-            });
-        }
-
-        // Email file uploads
-        setupFileUpload(
-            document.getElementById('accountFileInput'),
-            accountsInput,
-            document.getElementById('accountFileInfo'),
-            document.getElementById('accountFileName'),
-            document.getElementById('accountFileSize'),
-            document.getElementById('accountCount'),
-            clearAccounts
-        );
-
-        setupFileUpload(
-            document.getElementById('proxyFileInput'),
-            proxiesInput,
-            document.getElementById('proxyFileInfo'),
-            document.getElementById('proxyFileName'),
-            document.getElementById('proxyFileSize'),
-            document.getElementById('proxyCount'),
-            clearProxies
-        );
-
-        function clearAccounts() {
-            accountsInput.value = '';
-            document.getElementById('accountFileInfo').style.display = 'none';
-            document.getElementById('accountCount').textContent = '0 loaded';
-            document.getElementById('accountFileInput').value = '';
-        }
-
-        function clearProxies() {
-            proxiesInput.value = '';
-            document.getElementById('proxyFileInfo').style.display = 'none';
-            document.getElementById('proxyCount').textContent = '0 loaded';
-            document.getElementById('proxyFileInput').value = '';
-        }
-
-        // Auth file uploads
-        setupFileUpload(
-            document.getElementById('authCardFileInput'),
-            authCardsInput,
-            document.getElementById('authCardFileInfo'),
-            document.getElementById('authCardFileName'),
-            document.getElementById('authCardFileSize'),
-            document.getElementById('authCardCount'),
-            clearAuthCards
-        );
-
-        setupFileUpload(
-            document.getElementById('authProxyFileInput'),
-            authProxiesInput,
-            document.getElementById('authProxyFileInfo'),
-            document.getElementById('authProxyFileName'),
-            document.getElementById('authProxyFileSize'),
-            document.getElementById('authProxyCount'),
-            clearAuthProxies
-        );
-
-        function clearAuthCards() {
-            authCardsInput.value = '';
-            document.getElementById('authCardFileInfo').style.display = 'none';
-            document.getElementById('authCardCount').textContent = '0 loaded';
-            document.getElementById('authCardFileInput').value = '';
-        }
-
-        function clearAuthProxies() {
-            authProxiesInput.value = '';
-            document.getElementById('authProxyFileInfo').style.display = 'none';
-            document.getElementById('authProxyCount').textContent = '0 loaded';
-            document.getElementById('authProxyFileInput').value = '';
-        }
-
-        // Braintree file uploads
-        setupFileUpload(
-            document.getElementById('btCardFileInput'),
-            btCardsInput,
-            document.getElementById('btCardFileInfo'),
-            document.getElementById('btCardFileName'),
-            document.getElementById('btCardFileSize'),
-            document.getElementById('btCardCount'),
-            clearBtCards
-        );
-
-        setupFileUpload(
-            document.getElementById('btProxyFileInput'),
-            btProxiesInput,
-            document.getElementById('btProxyFileInfo'),
-            document.getElementById('btProxyFileName'),
-            document.getElementById('btProxyFileSize'),
-            document.getElementById('btProxyCount'),
-            clearBtProxies
-        );
-
-        function clearBtCards() {
-            btCardsInput.value = '';
-            document.getElementById('btCardFileInfo').style.display = 'none';
-            document.getElementById('btCardCount').textContent = '0 loaded';
-            document.getElementById('btCardFileInput').value = '';
-        }
-
-        function clearBtProxies() {
-            btProxiesInput.value = '';
-            document.getElementById('btProxyFileInfo').style.display = 'none';
-            document.getElementById('btProxyCount').textContent = '0 loaded';
-            document.getElementById('btProxyFileInput').value = '';
-        }
-
-        // Stripe file uploads
-        setupFileUpload(
-            document.getElementById('stripeCardFileInput'),
-            stripeCardsInput,
-            document.getElementById('stripeCardFileInfo'),
-            document.getElementById('stripeCardFileName'),
-            document.getElementById('stripeCardFileSize'),
-            document.getElementById('stripeCardCount'),
-            clearStripeCards
-        );
-
-        setupFileUpload(
-            document.getElementById('stripeProxyFileInput'),
-            stripeProxiesInput,
-            document.getElementById('stripeProxyFileInfo'),
-            document.getElementById('stripeProxyFileName'),
-            document.getElementById('stripeProxyFileSize'),
-            document.getElementById('stripeProxyCount'),
-            clearStripeProxies
-        );
-
-        function clearStripeCards() {
-            stripeCardsInput.value = '';
-            document.getElementById('stripeCardFileInfo').style.display = 'none';
-            document.getElementById('stripeCardCount').textContent = '0 loaded';
-            document.getElementById('stripeCardFileInput').value = '';
-        }
-
-        function clearStripeProxies() {
-            stripeProxiesInput.value = '';
-            document.getElementById('stripeProxyFileInfo').style.display = 'none';
-            document.getElementById('stripeProxyCount').textContent = '0 loaded';
-            document.getElementById('stripeProxyFileInput').value = '';
-        }
-
-        // Payflow file uploads
-        setupFileUpload(
-            document.getElementById('payflowCardFileInput'),
-            payflowCardsInput,
-            document.getElementById('payflowCardFileInfo'),
-            document.getElementById('payflowCardFileName'),
-            document.getElementById('payflowCardFileSize'),
-            document.getElementById('payflowCardCount'),
-            clearPayflowCards
-        );
-
-        setupFileUpload(
-            document.getElementById('payflowProxyFileInput'),
-            payflowProxiesInput,
-            document.getElementById('payflowProxyFileInfo'),
-            document.getElementById('payflowProxyFileName'),
-            document.getElementById('payflowProxyFileSize'),
-            document.getElementById('payflowProxyCount'),
-            clearPayflowProxies
-        );
-
-        function clearPayflowCards() {
-            payflowCardsInput.value = '';
-            document.getElementById('payflowCardFileInfo').style.display = 'none';
-            document.getElementById('payflowCardCount').textContent = '0 loaded';
-            document.getElementById('payflowCardFileInput').value = '';
-        }
-
-        function clearPayflowProxies() {
-            payflowProxiesInput.value = '';
-            document.getElementById('payflowProxyFileInfo').style.display = 'none';
-            document.getElementById('payflowProxyCount').textContent = '0 loaded';
-            document.getElementById('payflowProxyFileInput').value = '';
-        }
 
         // ============================================
         // LOGGING
@@ -1367,443 +439,226 @@ Security Alert</textarea>
             if (logContainer.children.length > 200) {
                 logContainer.removeChild(logContainer.children[logContainer.children.length - 1]);
             }
-            document.getElementById('logCount').textContent = logContainer.children.length + ' entries';
+            document.getElementById('logCount').textContent = logContainer.children.length + ' entradas';
         }
 
         // ============================================
-        // CARD RESULTS
+        // CHANNEL INFO
         // ============================================
-        function addCardResult(container, card) {
-            const div = document.createElement('div');
-            div.className = `result-card ${card.status.toLowerCase()}`;
-            const time = new Date().toLocaleTimeString();
-            const statusIcons = {
-                'APPROVED': '✅',
-                'DECLINED': '❌',
-                'INVALID': '⚠️',
-                'PENDING': '⏳',
-                'ERROR': '💥'
-            };
-            const icon = statusIcons[card.status] || '❓';
-            div.innerHTML = `<span style="color:var(--text-secondary);font-size:10px;">${time}</span> ${icon} <strong>${card.card}</strong> | ${card.brand} | ${card.status} | ${card.reason}`;
-            container.prepend(div);
-            if (container.children.length > 100) {
-                container.removeChild(container.children[container.children.length - 1]);
+        async function getChannelInfo() {
+            const channel = document.getElementById('channelInput').value.trim();
+            if (!channel) {
+                addLog('⚠️ Ingresa un nombre de canal', 'warning');
+                return;
+            }
+
+            addLog(`🔍 Buscando información de ${channel}...`, 'info');
+
+            try {
+                const response = await fetch('/api/channel/info', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ channel, method: 'all' })
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    addLog(`❌ Error: ${data.error}`, 'error');
+                    return;
+                }
+
+                // Mostrar resultados
+                const container = document.getElementById('channelInfoContainer');
+                let html = '';
+
+                data.results.forEach((result, index) => {
+                    if (result.success) {
+                        const liveTag = result.is_live ? 
+                            '<span class="live-tag live">🔴 EN VIVO</span>' : 
+                            '<span class="live-tag offline">⚪ OFFLINE</span>';
+                        
+                        html += `
+                            <div class="channel-info" style="margin-top:${index > 0 ? '8px' : '0'};border-left-color:${result.is_live ? 'var(--danger)' : 'var(--text-secondary)'};">
+                                <div style="display:flex;justify-content:space-between;flex-wrap:wrap;">
+                                    <div>
+                                        <span class="label">${result.method}</span><br>
+                                        <span class="value">${result.display_name}</span>
+                                    </div>
+                                    ${liveTag}
+                                </div>
+                                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:8px;margin-top:8px;">
+                                    <div><span class="label">Seguidores</span><br><span class="value">${result.followers.toLocaleString()}</span></div>
+                                    <div><span class="label">Viewers</span><br><span class="value">${result.viewers.toLocaleString()}</span></div>
+                                    <div><span class="label">Categoría</span><br><span class="value" style="font-size:12px;">${result.category || 'N/A'}</span></div>
+                                </div>
+                                ${result.title ? `<div style="margin-top:6px;"><span class="label">Título</span><br><span class="value" style="font-size:13px;">${result.title}</span></div>` : ''}
+                            </div>
+                        `;
+
+                        // Actualizar stats
+                        document.getElementById('statFollowers').textContent = result.followers.toLocaleString();
+                        document.getElementById('statLive').textContent = result.is_live ? '🔴 EN VIVO' : '⚪ OFFLINE';
+                        document.getElementById('statLive').style.color = result.is_live ? 'var(--danger)' : 'var(--text-secondary)';
+                    }
+                });
+
+                if (!html) {
+                    html = `<div style="color:var(--warning);font-size:12px;text-align:center;padding:10px;">
+                        ⚠️ No se pudo obtener información del canal
+                    </div>`;
+                }
+
+                container.innerHTML = html;
+                addLog(`✅ Información de ${channel} obtenida correctamente`, 'success');
+
+            } catch (error) {
+                addLog(`❌ Error: ${error.message}`, 'error');
             }
         }
 
-        function clearCardResults() {
-            const containers = [
-                authResultsContainer,
-                btResultsContainer,
-                stripeResultsContainer,
-                payflowResultsContainer
-            ];
-            containers.forEach(c => {
-                c.innerHTML = '<div class="log-line"><span class="time">●</span><span class="message info">Results cleared</span></div>';
-            });
-        }
-
         // ============================================
-        // STATS UPDATE
+        // VIEWERS INJECTION
         // ============================================
-        function updateStats(stats) {
-            document.getElementById('statValid').textContent = stats.valid || 0;
-            document.getElementById('statInbox').textContent = stats.inbox || 0;
-            document.getElementById('stat2FA').textContent = stats['2fa'] || 0;
-            document.getElementById('statBad').textContent = stats.bad || 0;
-            document.getElementById('statChecked').textContent = stats.checked || 0;
-            document.getElementById('statTotal').textContent = stats.total || 0;
-            document.getElementById('statCPM').textContent = stats.cpm || 0;
-            document.getElementById('statApproved').textContent = stats.approved || 0;
-            document.getElementById('statDeclined').textContent = stats.declined || 0;
-            document.getElementById('statInvalid').textContent = stats.invalid || 0;
-            document.getElementById('statPending').textContent = stats.pending || 0;
-            
-            const progress = stats.total > 0 ? (stats.checked / stats.total * 100) : 0;
-            
-            // Email progress
-            document.getElementById('progressFill').style.width = Math.min(progress, 100) + '%';
-            document.getElementById('progressText').textContent = `${stats.checked || 0} / ${stats.total || 0}`;
-            document.getElementById('progressPercent').textContent = Math.min(progress, 100).toFixed(1) + '%';
-            
-            // Auth progress
-            document.getElementById('authProgressFill').style.width = Math.min(progress, 100) + '%';
-            document.getElementById('authProgressText').textContent = `${stats.checked || 0} / ${stats.total || 0}`;
-            document.getElementById('authProgressPercent').textContent = Math.min(progress, 100).toFixed(1) + '%';
-            
-            // Braintree progress
-            document.getElementById('btProgressFill').style.width = Math.min(progress, 100) + '%';
-            document.getElementById('btProgressText').textContent = `${stats.checked || 0} / ${stats.total || 0}`;
-            document.getElementById('btProgressPercent').textContent = Math.min(progress, 100).toFixed(1) + '%';
-            
-            // Stripe progress
-            document.getElementById('stripeProgressFill').style.width = Math.min(progress, 100) + '%';
-            document.getElementById('stripeProgressText').textContent = `${stats.checked || 0} / ${stats.total || 0}`;
-            document.getElementById('stripeProgressPercent').textContent = Math.min(progress, 100).toFixed(1) + '%';
-            
-            // Payflow progress
-            document.getElementById('payflowProgressFill').style.width = Math.min(progress, 100) + '%';
-            document.getElementById('payflowProgressText').textContent = `${stats.checked || 0} / ${stats.total || 0}`;
-            document.getElementById('payflowProgressPercent').textContent = Math.min(progress, 100).toFixed(1) + '%';
-        }
-
-        // ============================================
-        // MAIN FUNCTIONS
-        // ============================================
-        async function startCheck(type) {
+        async function startViewers() {
             if (running) return;
 
-            const accounts = accountsInput.value;
-            const keywords = keywordsInput.value;
-            const proxies = proxiesInput.value;
-            const threads = parseInt(document.getElementById('threadCount').value) || 50;
+            const channel = document.getElementById('viewerChannel').value.trim();
+            const count = parseInt(document.getElementById('viewerCount').value) || 10;
+            const method = document.querySelector('input[name="method"]:checked').value;
 
-            if (!accounts.trim()) {
-                addLog('⚠️ Please enter accounts or upload a file', 'warning');
+            if (!channel) {
+                addLog('⚠️ Ingresa un canal objetivo', 'warning');
+                return;
+            }
+
+            if (count < 1 || count > 10000) {
+                addLog('⚠️ La cantidad debe estar entre 1 y 10000', 'warning');
                 return;
             }
 
             running = true;
-            currentCheckerType = 'email';
             startBtn.disabled = true;
             stopBtn.disabled = false;
-            document.querySelectorAll('.tab-btn').forEach(b => b.disabled = true);
             statusDot.className = 'status-dot running';
-            statusText.textContent = 'Running...';
+            statusText.textContent = 'Inyectando...';
 
-            addLog('🚀 Starting email check...', 'info');
+            addLog(`🚀 Iniciando inyección en ${channel} (${count} viewers, método: ${method})`, 'info');
 
             try {
-                const response = await fetch('/api/start', {
+                const response = await fetch('/api/viewers/start', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ type: 'email', accounts, keywords, proxies, threads })
+                    body: JSON.stringify({ channel, count, method })
                 });
 
                 const data = await response.json();
+
                 if (data.error) {
-                    addLog(`⚠️ ${data.error}`, 'error');
+                    addLog(`❌ ${data.error}`, 'error');
                     running = false;
                     startBtn.disabled = false;
                     stopBtn.disabled = true;
-                    document.querySelectorAll('.tab-btn').forEach(b => b.disabled = false);
                     statusDot.className = 'status-dot stopped';
                     statusText.textContent = 'Error';
                     return;
                 }
 
-                addLog(`✅ Started: ${data.total} accounts`, 'success');
-                
+                addLog(`✅ Inyección iniciada: ${data.count} viewers en ${data.channel}`, 'success');
+
                 if (updateInterval) clearInterval(updateInterval);
-                updateInterval = setInterval(fetchStatus, 1500);
+                updateInterval = setInterval(fetchStatus, 2000);
 
             } catch (error) {
-                addLog(`⚠️ Error: ${error.message}`, 'error');
+                addLog(`❌ Error: ${error.message}`, 'error');
                 running = false;
                 startBtn.disabled = false;
                 stopBtn.disabled = true;
-                document.querySelectorAll('.tab-btn').forEach(b => b.disabled = false);
                 statusDot.className = 'status-dot stopped';
                 statusText.textContent = 'Error';
             }
         }
 
-        async function startCardCheck(checkerType) {
-            if (running) return;
-
-            let cardsInput, proxiesInput, threadCount, startBtnEl, stopBtnEl, resultsContainer;
-            
-            switch(checkerType) {
-                case 'authorize':
-                    cardsInput = authCardsInput;
-                    proxiesInput = authProxiesInput;
-                    threadCount = document.getElementById('authThreadCount');
-                    startBtnEl = document.getElementById('authStartBtn');
-                    stopBtnEl = document.getElementById('authStopBtn');
-                    resultsContainer = authResultsContainer;
-                    break;
-                case 'braintree':
-                    cardsInput = btCardsInput;
-                    proxiesInput = btProxiesInput;
-                    threadCount = document.getElementById('btThreadCount');
-                    startBtnEl = document.getElementById('btStartBtn');
-                    stopBtnEl = document.getElementById('btStopBtn');
-                    resultsContainer = btResultsContainer;
-                    break;
-                case 'stripe':
-                    cardsInput = stripeCardsInput;
-                    proxiesInput = stripeProxiesInput;
-                    threadCount = document.getElementById('stripeThreadCount');
-                    startBtnEl = document.getElementById('stripeStartBtn');
-                    stopBtnEl = document.getElementById('stripeStopBtn');
-                    resultsContainer = stripeResultsContainer;
-                    break;
-                case 'payflow':
-                    cardsInput = payflowCardsInput;
-                    proxiesInput = payflowProxiesInput;
-                    threadCount = document.getElementById('payflowThreadCount');
-                    startBtnEl = document.getElementById('payflowStartBtn');
-                    stopBtnEl = document.getElementById('payflowStopBtn');
-                    resultsContainer = payflowResultsContainer;
-                    break;
-                default:
-                    return;
-            }
-
-            const cards = cardsInput.value;
-            const proxies = proxiesInput.value;
-            const threads = parseInt(threadCount.value) || 3;
-
-            if (!cards.trim()) {
-                addLog('⚠️ Please enter cards or upload a file', 'warning');
-                return;
-            }
-
-            running = true;
-            currentCheckerType = checkerType;
-            startBtnEl.disabled = true;
-            stopBtnEl.disabled = false;
-            document.querySelectorAll('.tab-btn').forEach(b => b.disabled = true);
-            statusDot.className = 'status-dot running';
-            statusText.textContent = 'Running...';
-
-            const checkerNames = {
-                'authorize': 'Authorize.net',
-                'braintree': 'Braintree',
-                'stripe': 'Stripe',
-                'payflow': 'Payflow'
-            };
-
-            addLog(`🚀 Starting ${checkerNames[checkerType]} card check...`, 'info');
-
-            try {
-                const response = await fetch('/api/start', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ type: 'card', checker_type: checkerType, cards, proxies, threads })
-                });
-
-                const data = await response.json();
-                if (data.error) {
-                    addLog(`⚠️ ${data.error}`, 'error');
-                    running = false;
-                    startBtnEl.disabled = false;
-                    stopBtnEl.disabled = true;
-                    document.querySelectorAll('.tab-btn').forEach(b => b.disabled = false);
-                    statusDot.className = 'status-dot stopped';
-                    statusText.textContent = 'Error';
-                    return;
-                }
-
-                addLog(`✅ Started: ${data.total} cards`, 'success');
-                
-                if (updateInterval) clearInterval(updateInterval);
-                updateInterval = setInterval(fetchStatus, 1500);
-
-            } catch (error) {
-                addLog(`⚠️ Error: ${error.message}`, 'error');
-                running = false;
-                startBtnEl.disabled = false;
-                stopBtnEl.disabled = true;
-                document.querySelectorAll('.tab-btn').forEach(b => b.disabled = false);
-                statusDot.className = 'status-dot stopped';
-                statusText.textContent = 'Error';
-            }
-        }
-
-        async function stopCheck() {
+        async function stopViewers() {
             if (!running) return;
-            
+
             try {
-                await fetch('/api/stop', { method: 'POST' });
-                addLog('⏹️ Stopping...', 'warning');
+                await fetch('/api/viewers/stop', { method: 'POST' });
+                addLog('⏹️ Deteniendo inyección...', 'warning');
             } catch (error) {
-                addLog(`⚠️ Stop error: ${error.message}`, 'error');
+                addLog(`❌ Error al detener: ${error.message}`, 'error');
             }
         }
 
+        // ============================================
+        // STATUS FETCH
+        // ============================================
         async function fetchStatus() {
             try {
                 const response = await fetch('/api/status');
                 const data = await response.json();
-                
-                updateStats(data.stats);
-                
-                // Update logs
+
+                document.getElementById('statViewers').textContent = data.viewers_injected || 0;
+                document.getElementById('statConnections').textContent = data.active_connections || 0;
+                document.getElementById('statTarget').textContent = data.target || 0;
+
+                // Actualizar logs si hay nuevos
                 if (data.logs && data.logs.length > 0) {
-                    data.logs.reverse().forEach(log => {
-                        addLog(log.message, log.level);
+                    data.logs.forEach(log => {
+                        // Solo agregar si no existe ya en el DOM
+                        const exists = Array.from(logContainer.querySelectorAll('.log-line')).some(
+                            el => el.textContent.includes(log.message)
+                        );
+                        if (!exists) {
+                            addLog(log.message, log.level);
+                        }
                     });
                 }
-                
-                // Update card results
-                if (data.card_results && data.card_results.length > 0) {
-                    const containers = {
-                        'authorize': authResultsContainer,
-                        'braintree': btResultsContainer,
-                        'stripe': stripeResultsContainer,
-                        'payflow': payflowResultsContainer
-                    };
-                    const container = containers[data.current_checker] || authResultsContainer;
-                    data.card_results.forEach(card => {
-                        addCardResult(container, card);
-                    });
-                }
-                
-                // Update file list
-                if (data.export_ready && data.export_files) {
-                    updateFileList(data.export_files);
-                }
-                
-                // Update selenium status
-                if (data.selenium_available !== undefined) {
-                    document.getElementById('seleniumStatus').textContent = `🧪 Selenium: ${data.selenium_available ? '✓' : '✗'}`;
-                    document.getElementById('seleniumStatus').style.color = data.selenium_available ? 'var(--success)' : 'var(--danger)';
-                }
-                
-                // Update status
+
                 if (!data.running && running) {
                     running = false;
-                    document.getElementById('startBtn').disabled = false;
-                    document.getElementById('stopBtn').disabled = true;
-                    document.getElementById('authStartBtn').disabled = false;
-                    document.getElementById('authStopBtn').disabled = true;
-                    document.getElementById('btStartBtn').disabled = false;
-                    document.getElementById('btStopBtn').disabled = true;
-                    document.getElementById('stripeStartBtn').disabled = false;
-                    document.getElementById('stripeStopBtn').disabled = true;
-                    document.getElementById('payflowStartBtn').disabled = false;
-                    document.getElementById('payflowStopBtn').disabled = true;
-                    document.querySelectorAll('.tab-btn').forEach(b => b.disabled = false);
+                    startBtn.disabled = false;
+                    stopBtn.disabled = true;
                     statusDot.className = 'status-dot stopped';
-                    statusText.textContent = 'Stopped';
+                    statusText.textContent = 'Completado';
                     if (updateInterval) {
                         clearInterval(updateInterval);
                         updateInterval = null;
                     }
-                    addLog('✅ Check completed', 'success');
+                    addLog('✅ Proceso completado', 'success');
                 }
-                
-                if (data.stats.total > 0 && data.stats.checked >= data.stats.total) {
-                    running = false;
-                    document.getElementById('startBtn').disabled = false;
-                    document.getElementById('stopBtn').disabled = true;
-                    document.getElementById('authStartBtn').disabled = false;
-                    document.getElementById('authStopBtn').disabled = true;
-                    document.getElementById('btStartBtn').disabled = false;
-                    document.getElementById('btStopBtn').disabled = true;
-                    document.getElementById('stripeStartBtn').disabled = false;
-                    document.getElementById('stripeStopBtn').disabled = true;
-                    document.getElementById('payflowStartBtn').disabled = false;
-                    document.getElementById('payflowStopBtn').disabled = true;
-                    document.querySelectorAll('.tab-btn').forEach(b => b.disabled = false);
-                    statusDot.className = 'status-dot complete';
-                    statusText.textContent = 'Complete';
-                    if (updateInterval) {
-                        clearInterval(updateInterval);
-                        updateInterval = null;
-                    }
-                }
-                
+
             } catch (error) {
                 console.error('Status fetch error:', error);
             }
         }
 
         // ============================================
-        // FILE LIST
+        // LOGS
         // ============================================
-        function updateFileList(files) {
-            if (!files || files.length === 0) {
-                fileList.innerHTML = `<div style="color:var(--text-secondary);font-size:10px;text-align:center;padding:4px;">
-                    <i class="fas fa-info-circle"></i> No files available yet
-                </div>`;
-                return;
-            }
-
-            let html = '';
-            files.forEach(file => {
-                const size = file.size > 1024 * 1024 
-                    ? (file.size / (1024 * 1024)).toFixed(2) + ' MB'
-                    : (file.size / 1024).toFixed(1) + ' KB';
-                html += `
-                    <div class="file-item">
-                        <span class="name">${file.name}</span>
-                        <span class="size">${size}</span>
-                        <button class="download-btn" onclick="downloadSpecificFile('${file.name}')">⬇️</button>
-                    </div>
-                `;
-            });
-            
-            fileList.innerHTML = html;
-        }
-
-        // ============================================
-        // DOWNLOAD FUNCTIONS
-        // ============================================
-        function downloadSpecificFile(filename) {
-            const url = `/api/download/${encodeURIComponent(filename)}`;
-            window.open(url, '_blank');
-            addLog(`📤 Downloading: ${filename}`, 'info');
-        }
-
-        function downloadFile(type) {
-            const endpoints = {
-                'inbox': '/api/download/inbox',
-                'valid': '/api/download/valid',
-                'approved': '/api/download/approved'
-            };
-            
-            const url = endpoints[type];
-            if (!url) {
-                addLog('⚠️ Invalid file type', 'warning');
-                return;
-            }
-            
-            window.open(url, '_blank');
-            addLog(`📤 Downloading ${type}.txt...`, 'info');
-        }
-
-        function downloadAll() {
-            window.open('/api/download/all', '_blank');
-            addLog('📤 Downloading all results as ZIP...', 'info');
-        }
-
-        function clearLogs() {
-            logContainer.innerHTML = '<div class="log-line"><span class="time">●</span><span class="message info">Logs cleared</span></div>';
-            document.getElementById('logCount').textContent = '1 entries';
-        }
-
-        // ============================================
-        // LOAD FILES ON STARTUP
-        // ============================================
-        async function loadFiles() {
+        async function clearLogs() {
             try {
-                const response = await fetch('/api/files');
-                const data = await response.json();
-                if (data.files) {
-                    updateFileList(data.files);
-                }
-            } catch (e) {
-                console.error('Error loading files:', e);
+                await fetch('/api/logs/clear', { method: 'POST' });
+                logContainer.innerHTML = '<div class="log-line"><span class="time">●</span><span class="message info">Logs limpiados</span></div>';
+                document.getElementById('logCount').textContent = '1 entrada';
+                addLog('🗑️ Logs limpiados', 'info');
+            } catch (error) {
+                addLog(`❌ Error al limpiar logs: ${error.message}`, 'error');
             }
         }
 
-        // Auto fetch status and files
+        // ============================================
+        // AUTO FETCH
+        // ============================================
         setInterval(() => {
             if (!running) {
                 fetchStatus();
             }
         }, 5000);
 
-        // Load files on startup
-        loadFiles();
-
-        addLog('🔧 Checker Pro ready - 5 checkers available', 'info');
-        addLog('💡 Switch tabs for different checkers', 'info');
-        addLog('📁 Drag & drop files supported', 'info');
-        addLog('📤 Results are automatically saved', 'info');
+        addLog('🔧 Kick Bot Pro listo', 'info');
+        addLog('💡 Busca un canal para ver su información', 'info');
+        addLog('🚀 Configura la cantidad y método para inyectar viewers', 'info');
     </script>
 </body>
 </html>
