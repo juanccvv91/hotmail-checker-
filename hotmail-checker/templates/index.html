@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotmail Checker Pro</title>
+    <title>Hotmail & Card Checker Pro</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -21,6 +21,7 @@
             --danger: #ff4757;
             --purple: #a29bfe;
             --pink: #e056a0;
+            --gold: #ffd700;
         }
 
         body {
@@ -29,13 +30,11 @@
             font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
             min-height: 100vh;
             padding: 20px;
-            background-image: 
-                radial-gradient(ellipse at 10% 20%, rgba(0, 212, 255, 0.03) 0%, transparent 50%),
-                radial-gradient(ellipse at 90% 80%, rgba(0, 212, 255, 0.03) 0%, transparent 50%);
         }
 
         .container { max-width: 1440px; margin: 0 auto; }
 
+        /* HEADER */
         .header {
             display: flex;
             justify-content: space-between;
@@ -46,6 +45,8 @@
             border-radius: 16px;
             margin-bottom: 25px;
             backdrop-filter: blur(20px);
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
         .logo {
@@ -81,6 +82,7 @@
             display: flex;
             align-items: center;
             gap: 20px;
+            flex-wrap: wrap;
         }
 
         .status-badge {
@@ -112,9 +114,53 @@
             50% { opacity: 0.5; transform: scale(0.9); }
         }
 
+        /* TABS */
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 5px;
+        }
+
+        .tab-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+            text-align: center;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-btn.active {
+            background: var(--accent);
+            color: #0a0e17;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* STATS */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 10px;
             margin-bottom: 20px;
         }
@@ -142,8 +188,11 @@
         .stat-card.bad .stat-number { color: var(--danger); }
         .stat-card.checked .stat-number { color: var(--accent); }
         .stat-card.total .stat-number { color: var(--purple); }
-        .stat-card.cpm .stat-number { color: #ff6b6b; }
+        .stat-card.cpm .stat-number { color: var(--gold); }
+        .stat-card.approved .stat-number { color: var(--success); }
+        .stat-card.declined .stat-number { color: var(--danger); }
 
+        /* CARDS */
         .main-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -178,7 +227,6 @@
         }
 
         .card-title i { font-size: 15px; }
-
         .card-badge {
             font-size: 11px;
             padding: 4px 12px;
@@ -188,6 +236,7 @@
             color: var(--text-secondary);
         }
 
+        /* FILE UPLOAD */
         .file-upload-area {
             border: 2px dashed var(--border-color);
             border-radius: 12px;
@@ -288,6 +337,7 @@
             padding: 6px 10px;
         }
 
+        /* BUTTONS */
         .btn {
             padding: 10px 24px;
             border: none;
@@ -328,6 +378,9 @@
         .btn-purple { background: var(--purple); color: #0a0e17; }
         .btn-purple:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(162, 155, 254, 0.3); }
 
+        .btn-gold { background: var(--gold); color: #0a0e17; }
+        .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255, 215, 0, 0.3); }
+
         .btn-sm { padding: 5px 12px; font-size: 11px; }
 
         .btn-group {
@@ -337,15 +390,7 @@
             margin: 10px 0;
         }
 
-        .btn-group-export {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin: 5px 0;
-        }
-
-        .btn-group-export .btn { padding: 6px 14px; font-size: 11px; }
-
+        /* PROGRESS */
         .progress-container { margin: 12px 0 5px 0; }
 
         .progress-info {
@@ -372,6 +417,7 @@
             width: 0%;
         }
 
+        /* LOGS */
         .log-container {
             background: rgba(10, 14, 23, 0.9);
             border-radius: 10px;
@@ -402,6 +448,7 @@
         .log-line .message.warning { color: var(--warning); }
         .log-line .message.info { color: var(--text-secondary); }
 
+        /* EXPORT SECTION */
         .export-section {
             background: rgba(0, 212, 255, 0.05);
             border: 1px solid var(--border-color);
@@ -448,9 +495,9 @@
 
         .file-item .name { color: var(--text-primary); font-family: monospace; }
         .file-item .size { color: var(--text-secondary); font-size: 10px; }
-        .file-item .download-btn { 
-            background: var(--success); 
-            border: none; 
+        .file-item .download-btn {
+            background: var(--success);
+            border: none;
             color: #0a0e17;
             padding: 2px 10px;
             border-radius: 4px;
@@ -461,55 +508,37 @@
 
         .file-item .download-btn:hover { opacity: 0.8; }
 
-        .notification {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: var(--bg-card);
-            border: 1px solid var(--success);
-            border-radius: 12px;
-            padding: 15px 25px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-            transform: translateY(100px);
-            opacity: 0;
-            transition: all 0.5s;
-            z-index: 999;
-            max-width: 400px;
+        .result-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+            padding: 6px 10px;
+            margin-bottom: 4px;
+            font-size: 12px;
+            font-family: monospace;
+            border-left: 3px solid var(--text-secondary);
         }
 
-        .notification.show {
-            transform: translateY(0);
-            opacity: 1;
-        }
+        .result-card.approved { border-left-color: var(--success); }
+        .result-card.declined { border-left-color: var(--danger); }
+        .result-card.invalid { border-left-color: var(--warning); }
+        .result-card.pending { border-left-color: var(--gold); }
 
-        .notification .title { color: var(--success); font-weight: 700; margin-bottom: 5px; }
-        .notification .message { color: var(--text-secondary); font-size: 13px; }
-        .notification .close-btn {
-            position: absolute;
-            top: 5px;
-            right: 10px;
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 18px;
-            cursor: pointer;
-        }
-
+        /* RESPONSIVE */
         @media (max-width: 1024px) { .main-grid { grid-template-columns: 1fr; } }
 
         @media (max-width: 768px) {
-            .header { flex-direction: column; gap: 15px; align-items: stretch; text-align: center; }
+            .header { flex-direction: column; align-items: stretch; text-align: center; }
             .header-status { justify-content: center; }
             .stats-grid { grid-template-columns: repeat(4, 1fr); }
             .settings-row { flex-direction: column; align-items: stretch; }
             .btn-group { justify-content: center; }
-            .btn-group-export { justify-content: center; }
-            .notification { left: 20px; right: 20px; bottom: 20px; }
+            .tab-btn { font-size: 12px; padding: 10px 15px; }
         }
 
         @media (max-width: 480px) {
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .card { padding: 14px; }
+            .tab-btn { font-size: 10px; padding: 8px 10px; }
         }
     </style>
 </head>
@@ -520,8 +549,8 @@
             <div class="logo">
                 <div class="logo-icon">📧</div>
                 <div class="logo-text">
-                    <h1>Hotmail Checker</h1>
-                    <span>Microsoft Account Validator</span>
+                    <h1>Checker Pro</h1>
+                    <span>Microsoft & Authorize.net Validator</span>
                 </div>
             </div>
             <div class="header-status">
@@ -534,9 +563,9 @@
         </header>
 
         <!-- STATS -->
-        <div class="stats-grid">
+        <div class="stats-grid" id="statsGrid">
             <div class="stat-card valid"><span class="stat-number" id="statValid">0</span><span class="stat-label">✅ Valid</span></div>
-            <div class="stat-card inbox"><span class="stat-number" id="statInbox">0</span><span class="stat-label">📬 Inbox Hits</span></div>
+            <div class="stat-card inbox"><span class="stat-number" id="statInbox">0</span><span class="stat-label">📬 Inbox</span></div>
             <div class="stat-card fa"><span class="stat-number" id="stat2FA">0</span><span class="stat-label">🔐 2FA</span></div>
             <div class="stat-card bad"><span class="stat-number" id="statBad">0</span><span class="stat-label">❌ Invalid</span></div>
             <div class="stat-card checked"><span class="stat-number" id="statChecked">0</span><span class="stat-label">📊 Checked</span></div>
@@ -544,123 +573,194 @@
             <div class="stat-card cpm"><span class="stat-number" id="statCPM">0</span><span class="stat-label">⚡ CPM</span></div>
         </div>
 
-        <!-- MAIN GRID -->
-        <div class="main-grid">
-            <!-- LEFT COLUMN -->
-            <div>
-                <!-- Accounts -->
-                <div class="card" style="margin-bottom:18px;">
-                    <div class="card-header">
-                        <div class="card-title"><i class="fas fa-users"></i> Accounts</div>
-                        <span class="card-badge" id="accountCount">0 loaded</span>
-                    </div>
-                    <div class="file-upload-area" id="accountDrop">
-                        <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                        <div class="upload-text"><strong>Click or drag</strong> to upload accounts.txt</div>
-                        <input type="file" id="accountFileInput" accept=".txt">
-                        <div class="file-info" id="accountFileInfo" style="display:none;">
-                            <i class="fas fa-check-circle"></i>
-                            <span class="file-name" id="accountFileName">accounts.txt</span>
-                            <span class="file-size" id="accountFileSize">0 KB</span>
-                            <button class="btn-remove" onclick="clearAccounts()">✕</button>
-                        </div>
-                    </div>
-                    <textarea id="accountsInput" placeholder="email1:password1&#10;email2:password2" style="margin-top:8px;min-height:100px;"></textarea>
-                </div>
+        <!-- TABS -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('email')"><i class="fas fa-envelope"></i> Email Checker</button>
+            <button class="tab-btn" onclick="switchTab('card')"><i class="fas fa-credit-card"></i> Authorize.net Checker</button>
+        </div>
 
-                <!-- Proxies -->
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title"><i class="fas fa-shield-alt"></i> Proxies</div>
-                        <span class="card-badge" id="proxyCount">0 loaded</span>
-                    </div>
-                    <div class="file-upload-area" id="proxyDrop">
-                        <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                        <div class="upload-text"><strong>Click or drag</strong> to upload proxies.txt</div>
-                        <input type="file" id="proxyFileInput" accept=".txt">
-                        <div class="file-info" id="proxyFileInfo" style="display:none;">
-                            <i class="fas fa-check-circle"></i>
-                            <span class="file-name" id="proxyFileName">proxies.txt</span>
-                            <span class="file-size" id="proxyFileSize">0 KB</span>
-                            <button class="btn-remove" onclick="clearProxies()">✕</button>
+        <!-- TAB 1: EMAIL CHECKER -->
+        <div class="tab-content active" id="tabEmail">
+            <div class="main-grid">
+                <div>
+                    <div class="card" style="margin-bottom:18px;">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fas fa-users"></i> Accounts</div>
+                            <span class="card-badge" id="accountCount">0 loaded</span>
                         </div>
+                        <div class="file-upload-area" id="accountDrop">
+                            <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                            <div class="upload-text"><strong>Click or drag</strong> to upload accounts.txt</div>
+                            <input type="file" id="accountFileInput" accept=".txt">
+                            <div class="file-info" id="accountFileInfo" style="display:none;">
+                                <i class="fas fa-check-circle"></i>
+                                <span class="file-name" id="accountFileName">accounts.txt</span>
+                                <span class="file-size" id="accountFileSize">0 KB</span>
+                                <button class="btn-remove" onclick="clearAccounts()">✕</button>
+                            </div>
+                        </div>
+                        <textarea id="accountsInput" placeholder="email1:password1&#10;email2:password2" style="margin-top:8px;min-height:100px;"></textarea>
                     </div>
-                    <textarea id="proxiesInput" placeholder="proxy1:8080&#10;proxy2:3128" style="margin-top:8px;min-height:50px;"></textarea>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fas fa-shield-alt"></i> Proxies</div>
+                            <span class="card-badge" id="proxyCount">0 loaded</span>
+                        </div>
+                        <div class="file-upload-area" id="proxyDrop">
+                            <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                            <div class="upload-text"><strong>Click or drag</strong> to upload proxies.txt</div>
+                            <input type="file" id="proxyFileInput" accept=".txt">
+                            <div class="file-info" id="proxyFileInfo" style="display:none;">
+                                <i class="fas fa-check-circle"></i>
+                                <span class="file-name" id="proxyFileName">proxies.txt</span>
+                                <span class="file-size" id="proxyFileSize">0 KB</span>
+                                <button class="btn-remove" onclick="clearProxies()">✕</button>
+                            </div>
+                        </div>
+                        <textarea id="proxiesInput" placeholder="proxy1:8080&#10;proxy2:3128" style="margin-top:8px;min-height:50px;"></textarea>
+                    </div>
                 </div>
-            </div>
-
-            <!-- RIGHT COLUMN -->
-            <div>
-                <!-- Settings & Controls -->
-                <div class="card" style="margin-bottom:18px;">
-                    <div class="card-header">
-                        <div class="card-title"><i class="fas fa-sliders-h"></i> Controls</div>
-                    </div>
-                    <div class="settings-row" style="margin-bottom:12px;">
-                        <label>Threads:</label>
-                        <input type="number" id="threadCount" value="50" min="1" max="200">
-                        <label style="margin-left:8px;">Keywords:</label>
-                        <textarea id="keywordsInput" class="small" style="min-height:36px;flex:1;font-size:12px;padding:6px 10px;" placeholder="Steam&#10;Netflix&#10;PayPal">Steam
+                <div>
+                    <div class="card" style="margin-bottom:18px;">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fas fa-sliders-h"></i> Controls</div>
+                        </div>
+                        <div class="settings-row" style="margin-bottom:12px;">
+                            <label>Threads:</label>
+                            <input type="number" id="threadCount" value="50" min="1" max="200">
+                            <label style="margin-left:8px;">Keywords:</label>
+                            <textarea id="keywordsInput" class="small" style="min-height:36px;flex:1;font-size:12px;padding:6px 10px;" placeholder="Steam&#10;Netflix&#10;PayPal">Steam
 Netflix
 PayPal
 Amazon
 Security Alert</textarea>
-                    </div>
-                    <div class="btn-group">
-                        <button class="btn btn-primary" id="startBtn" onclick="startCheck()"><i class="fas fa-play"></i> Start</button>
-                        <button class="btn btn-danger" id="stopBtn" onclick="stopCheck()" disabled><i class="fas fa-stop"></i> Stop</button>
-                        <button class="btn btn-warning" onclick="clearLogs()"><i class="fas fa-trash-alt"></i> Clear</button>
-                    </div>
-
-                    <!-- EXPORT SECTION -->
-                    <div class="export-section">
-                        <div class="title"><i class="fas fa-download"></i> Export Results</div>
-                        <div class="btn-group-export">
-                            <button class="btn btn-success" onclick="downloadAll()"><i class="fas fa-file-archive"></i> All (ZIP)</button>
-                            <button class="btn btn-success" onclick="downloadFile('inbox')"><i class="fas fa-inbox"></i> Inbox</button>
-                            <button class="btn btn-success" onclick="downloadFile('valid')"><i class="fas fa-check-circle"></i> Valid</button>
-                            <button class="btn btn-success" onclick="downloadFile('2fa')"><i class="fas fa-lock"></i> 2FA</button>
                         </div>
-                        <div class="file-list" id="fileList">
-                            <div style="color:var(--text-secondary);font-size:11px;text-align:center;padding:5px;">
-                                <i class="fas fa-spinner fa-spin"></i> Loading files...
+                        <div class="btn-group">
+                            <button class="btn btn-primary" id="startBtn" onclick="startCheck('email')"><i class="fas fa-play"></i> Start</button>
+                            <button class="btn btn-danger" id="stopBtn" onclick="stopCheck()" disabled><i class="fas fa-stop"></i> Stop</button>
+                            <button class="btn btn-warning" onclick="clearLogs()"><i class="fas fa-trash-alt"></i> Clear</button>
+                        </div>
+                        <div class="export-section">
+                            <div class="title"><i class="fas fa-download"></i> Export Results</div>
+                            <div class="btn-group" style="margin:5px 0;">
+                                <button class="btn btn-success btn-sm" onclick="downloadAll()"><i class="fas fa-file-archive"></i> All (ZIP)</button>
+                                <button class="btn btn-success btn-sm" onclick="downloadFile('inbox')"><i class="fas fa-inbox"></i> Inbox</button>
+                                <button class="btn btn-success btn-sm" onclick="downloadFile('valid')"><i class="fas fa-check-circle"></i> Valid</button>
+                            </div>
+                            <div class="file-list" id="fileList">
+                                <div style="color:var(--text-secondary);font-size:11px;text-align:center;padding:5px;">
+                                    <i class="fas fa-spinner fa-spin"></i> Loading files...
+                                </div>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="progress-container">
-                        <div class="progress-info">
-                            <span id="progressText">0 / 0</span>
-                            <span id="progressPercent">0%</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="fill" id="progressFill"></div>
+                        <div class="progress-container">
+                            <div class="progress-info">
+                                <span id="progressText">0 / 0</span>
+                                <span id="progressPercent">0%</span>
+                            </div>
+                            <div class="progress-bar"><div class="fill" id="progressFill"></div></div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Logs -->
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title"><i class="fas fa-terminal"></i> Live Log</div>
-                        <span class="card-badge" id="logCount">0 entries</span>
-                    </div>
-                    <div class="log-container" id="logContainer">
-                        <div class="log-line">
-                            <span class="time">●</span>
-                            <span class="message info">Ready to check accounts...</span>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fas fa-terminal"></i> Live Log</div>
+                            <span class="card-badge" id="logCount">0 entries</span>
+                        </div>
+                        <div class="log-container" id="logContainer">
+                            <div class="log-line"><span class="time">●</span><span class="message info">Ready to check accounts...</span></div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- NOTIFICATION -->
-    <div class="notification" id="notification">
-        <button class="close-btn" onclick="closeNotification()">✕</button>
-        <div class="title" id="notifTitle">✅ Ready</div>
-        <div class="message" id="notifMessage">Files are ready for download</div>
+        <!-- TAB 2: AUTHORIZE.NET CHECKER -->
+        <div class="tab-content" id="tabCard">
+            <div class="main-grid">
+                <div>
+                    <div class="card" style="margin-bottom:18px;">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fas fa-credit-card"></i> Cards</div>
+                            <span class="card-badge" id="cardCount">0 loaded</span>
+                        </div>
+                        <div class="file-upload-area" id="cardDrop">
+                            <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                            <div class="upload-text"><strong>Click or drag</strong> to upload cards.txt</div>
+                            <input type="file" id="cardFileInput" accept=".txt">
+                            <div class="file-info" id="cardFileInfo" style="display:none;">
+                                <i class="fas fa-check-circle"></i>
+                                <span class="file-name" id="cardFileName">cards.txt</span>
+                                <span class="file-size" id="cardFileSize">0 KB</span>
+                                <button class="btn-remove" onclick="clearCards()">✕</button>
+                            </div>
+                        </div>
+                        <textarea id="cardsInput" placeholder="4111111111111111|12|26|123&#10;5111111111111111|10|27|456" style="margin-top:8px;min-height:100px;"></textarea>
+                        <div style="font-size:11px;color:var(--text-secondary);margin-top:5px;">
+                            <i class="fas fa-info-circle"></i> Format: CC|MM|YY|CVV or CC|MM|YY|CVV|Name
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fas fa-shield-alt"></i> Proxies</div>
+                            <span class="card-badge" id="cardProxyCount">0 loaded</span>
+                        </div>
+                        <div class="file-upload-area" id="cardProxyDrop">
+                            <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                            <div class="upload-text"><strong>Click or drag</strong> to upload proxies.txt</div>
+                            <input type="file" id="cardProxyFileInput" accept=".txt">
+                            <div class="file-info" id="cardProxyFileInfo" style="display:none;">
+                                <i class="fas fa-check-circle"></i>
+                                <span class="file-name" id="cardProxyFileName">proxies.txt</span>
+                                <span class="file-size" id="cardProxyFileSize">0 KB</span>
+                                <button class="btn-remove" onclick="clearCardProxies()">✕</button>
+                            </div>
+                        </div>
+                        <textarea id="cardProxiesInput" placeholder="proxy1:8080&#10;proxy2:3128" style="margin-top:8px;min-height:50px;"></textarea>
+                    </div>
+                </div>
+                <div>
+                    <div class="card" style="margin-bottom:18px;">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fas fa-sliders-h"></i> Card Controls</div>
+                        </div>
+                        <div class="settings-row" style="margin-bottom:12px;">
+                            <label>Threads:</label>
+                            <input type="number" id="cardThreadCount" value="5" min="1" max="20">
+                            <label style="margin-left:8px;color:var(--warning);"><i class="fas fa-exclamation-triangle"></i> Use fewer threads for Selenium</label>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-gold" id="cardStartBtn" onclick="startCheck('card')"><i class="fas fa-play"></i> Check Cards</button>
+                            <button class="btn btn-danger" id="cardStopBtn" onclick="stopCheck()" disabled><i class="fas fa-stop"></i> Stop</button>
+                            <button class="btn btn-warning" onclick="clearCardResults()"><i class="fas fa-trash-alt"></i> Clear Results</button>
+                        </div>
+                        <div class="export-section">
+                            <div class="title"><i class="fas fa-download"></i> Export Card Results</div>
+                            <div class="btn-group" style="margin:5px 0;">
+                                <button class="btn btn-success btn-sm" onclick="downloadAll()"><i class="fas fa-file-archive"></i> All (ZIP)</button>
+                                <button class="btn btn-success btn-sm" onclick="downloadFile('approved')"><i class="fas fa-check-circle"></i> Approved</button>
+                                <button class="btn btn-danger btn-sm" onclick="downloadFile('declined')"><i class="fas fa-times-circle"></i> Declined</button>
+                            </div>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-info">
+                                <span id="cardProgressText">0 / 0</span>
+                                <span id="cardProgressPercent">0%</span>
+                            </div>
+                            <div class="progress-bar"><div class="fill" id="cardProgressFill"></div></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fas fa-list"></i> Card Results</div>
+                            <span class="card-badge" id="cardResultCount">0 results</span>
+                        </div>
+                        <div class="log-container" id="cardResultsContainer" style="max-height:200px;">
+                            <div class="log-line"><span class="time">●</span><span class="message info">No cards checked yet...</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -669,6 +769,7 @@ Security Alert</textarea>
         // ============================================
         let running = false;
         let updateInterval = null;
+        let currentTab = 'email';
 
         // ============================================
         // DOM ELEMENTS
@@ -676,14 +777,34 @@ Security Alert</textarea>
         const accountsInput = document.getElementById('accountsInput');
         const proxiesInput = document.getElementById('proxiesInput');
         const keywordsInput = document.getElementById('keywordsInput');
+        const cardsInput = document.getElementById('cardsInput');
+        const cardProxiesInput = document.getElementById('cardProxiesInput');
         const logContainer = document.getElementById('logContainer');
+        const cardResultsContainer = document.getElementById('cardResultsContainer');
         const startBtn = document.getElementById('startBtn');
         const stopBtn = document.getElementById('stopBtn');
+        const cardStartBtn = document.getElementById('cardStartBtn');
+        const cardStopBtn = document.getElementById('cardStopBtn');
         const statusText = document.getElementById('statusText');
         const statusDot = document.getElementById('statusDot');
-        const accountFileInput = document.getElementById('accountFileInput');
-        const proxyFileInput = document.getElementById('proxyFileInput');
         const fileList = document.getElementById('fileList');
+
+        // ============================================
+        // TAB SWITCHING
+        // ============================================
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            if (tab === 'email') {
+                document.querySelector('.tab-btn:first-child').classList.add('active');
+                document.getElementById('tabEmail').classList.add('active');
+            } else {
+                document.querySelector('.tab-btn:last-child').classList.add('active');
+                document.getElementById('tabCard').classList.add('active');
+            }
+        }
 
         // ============================================
         // FILE UPLOAD HANDLERS
@@ -727,9 +848,10 @@ Security Alert</textarea>
             });
         }
 
+        // Email file uploads
         setupFileUpload(
-            accountFileInput, 
-            accountsInput, 
+            document.getElementById('accountFileInput'),
+            accountsInput,
             document.getElementById('accountFileInfo'),
             document.getElementById('accountFileName'),
             document.getElementById('accountFileSize'),
@@ -738,7 +860,7 @@ Security Alert</textarea>
         );
 
         setupFileUpload(
-            proxyFileInput,
+            document.getElementById('proxyFileInput'),
             proxiesInput,
             document.getElementById('proxyFileInfo'),
             document.getElementById('proxyFileName'),
@@ -747,18 +869,53 @@ Security Alert</textarea>
             clearProxies
         );
 
+        // Card file uploads
+        setupFileUpload(
+            document.getElementById('cardFileInput'),
+            cardsInput,
+            document.getElementById('cardFileInfo'),
+            document.getElementById('cardFileName'),
+            document.getElementById('cardFileSize'),
+            document.getElementById('cardCount'),
+            clearCards
+        );
+
+        setupFileUpload(
+            document.getElementById('cardProxyFileInput'),
+            cardProxiesInput,
+            document.getElementById('cardProxyFileInfo'),
+            document.getElementById('cardProxyFileName'),
+            document.getElementById('cardProxyFileSize'),
+            document.getElementById('cardProxyCount'),
+            clearCardProxies
+        );
+
         function clearAccounts() {
             accountsInput.value = '';
             document.getElementById('accountFileInfo').style.display = 'none';
             document.getElementById('accountCount').textContent = '0 loaded';
-            accountFileInput.value = '';
+            document.getElementById('accountFileInput').value = '';
         }
 
         function clearProxies() {
             proxiesInput.value = '';
             document.getElementById('proxyFileInfo').style.display = 'none';
             document.getElementById('proxyCount').textContent = '0 loaded';
-            proxyFileInput.value = '';
+            document.getElementById('proxyFileInput').value = '';
+        }
+
+        function clearCards() {
+            cardsInput.value = '';
+            document.getElementById('cardFileInfo').style.display = 'none';
+            document.getElementById('cardCount').textContent = '0 loaded';
+            document.getElementById('cardFileInput').value = '';
+        }
+
+        function clearCardProxies() {
+            cardProxiesInput.value = '';
+            document.getElementById('cardProxyFileInfo').style.display = 'none';
+            document.getElementById('cardProxyCount').textContent = '0 loaded';
+            document.getElementById('cardProxyFileInput').value = '';
         }
 
         // ============================================
@@ -777,6 +934,34 @@ Security Alert</textarea>
         }
 
         // ============================================
+        // CARD RESULTS
+        // ============================================
+        function addCardResult(card) {
+            const div = document.createElement('div');
+            div.className = `result-card ${card.status.toLowerCase()}`;
+            const time = new Date().toLocaleTimeString();
+            const statusIcons = {
+                'APPROVED': '✅',
+                'DECLINED': '❌',
+                'INVALID': '⚠️',
+                'PENDING': '⏳',
+                'ERROR': '💥'
+            };
+            const icon = statusIcons[card.status] || '❓';
+            div.innerHTML = `<span style="color:var(--text-secondary);font-size:10px;">${time}</span> ${icon} <strong>${card.card}</strong> | ${card.brand} | ${card.status} | ${card.reason}`;
+            cardResultsContainer.prepend(div);
+            if (cardResultsContainer.children.length > 100) {
+                cardResultsContainer.removeChild(cardResultsContainer.children[cardResultsContainer.children.length - 1]);
+            }
+            document.getElementById('cardResultCount').textContent = cardResultsContainer.children.length + ' results';
+        }
+
+        function clearCardResults() {
+            cardResultsContainer.innerHTML = '<div class="log-line"><span class="time">●</span><span class="message info">Results cleared</span></div>';
+            document.getElementById('cardResultCount').textContent = '0 results';
+        }
+
+        // ============================================
         // STATS UPDATE
         // ============================================
         function updateStats(stats) {
@@ -792,53 +977,71 @@ Security Alert</textarea>
             document.getElementById('progressFill').style.width = Math.min(progress, 100) + '%';
             document.getElementById('progressText').textContent = `${stats.checked || 0} / ${stats.total || 0}`;
             document.getElementById('progressPercent').textContent = Math.min(progress, 100).toFixed(1) + '%';
-        }
-
-        // ============================================
-        // NOTIFICATION
-        // ============================================
-        function showNotification(title, message, type = 'success') {
-            const notif = document.getElementById('notification');
-            document.getElementById('notifTitle').textContent = title;
-            document.getElementById('notifTitle').style.color = type === 'success' ? 'var(--success)' : 'var(--warning)';
-            document.getElementById('notifMessage').textContent = message;
-            notif.classList.add('show');
-            setTimeout(() => notif.classList.remove('show'), 8000);
-        }
-
-        function closeNotification() {
-            document.getElementById('notification').classList.remove('show');
+            
+            // Card progress
+            const cardProgress = stats.total > 0 ? (stats.checked / stats.total * 100) : 0;
+            document.getElementById('cardProgressFill').style.width = Math.min(cardProgress, 100) + '%';
+            document.getElementById('cardProgressText').textContent = `${stats.checked || 0} / ${stats.total || 0}`;
+            document.getElementById('cardProgressPercent').textContent = Math.min(cardProgress, 100).toFixed(1) + '%';
         }
 
         // ============================================
         // MAIN FUNCTIONS
         // ============================================
-        async function startCheck() {
+        async function startCheck(type) {
             if (running) return;
 
-            const accounts = accountsInput.value;
-            const keywords = keywordsInput.value;
-            const proxies = proxiesInput.value;
-            const threads = parseInt(document.getElementById('threadCount').value) || 50;
+            let accounts, keywords, proxies, threads, cards;
 
-            if (!accounts.trim()) {
-                addLog('⚠️ Please enter accounts or upload a file', 'warning');
-                return;
+            if (type === 'email') {
+                accounts = accountsInput.value;
+                keywords = keywordsInput.value;
+                proxies = proxiesInput.value;
+                threads = parseInt(document.getElementById('threadCount').value) || 50;
+
+                if (!accounts.trim()) {
+                    addLog('⚠️ Please enter accounts or upload a file', 'warning');
+                    return;
+                }
+            } else {
+                cards = cardsInput.value;
+                proxies = cardProxiesInput.value;
+                threads = parseInt(document.getElementById('cardThreadCount').value) || 5;
+
+                if (!cards.trim()) {
+                    addLog('⚠️ Please enter cards or upload a file', 'warning');
+                    return;
+                }
             }
 
             running = true;
             startBtn.disabled = true;
             stopBtn.disabled = false;
+            cardStartBtn.disabled = true;
+            cardStopBtn.disabled = false;
             statusDot.className = 'status-dot running';
             statusText.textContent = 'Running...';
 
-            addLog('🚀 Starting check...', 'info');
+            addLog(`🚀 Starting ${type} check...`, 'info');
 
             try {
+                const payload = {
+                    type: type,
+                    proxies: proxies,
+                    threads: threads
+                };
+
+                if (type === 'email') {
+                    payload.accounts = accounts;
+                    payload.keywords = keywords;
+                } else {
+                    payload.cards = cards;
+                }
+
                 const response = await fetch('/api/start', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ accounts, keywords, proxies, threads })
+                    body: JSON.stringify(payload)
                 });
 
                 const data = await response.json();
@@ -847,12 +1050,14 @@ Security Alert</textarea>
                     running = false;
                     startBtn.disabled = false;
                     stopBtn.disabled = true;
+                    cardStartBtn.disabled = false;
+                    cardStopBtn.disabled = true;
                     statusDot.className = 'status-dot stopped';
                     statusText.textContent = 'Error';
                     return;
                 }
 
-                addLog(`✅ Started: ${data.total} accounts`, 'success');
+                addLog(`✅ Started: ${data.total} items`, 'success');
                 
                 if (updateInterval) clearInterval(updateInterval);
                 updateInterval = setInterval(fetchStatus, 1500);
@@ -862,6 +1067,8 @@ Security Alert</textarea>
                 running = false;
                 startBtn.disabled = false;
                 stopBtn.disabled = true;
+                cardStartBtn.disabled = false;
+                cardStopBtn.disabled = true;
                 statusDot.className = 'status-dot stopped';
                 statusText.textContent = 'Error';
             }
@@ -885,21 +1092,32 @@ Security Alert</textarea>
                 
                 updateStats(data.stats);
                 
+                // Update logs
                 if (data.logs && data.logs.length > 0) {
                     data.logs.reverse().forEach(log => {
                         addLog(log.message, log.level);
                     });
                 }
                 
-                // Actualizar lista de archivos
+                // Update card results
+                if (data.card_results && data.card_results.length > 0) {
+                    data.card_results.forEach(card => {
+                        addCardResult(card);
+                    });
+                }
+                
+                // Update file list
                 if (data.export_ready && data.export_files) {
                     updateFileList(data.export_files);
                 }
                 
+                // Update status
                 if (!data.running && running) {
                     running = false;
                     startBtn.disabled = false;
                     stopBtn.disabled = true;
+                    cardStartBtn.disabled = false;
+                    cardStopBtn.disabled = true;
                     statusDot.className = 'status-dot stopped';
                     statusText.textContent = 'Stopped';
                     if (updateInterval) {
@@ -907,13 +1125,14 @@ Security Alert</textarea>
                         updateInterval = null;
                     }
                     addLog('✅ Check completed', 'success');
-                    showNotification('✅ Check Completed', 'Results are ready for download!');
                 }
                 
                 if (data.stats.total > 0 && data.stats.checked >= data.stats.total) {
                     running = false;
                     startBtn.disabled = false;
                     stopBtn.disabled = true;
+                    cardStartBtn.disabled = false;
+                    cardStopBtn.disabled = true;
                     statusDot.className = 'status-dot complete';
                     statusText.textContent = 'Complete';
                     if (updateInterval) {
@@ -943,13 +1162,12 @@ Security Alert</textarea>
                 const size = file.size > 1024 * 1024 
                     ? (file.size / (1024 * 1024)).toFixed(2) + ' MB'
                     : (file.size / 1024).toFixed(1) + ' KB';
-                const name = file.name.replace('Countries/', '🌍 ').replace('Keywords/', '🏷️ ');
-                const downloadUrl = `/api/download/${encodeURIComponent(file.name)}`;
+                const name = file.name;
                 html += `
                     <div class="file-item">
                         <span class="name">${name}</span>
                         <span class="size">${size}</span>
-                        <button class="download-btn" onclick="downloadSpecificFile('${file.name}')">⬇️</button>
+                        <button class="download-btn" onclick="downloadSpecificFile('${name}')">⬇️</button>
                     </div>
                 `;
             });
@@ -970,7 +1188,7 @@ Security Alert</textarea>
             const endpoints = {
                 'inbox': '/api/download/inbox',
                 'valid': '/api/download/valid',
-                '2fa': '/api/download/2fa'
+                'approved': '/api/download/approved'
             };
             
             const url = endpoints[type];
@@ -1018,11 +1236,10 @@ Security Alert</textarea>
         // Load files on startup
         loadFiles();
 
-        addLog('🔧 Hotmail Checker Pro ready', 'info');
-        addLog('💡 Upload accounts.txt or paste credentials', 'info');
+        addLog('🔧 Checker Pro ready', 'info');
+        addLog('💡 Switch tabs for Email or Card checker', 'info');
         addLog('📁 Drag & drop files supported', 'info');
-        addLog('📤 Results are automatically saved in Results folder', 'info');
-        addLog('⬇️ Use download buttons to get your files', 'info');
+        addLog('📤 Results are automatically saved', 'info');
     </script>
 </body>
 </html>
