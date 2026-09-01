@@ -18,6 +18,8 @@ ENV/
 *.swp
 *.swo
 *~
+*.sublime-workspace
+*.sublime-project
 
 # OS
 .DS_Store
@@ -46,6 +48,8 @@ build/
 *.sqlite
 *.sqlite3
 data/
+results/
+uploads/
 
 # Temp
 tmp/
