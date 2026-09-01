@@ -8,10 +8,10 @@ import requests
 import websocket
 import urllib3
 from datetime import datetime
-from flask import Flask, render_template, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 from fake_useragent import UserAgent
-import _thread
+import ssl
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -34,9 +34,6 @@ checker_state = {
     'target': 0
 }
 
-# ============================================
-# FUNCIONES DE UTILIDAD
-# ============================================
 def add_log(message, level='info'):
     timestamp = datetime.now().strftime('%H:%M:%S')
     checker_state['logs'].insert(0, {
@@ -63,23 +60,322 @@ def get_headers():
     }
 
 # ============================================
-# MÉTODOS PARA OBTENER INFO DEL CANAL (3 MÉTODOS)
+# OBTENER TOKEN DE AUTENTICACIÓN
 # ============================================
+def get_kick_token(channel):
+    """Obtiene el token de autenticación para WebSocket"""
+    try:
+        url = f'https://kick.com/api/v2/channels/{channel}'
+        headers = get_headers()
+        response = requests.get(url, headers=headers, timeout=10)
+        
+        if response.status_code == 200:
+            data = response.json()
+            livestream = data.get('livestream', {})
+            if livestream and livestream.get('is_live'):
+                # Token para WebSocket
+                return {
+                    'success': True,
+                    'token': livestream.get('key', ''),
+                    'channel_id': data.get('id', ''),
+                    'stream_id': livestream.get('id', '')
+                }
+            else:
+                return {
+                    'success': False,
+                    'error': 'El canal no está en vivo'
+                }
+        return {'success': False, 'error': f'Error {response.status_code}'}
+    except Exception as e:
+        return {'success': False, 'error': str(e)}
 
+# ============================================
+# CLASE VIEWER BOT CON WEBSOCKET CORRECTO
+# ============================================
+class KickViewerBot:
+    def __init__(self):
+        self.active_connections = []
+        self.running = False
+        self.target_channel = None
+        self.target_count = 0
+        self.current_count = 0
+        self.method = 'websocket'
+        self.ws_url = "wss://kick.com/ws"
+        self.session = requests.Session()
+        
+    def get_cookies(self, channel):
+        """Obtiene cookies necesarias para la conexión"""
+        try:
+            url = f'https://kick.com/{channel}'
+            headers = get_headers()
+            response = self.session.get(url, headers=headers, timeout=10)
+            return response.cookies.get_dict()
+        except:
+            return {}
+    
+    # ========== MÉTODO 1: WEBSOCKET CON AUTENTICACIÓN COMPLETA ==========
+    def inject_websocket(self, channel, count):
+        """Inyecta viewers con WebSocket autenticado"""
+        self.running = True
+        self.target_channel = channel
+        self.target_count = count
+        self.current_count = 0
+        self.method = 'websocket'
+        
+        add_log(f"🚀 Iniciando inyección WebSocket en {channel} - Objetivo: {count} viewers", 'info')
+        
+        # Obtener token de autenticación
+        token_data = get_kick_token(channel)
+        if not token_data.get('success'):
+            add_log(f"❌ {token_data.get('error', 'No se pudo obtener token')}", 'error')
+            self.running = False
+            return 0
+        
+        token = token_data.get('token')
+        channel_id = token_data.get('channel_id')
+        stream_id = token_data.get('stream_id')
+        
+        add_log(f"✅ Token obtenido correctamente", 'success')
+        
+        # Obtener cookies
+        cookies = self.get_cookies(channel)
+        cookie_str = '; '.join([f'{k}={v}' for k, v in cookies.items()])
+        
+        for i in range(count):
+            if not self.running:
+                break
+            
+            try:
+                # Headers completos para WebSocket
+                headers = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Origin': 'https://kick.com',
+                    'Referer': f'https://kick.com/{channel}',
+                    'Cookie': cookie_str,
+                    'Accept-Encoding': 'gzip, deflate, br',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache',
+                    'Sec-WebSocket-Extensions': 'permessage-deflate; client_max_window_bits',
+                    'Sec-WebSocket-Key': 'dGhlIHNhbXBsZSBub25jZQ==',
+                    'Sec-WebSocket-Version': '13'
+                }
+                
+                # Crear conexión WebSocket con timeout
+                ws = websocket.WebSocket()
+                ws.connect(
+                    self.ws_url,
+                    header=headers,
+                    cookie=cookie_str,
+                    timeout=5,
+                    skip_utf8_validation=True
+                )
+                
+                # Enviar mensaje de autenticación
+                auth_msg = {
+                    "type": "auth",
+                    "token": token,
+                    "channel_id": channel_id,
+                    "stream_id": stream_id
+                }
+                ws.send(json.dumps(auth_msg))
+                time.sleep(0.3)
+                
+                # Enviar heartbeat
+                heartbeat = {
+                    "type": "heartbeat"
+                }
+                ws.send(json.dumps(heartbeat))
+                
+                # Recibir respuesta de confirmación
+                try:
+                    response = ws.recv(timeout=2)
+                    resp_data = json.loads(response)
+                    if resp_data.get('type') == 'auth_success':
+                        self.active_connections.append(ws)
+                        self.current_count += 1
+                        checker_state['viewers_injected'] = self.current_count
+                        checker_state['active_connections'] = len(self.active_connections)
+                        add_log(f"✅ Conexión WS #{i+1} autenticada ({self.current_count}/{count})", 'success')
+                    else:
+                        add_log(f"⚠️ Conexión #{i+1} autenticación fallida: {resp_data}", 'warning')
+                        ws.close()
+                except websocket.WebSocketTimeoutException:
+                    add_log(f"⚠️ Conexión #{i+1} timeout en respuesta", 'warning')
+                    ws.close()
+                
+                # Pausa entre conexiones
+                time.sleep(0.5 + random.uniform(0, 0.5))
+                
+            except websocket.WebSocketBadStatusException as e:
+                add_log(f"❌ Error en conexión #{i+1}: {str(e)}", 'error')
+                time.sleep(1)
+            except websocket.WebSocketConnectionClosedException:
+                add_log(f"❌ Conexión #{i+1} cerrada inesperadamente", 'error')
+                time.sleep(1)
+            except Exception as e:
+                add_log(f"❌ Error en conexión #{i+1}: {str(e)[:100]}", 'error')
+                time.sleep(1)
+        
+        if self.current_count >= count:
+            add_log(f"🎉 Inyección completada: {self.current_count} viewers conectados", 'success')
+        else:
+            add_log(f"⚠️ Inyección parcial: {self.current_count}/{count} viewers conectados", 'warning')
+        
+        self.running = False
+        return self.current_count
+
+    # ========== MÉTODO 2: WEBSOCKET CON PROXIES ==========
+    def inject_proxy_websocket(self, channel, count):
+        """Inyecta viewers con WebSocket + proxies"""
+        self.running = True
+        self.target_channel = channel
+        self.target_count = count
+        self.current_count = 0
+        self.method = 'proxy_websocket'
+        
+        add_log(f"🚀 Iniciando inyección con proxies en {channel} - Objetivo: {count} viewers", 'info')
+        
+        # Obtener token
+        token_data = get_kick_token(channel)
+        if not token_data.get('success'):
+            add_log(f"❌ {token_data.get('error', 'No se pudo obtener token')}", 'error')
+            self.running = False
+            return 0
+        
+        token = token_data.get('token')
+        channel_id = token_data.get('channel_id')
+        stream_id = token_data.get('stream_id')
+        cookies = self.get_cookies(channel)
+        cookie_str = '; '.join([f'{k}={v}' for k, v in cookies.items()])
+        
+        # Lista de proxies de prueba (en producción usar proxies residenciales)
+        proxy_list = [
+            None,  # Sin proxy para algunos
+            None,  # Sin proxy para algunos
+            None,  # Sin proxy para algunos
+        ]
+        
+        for i in range(count):
+            if not self.running:
+                break
+            
+            try:
+                proxy = random.choice(proxy_list) if proxy_list else None
+                
+                headers = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Origin': 'https://kick.com',
+                    'Referer': f'https://kick.com/{channel}',
+                    'Cookie': cookie_str,
+                    'Accept-Encoding': 'gzip, deflate, br',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
+                }
+                
+                ws = websocket.WebSocket()
+                ws.connect(
+                    self.ws_url,
+                    header=headers,
+                    cookie=cookie_str,
+                    timeout=5
+                )
+                
+                auth_msg = {
+                    "type": "auth",
+                    "token": token,
+                    "channel_id": channel_id,
+                    "stream_id": stream_id
+                }
+                ws.send(json.dumps(auth_msg))
+                time.sleep(0.3)
+                ws.send(json.dumps({"type": "heartbeat"}))
+                
+                try:
+                    response = ws.recv(timeout=2)
+                    resp_data = json.loads(response)
+                    if resp_data.get('type') == 'auth_success':
+                        self.active_connections.append(ws)
+                        self.current_count += 1
+                        checker_state['viewers_injected'] = self.current_count
+                        add_log(f"✅ Conexión Proxy #{i+1} autenticada ({self.current_count}/{count})", 'success')
+                    else:
+                        ws.close()
+                except:
+                    ws.close()
+                
+                time.sleep(0.6 + random.uniform(0, 0.5))
+                
+            except Exception as e:
+                add_log(f"❌ Error en proxy #{i+1}: {str(e)[:80]}", 'error')
+                time.sleep(1)
+        
+        self.running = False
+        return self.current_count
+
+    # ========== MÉTODO 3: API DE VIEWER (POST) ==========
+    def inject_requests(self, channel, count):
+        """Inyecta viewers mediante peticiones HTTP"""
+        self.running = True
+        self.target_channel = channel
+        self.target_count = count
+        self.current_count = 0
+        self.method = 'requests'
+        
+        add_log(f"🚀 Iniciando inyección HTTP en {channel} - Objetivo: {count} viewers", 'info')
+        
+        token_data = get_kick_token(channel)
+        if not token_data.get('success'):
+            add_log(f"❌ {token_data.get('error', 'No se pudo obtener token')}", 'error')
+            self.running = False
+            return 0
+        
+        token = token_data.get('token')
+        url = f'https://kick.com/api/v1/channels/{channel}/viewer'
+        headers = get_headers()
+        headers['Content-Type'] = 'application/json'
+        headers['X-Client-Token'] = token
+        
+        for i in range(count):
+            if not self.running:
+                break
+            
+            try:
+                session = requests.Session()
+                session.headers.update(headers)
+                
+                response = session.post(url, json={'channel': channel}, timeout=5)
+                
+                if response.status_code in [200, 201, 204]:
+                    self.current_count += 1
+                    checker_state['viewers_injected'] = self.current_count
+                    add_log(f"✅ Viewer HTTP #{i+1} activo ({self.current_count}/{count})", 'success')
+                else:
+                    add_log(f"⚠️ HTTP #{i+1} falló ({response.status_code})", 'warning')
+                
+                session.close()
+                time.sleep(0.3 + random.uniform(0, 0.2))
+                
+            except Exception as e:
+                add_log(f"❌ Error HTTP #{i+1}: {str(e)[:80]}", 'error')
+                time.sleep(0.5)
+        
+        self.running = False
+        return self.current_count
+
+# ============================================
+# INFO DEL CANAL (3 MÉTODOS)
+# ============================================
 class KickChannelInfo:
     def __init__(self):
         self.ua = UserAgent()
         self.session = requests.Session()
     
-    # ========== MÉTODO 1: API OFICIAL ==========
     def get_by_api(self, channel):
-        """Obtiene info usando la API oficial de Kick"""
         try:
             url = f'https://kick.com/api/v2/channels/{channel}'
-            headers = {
-                'User-Agent': self.ua.random,
-                'Accept': 'application/json'
-            }
+            headers = {'User-Agent': self.ua.random, 'Accept': 'application/json'}
             response = self.session.get(url, headers=headers, timeout=10)
             
             if response.status_code == 200:
@@ -102,16 +398,10 @@ class KickChannelInfo:
         except Exception as e:
             return {'success': False, 'error': str(e), 'method': 'API Oficial'}
     
-    # ========== MÉTODO 2: GRAPHQL ==========
     def get_by_graphql(self, channel):
-        """Obtiene info usando GraphQL de Kick"""
         try:
             url = 'https://kick.com/api/graphql'
-            headers = {
-                'User-Agent': self.ua.random,
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            }
+            headers = {'User-Agent': self.ua.random, 'Content-Type': 'application/json', 'Accept': 'application/json'}
             
             query = {
                 'query': '''
@@ -125,9 +415,7 @@ class KickChannelInfo:
                                 isLive
                                 viewerCount
                                 sessionTitle
-                                category {
-                                    name
-                                }
+                                category { name }
                             }
                         }
                     }
@@ -157,25 +445,16 @@ class KickChannelInfo:
         except Exception as e:
             return {'success': False, 'error': str(e), 'method': 'GraphQL'}
     
-    # ========== MÉTODO 3: SCRAPING HTML (JSON embebido) ==========
     def get_by_scraping(self, channel):
-        """Obtiene info extrayendo JSON del HTML"""
         try:
             url = f'https://kick.com/{channel}'
-            headers = {
-                'User-Agent': self.ua.random,
-                'Accept': 'text/html,application/xhtml+xml',
-                'Accept-Language': 'en-US,en;q=0.9'
-            }
+            headers = {'User-Agent': self.ua.random, 'Accept': 'text/html'}
             response = self.session.get(url, headers=headers, timeout=10)
             
             if response.status_code != 200:
                 return {'success': False, 'error': f'Error {response.status_code}', 'method': 'Scraping'}
             
-            html = response.text
-            
-            # Buscar JSON embebido en __NEXT_DATA__
-            match = re.search(r'<script id="__NEXT_DATA__".*?>(.*?)</script>', html, re.DOTALL)
+            match = re.search(r'<script id="__NEXT_DATA__".*?>(.*?)</script>', response.text, re.DOTALL)
             if not match:
                 return {'success': False, 'error': 'No se encontraron datos', 'method': 'Scraping'}
             
@@ -199,200 +478,7 @@ class KickChannelInfo:
             return {'success': False, 'error': str(e), 'method': 'Scraping'}
 
 # ============================================
-# MÉTODOS DE INYECCIÓN DE VIEWERS (3 MÉTODOS)
-# ============================================
-
-class KickViewerBot:
-    def __init__(self):
-        self.active_connections = []
-        self.running = False
-        self.target_channel = None
-        self.target_count = 0
-        self.current_count = 0
-        self.method = 'websocket'
-        
-    def get_kick_token(self, channel):
-        """Obtiene token de autenticación para WebSocket"""
-        try:
-            url = f'https://kick.com/api/v1/channels/{channel}'
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                'Accept': 'application/json'
-            }
-            response = requests.get(url, headers=headers, timeout=10)
-            if response.status_code == 200:
-                data = response.json()
-                return data.get('stream', {}).get('key', None)
-            return None
-        except:
-            return None
-    
-    # ========== MÉTODO 1: WEBSOCKET DIRECTO (MÁS EFECTIVO) ==========
-    def inject_websocket(self, channel, count):
-        """Inyecta viewers mediante WebSocket (el que mejor funciona)"""
-        self.running = True
-        self.target_channel = channel
-        self.target_count = count
-        self.current_count = 0
-        self.method = 'websocket'
-        
-        add_log(f"🚀 Iniciando inyección WebSocket en {channel} - Objetivo: {count} viewers", 'info')
-        
-        for i in range(count):
-            if not self.running:
-                break
-            
-            try:
-                # Crear conexión WebSocket
-                ws_url = "wss://kick.com/ws"
-                ws = websocket.WebSocket()
-                ws.connect(ws_url, timeout=5)
-                
-                # Enviar mensaje de autenticación
-                auth_msg = {
-                    "type": "auth",
-                    "channel": channel
-                }
-                ws.send(json.dumps(auth_msg))
-                
-                # Enviar heartbeat para mantener la conexión
-                heartbeat = {
-                    "type": "heartbeat"
-                }
-                ws.send(json.dumps(heartbeat))
-                
-                self.active_connections.append(ws)
-                self.current_count += 1
-                checker_state['viewers_injected'] = self.current_count
-                checker_state['active_connections'] = len(self.active_connections)
-                
-                add_log(f"✅ Conexión WebSocket #{i+1} establecida ({self.current_count}/{count})", 'success')
-                time.sleep(0.3)  # Pequeña pausa para no sobrecargar
-                
-            except Exception as e:
-                add_log(f"❌ Error en conexión #{i+1}: {str(e)}", 'error')
-                time.sleep(0.5)
-        
-        if self.current_count >= count:
-            add_log(f"🎉 Inyección completada: {self.current_count} viewers conectados", 'success')
-        else:
-            add_log(f"⚠️ Inyección parcial: {self.current_count}/{count} viewers conectados", 'warning')
-        
-        self.running = False
-        return self.current_count
-    
-    # ========== MÉTODO 2: MULTI-SESIÓN CON REQUESTS ==========
-    def inject_requests(self, channel, count):
-        """Inyecta viewers simulando peticiones HTTP (menos efectivo pero sin WebSocket)"""
-        self.running = True
-        self.target_channel = channel
-        self.target_count = count
-        self.current_count = 0
-        self.method = 'requests'
-        
-        add_log(f"🚀 Iniciando inyección HTTP en {channel} - Objetivo: {count} viewers", 'info')
-        
-        # Obtener token para autenticación
-        token = self.get_kick_token(channel)
-        if not token:
-            add_log("❌ No se pudo obtener token de autenticación", 'error')
-            self.running = False
-            return 0
-        
-        url = f'https://kick.com/api/v1/channels/{channel}/viewer'
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'X-Client-Token': token
-        }
-        
-        for i in range(count):
-            if not self.running:
-                break
-            
-            try:
-                # Crear sesión independiente
-                session = requests.Session()
-                session.headers.update(headers)
-                
-                # Enviar ping de viewer
-                data = {'channel': channel}
-                response = session.post(url, json=data, timeout=5)
-                
-                if response.status_code in [200, 204]:
-                    self.current_count += 1
-                    checker_state['viewers_injected'] = self.current_count
-                    add_log(f"✅ Viewer HTTP #{i+1} activo ({self.current_count}/{count})", 'success')
-                else:
-                    add_log(f"⚠️ Viewer HTTP #{i+1} falló ({response.status_code})", 'warning')
-                
-                session.close()
-                time.sleep(0.2)
-                
-            except Exception as e:
-                add_log(f"❌ Error en HTTP #{i+1}: {str(e)}", 'error')
-                time.sleep(0.5)
-        
-        self.running = False
-        return self.current_count
-    
-    # ========== MÉTODO 3: PROXY ROTATIVO + WEBSOCKET ==========
-    def inject_proxy_websocket(self, channel, count):
-        """Inyecta viewers con WebSocket + proxies rotativos (más estable)"""
-        self.running = True
-        self.target_channel = channel
-        self.target_count = count
-        self.current_count = 0
-        self.method = 'proxy_websocket'
-        
-        add_log(f"🚀 Iniciando inyección con proxies en {channel} - Objetivo: {count} viewers", 'info')
-        
-        # Lista de proxies públicos (para demostración - en producción usar proxies residenciales)
-        proxies = [
-            None,  # Sin proxy para algunos
-        ]
-        
-        for i in range(count):
-            if not self.running:
-                break
-            
-            try:
-                # Elegir proxy aleatorio
-                proxy = random.choice(proxies) if proxies else None
-                
-                ws_url = "wss://kick.com/ws"
-                ws = websocket.WebSocket()
-                
-                if proxy:
-                    # Configurar proxy para WebSocket (requiere soporte)
-                    ws.connect(ws_url, timeout=5)
-                else:
-                    ws.connect(ws_url, timeout=5)
-                
-                # Autenticar
-                auth_msg = {"type": "auth", "channel": channel}
-                ws.send(json.dumps(auth_msg))
-                
-                # Heartbeat
-                ws.send(json.dumps({"type": "heartbeat"}))
-                
-                self.active_connections.append(ws)
-                self.current_count += 1
-                checker_state['viewers_injected'] = self.current_count
-                
-                add_log(f"✅ Conexión Proxy #{i+1} establecida ({self.current_count}/{count})", 'success')
-                time.sleep(0.4)
-                
-            except Exception as e:
-                add_log(f"❌ Error en conexión proxy #{i+1}: {str(e)}", 'error')
-                time.sleep(0.5)
-        
-        self.running = False
-        return self.current_count
-
-# ============================================
-# INSTANCIAS GLOBALES
+# INSTANCIAS
 # ============================================
 channel_info = KickChannelInfo()
 viewer_bot = KickViewerBot()
@@ -407,7 +493,6 @@ def index():
 
 @app.route('/api/channel/info', methods=['POST'])
 def get_channel_info():
-    """Obtiene información del canal usando los 3 métodos"""
     data = request.json
     channel = data.get('channel', '').strip()
     method = data.get('method', 'all')
@@ -419,42 +504,33 @@ def get_channel_info():
     
     results = []
     
-    # Método 1: API Oficial
     if method in ['all', 'api']:
         result = channel_info.get_by_api(channel)
         results.append(result)
         if result['success']:
             add_log(f"✅ API: {channel} - {'En vivo' if result['is_live'] else 'Offline'} ({result['viewers']} viewers)", 'success')
     
-    # Método 2: GraphQL
     if method in ['all', 'graphql']:
         result = channel_info.get_by_graphql(channel)
         results.append(result)
         if result['success']:
             add_log(f"✅ GraphQL: {channel} - {'En vivo' if result['is_live'] else 'Offline'} ({result['viewers']} viewers)", 'success')
     
-    # Método 3: Scraping
     if method in ['all', 'scraping']:
         result = channel_info.get_by_scraping(channel)
         results.append(result)
         if result['success']:
             add_log(f"✅ Scraping: {channel} - {'En vivo' if result['is_live'] else 'Offline'} ({result['viewers']} viewers)", 'success')
     
-    # Guardar info en estado
     if results and any(r.get('success') for r in results):
         best_result = next((r for r in results if r['success']), None)
         if best_result:
             checker_state['channel_info'] = best_result
     
-    return jsonify({
-        'success': True,
-        'channel': channel,
-        'results': results
-    })
+    return jsonify({'success': True, 'channel': channel, 'results': results})
 
 @app.route('/api/viewers/start', methods=['POST'])
 def start_viewer_injection():
-    """Inicia la inyección de viewers"""
     if checker_state['running']:
         return jsonify({'error': 'Ya hay un proceso en ejecución'}), 400
     
@@ -477,20 +553,13 @@ def start_viewer_injection():
     
     add_log(f"🚀 Iniciando inyección en {channel} con {count} viewers (método: {method})", 'info')
     
-    # Ejecutar en hilo separado
     thread = threading.Thread(target=run_viewer_injection, args=(channel, count, method))
     thread.daemon = True
     thread.start()
     
-    return jsonify({
-        'success': True,
-        'channel': channel,
-        'count': count,
-        'method': method
-    })
+    return jsonify({'success': True, 'channel': channel, 'count': count, 'method': method})
 
 def run_viewer_injection(channel, count, method):
-    """Ejecuta la inyección en segundo plano"""
     try:
         if method == 'websocket':
             viewer_bot.inject_websocket(channel, count)
@@ -510,14 +579,12 @@ def run_viewer_injection(channel, count, method):
 
 @app.route('/api/viewers/stop', methods=['POST'])
 def stop_viewer_injection():
-    """Detiene la inyección de viewers"""
     if not checker_state['running']:
         return jsonify({'error': 'No hay proceso en ejecución'}), 400
     
     viewer_bot.running = False
     checker_state['running'] = False
     
-    # Cerrar conexiones activas
     for ws in viewer_bot.active_connections:
         try:
             ws.close()
@@ -530,7 +597,6 @@ def stop_viewer_injection():
 
 @app.route('/api/status', methods=['GET'])
 def get_status():
-    """Obtiene el estado actual"""
     return jsonify({
         'running': checker_state['running'],
         'channel_info': checker_state['channel_info'],
@@ -544,7 +610,6 @@ def get_status():
 
 @app.route('/api/logs/clear', methods=['POST'])
 def clear_logs():
-    """Limpia los logs"""
     checker_state['logs'] = []
     return jsonify({'success': True})
 
