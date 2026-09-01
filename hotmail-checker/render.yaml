@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: checker-unificado
+    name: checker-dashboard
     runtime: python
     plan: free
     buildCommand: |
