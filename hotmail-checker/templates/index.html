@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kick Bot Pro - 5 Métodos</title>
+    <title>Hotmail Checker Pro</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
             --bg-primary: #0a0e17;
+            --bg-secondary: #111927;
             --bg-card: rgba(17, 25, 45, 0.85);
             --border-color: #1a2a44;
             --text-primary: #e8edf5;
@@ -19,18 +20,21 @@
             --warning: #ffa502;
             --danger: #ff4757;
             --purple: #a29bfe;
-            --gold: #ffd700;
+            --pink: #e056a0;
         }
 
         body {
             background: var(--bg-primary);
             color: var(--text-primary);
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
             min-height: 100vh;
             padding: 15px;
+            background-image: 
+                radial-gradient(ellipse at 10% 20%, rgba(0, 212, 255, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 90% 80%, rgba(0, 212, 255, 0.03) 0%, transparent 50%);
         }
 
-        .container { max-width: 1200px; margin: 0 auto; }
+        .container { max-width: 1440px; margin: 0 auto; }
 
         .header {
             display: flex;
@@ -41,23 +45,46 @@
             border: 1px solid var(--border-color);
             border-radius: 12px;
             margin-bottom: 15px;
+            backdrop-filter: blur(20px);
             flex-wrap: wrap;
             gap: 10px;
         }
 
-        .logo { display: flex; align-items: center; gap: 12px; }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
         .logo-icon {
-            width: 40px; height: 40px;
+            width: 40px;
+            height: 40px;
             background: linear-gradient(135deg, var(--accent), #0088cc);
             border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 18px;
+            font-weight: 900;
             color: #fff;
         }
-        .logo-text h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
+
+        .logo-text h1 {
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--accent), #66e0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
         .logo-text span { font-size: 11px; color: var(--text-secondary); }
+
+        .header-status {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
 
         .status-badge {
             display: flex;
@@ -67,106 +94,30 @@
             border-radius: 20px;
             font-size: 12px;
             font-weight: 600;
-            background: rgba(255,255,255,0.05);
+            background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--border-color);
         }
+
         .status-dot {
-            width: 10px; height: 10px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             display: inline-block;
         }
+
         .status-dot.ready { background: var(--text-secondary); }
         .status-dot.running { background: var(--success); animation: pulse 1s infinite; }
         .status-dot.stopped { background: var(--danger); }
+        .status-dot.complete { background: var(--accent); }
 
         @keyframes pulse {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.5; transform: scale(0.9); }
         }
 
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-
-        .card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 18px;
-            backdrop-filter: blur(20px);
-        }
-
-        .card-title {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--accent);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        input, select {
-            width: 100%;
-            background: rgba(10, 14, 23, 0.8);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            color: var(--text-primary);
-            padding: 10px 14px;
-            font-size: 13px;
-            transition: border-color 0.3s;
-        }
-        input:focus, select:focus { outline: none; border-color: var(--accent); }
-
-        .input-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 8px;
-            flex-wrap: wrap;
-        }
-        .input-group input { flex: 1; }
-        .input-group input[type="number"] { width: 100px; flex: none; }
-
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .btn-primary { background: linear-gradient(135deg, var(--accent), #0088cc); color: #0a0e17; }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,212,255,0.3); }
-        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        .btn-success { background: var(--success); color: #0a0e17; }
-        .btn-success:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(46,213,115,0.3); }
-
-        .btn-danger { background: var(--danger); color: #fff; }
-        .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255,71,87,0.3); }
-
-        .btn-warning { background: var(--warning); color: #0a0e17; }
-        .btn-warning:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255,165,2,0.3); }
-
-        .btn-purple { background: var(--purple); color: #0a0e17; }
-        .btn-purple:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(162,155,254,0.3); }
-
-        .btn-gold { background: var(--gold); color: #0a0e17; }
-        .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255,215,0,0.3); }
-
-        .btn-sm { padding: 6px 14px; font-size: 11px; }
-
-        .btn-group { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
             gap: 8px;
             margin-bottom: 15px;
         }
@@ -177,57 +128,263 @@
             border-radius: 10px;
             padding: 10px;
             text-align: center;
+            transition: all 0.3s;
         }
-        .stat-number { font-size: 22px; font-weight: 700; display: block; }
-        .stat-label { font-size: 9px; text-transform: uppercase; color: var(--text-secondary); margin-top: 3px; }
-        .stat-card.viewers .stat-number { color: var(--success); }
-        .stat-card.connections .stat-number { color: var(--accent); }
-        .stat-card.target .stat-number { color: var(--gold); }
-        .stat-card.followers .stat-number { color: var(--purple); }
-        .stat-card.live .stat-number { color: var(--danger); }
 
-        .method-selector {
+        .stat-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .stat-number { font-size: 20px; font-weight: 700; display: block; line-height: 1.2; }
+        .stat-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin-top: 3px; }
+
+        .stat-card.valid .stat-number { color: var(--success); }
+        .stat-card.inbox .stat-number { color: var(--warning); }
+        .stat-card.fa .stat-number { color: var(--pink); }
+        .stat-card.bad .stat-number { color: var(--danger); }
+        .stat-card.checked .stat-number { color: var(--accent); }
+        .stat-card.total .stat-number { color: var(--purple); }
+        .stat-card.cpm .stat-number { color: #ff6b6b; }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 15px 18px;
+            backdrop-filter: blur(20px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .card-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title i { font-size: 14px; }
+        .card-badge {
+            font-size: 10px;
+            padding: 3px 10px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .file-upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .file-upload-area:hover {
+            border-color: var(--accent);
+            background: rgba(0, 212, 255, 0.03);
+        }
+
+        .file-upload-area.dragover {
+            border-color: var(--accent);
+            background: rgba(0, 212, 255, 0.08);
+        }
+
+        .file-upload-area input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-upload-area .upload-icon { font-size: 22px; color: var(--text-secondary); margin-bottom: 4px; }
+        .file-upload-area .upload-text { color: var(--text-secondary); font-size: 11px; }
+        .file-upload-area .upload-text strong { color: var(--accent); }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 10px;
+            background: rgba(0, 212, 255, 0.08);
+            border-radius: 6px;
+            margin-top: 6px;
+            font-size: 11px;
+        }
+
+        .file-info i { color: var(--success); }
+        .file-info .file-name { color: var(--text-primary); font-weight: 500; }
+        .file-info .file-size { color: var(--text-secondary); margin-left: auto; font-size: 10px; }
+
+        .btn-remove {
+            background: var(--danger);
+            border: none;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            cursor: pointer;
+        }
+
+        textarea {
+            width: 100%;
+            background: rgba(10, 14, 23, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            padding: 8px 12px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 12px;
+            transition: border-color 0.3s;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        textarea:focus { outline: none; border-color: var(--accent); }
+
+        .settings-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .settings-row label { font-size: 11px; color: var(--text-secondary); }
+
+        .settings-row input[type="number"] {
+            width: 60px;
+            background: rgba(10, 14, 23, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            padding: 5px 8px;
+            font-size: 12px;
+        }
+
+        .settings-row input[type="number"]:focus { outline: none; border-color: var(--accent); }
+
+        .settings-row textarea.small {
+            min-height: 30px;
+            flex: 1;
+            font-size: 11px;
+            padding: 5px 8px;
+        }
+
+        .btn {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), #0088cc);
+            color: #0a0e17;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 212, 255, 0.3);
+        }
+
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255, 71, 87, 0.3); }
+        .btn-danger:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .btn-success { background: var(--success); color: #0a0e17; }
+        .btn-success:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(46, 213, 115, 0.3); }
+
+        .btn-warning { background: var(--warning); color: #0a0e17; }
+        .btn-warning:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255, 165, 2, 0.3); }
+
+        .btn-sm { padding: 4px 10px; font-size: 10px; }
+
+        .btn-group {
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
             margin: 8px 0;
         }
-        .method-selector label {
+
+        .progress-container { margin: 10px 0 4px 0; }
+
+        .progress-info {
             display: flex;
-            align-items: center;
-            gap: 5px;
+            justify-content: space-between;
             font-size: 11px;
             color: var(--text-secondary);
-            cursor: pointer;
-            padding: 4px 10px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            transition: all 0.3s;
+            margin-bottom: 3px;
         }
-        .method-selector label:hover { border-color: var(--accent); background: rgba(0,212,255,0.05); }
-        .method-selector input[type="radio"] { width: auto; accent-color: var(--accent); }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: var(--border-color);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-bar .fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--success));
+            border-radius: 3px;
+            transition: width 0.4s ease;
+            width: 0%;
+        }
 
         .log-container {
             background: rgba(10, 14, 23, 0.9);
             border-radius: 8px;
             padding: 10px;
-            max-height: 350px;
+            max-height: 220px;
             overflow-y: auto;
-            font-family: 'Consolas', monospace;
+            font-family: 'Consolas', 'Courier New', monospace;
             font-size: 11px;
             line-height: 1.6;
             border: 1px solid var(--border-color);
         }
+
         .log-container::-webkit-scrollbar { width: 4px; }
-        .log-container::-webkit-scrollbar-track { background: rgba(10,14,23,0.5); }
+        .log-container::-webkit-scrollbar-track { background: rgba(10, 14, 23, 0.5); }
         .log-container::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
 
         .log-line {
             padding: 2px 0;
-            border-bottom: 1px solid rgba(26,42,68,0.15);
+            border-bottom: 1px solid rgba(26, 42, 68, 0.15);
             display: flex;
             gap: 8px;
         }
+
         .log-line .time { color: var(--text-secondary); min-width: 50px; font-size: 10px; }
         .log-line .message { word-break: break-all; }
         .log-line .message.success { color: var(--success); }
@@ -235,38 +392,78 @@
         .log-line .message.warning { color: var(--warning); }
         .log-line .message.info { color: var(--text-secondary); }
 
-        .channel-info {
-            background: rgba(0,212,255,0.05);
+        .export-section {
+            background: rgba(0, 212, 255, 0.05);
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            padding: 12px;
-            margin-top: 10px;
+            padding: 10px 12px;
+            margin-top: 8px;
         }
-        .channel-info .label { color: var(--text-secondary); font-size: 11px; }
-        .channel-info .value { color: var(--text-primary); font-size: 14px; font-weight: 600; }
-        .live-tag {
-            display: inline-block;
-            padding: 2px 10px;
-            border-radius: 4px;
+
+        .export-section .title {
             font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .export-section .title i { color: var(--accent); }
+
+        .file-list {
+            margin-top: 8px;
+            max-height: 80px;
+            overflow-y: auto;
+        }
+
+        .file-list::-webkit-scrollbar { width: 3px; }
+        .file-list::-webkit-scrollbar-track { background: rgba(10, 14, 23, 0.5); }
+        .file-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 3px 6px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 4px;
+            margin-bottom: 2px;
+            font-size: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .file-item:hover { background: rgba(0, 212, 255, 0.08); }
+
+        .file-item .name { color: var(--text-primary); font-family: monospace; }
+        .file-item .size { color: var(--text-secondary); font-size: 9px; }
+        .file-item .download-btn {
+            background: var(--success);
+            border: none;
+            color: #0a0e17;
+            padding: 1px 8px;
+            border-radius: 3px;
+            font-size: 9px;
+            cursor: pointer;
             font-weight: 700;
         }
-        .live-tag.live { background: var(--danger); color: #fff; }
-        .live-tag.offline { background: var(--text-secondary); color: #fff; }
 
-        .status-badge-extra {
-            font-size: 10px;
-            color: var(--text-secondary);
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-        .status-badge-extra .available { color: var(--success); }
-        .status-badge-extra .unavailable { color: var(--danger); }
+        .file-item .download-btn:hover { opacity: 0.8; }
+
+        @media (max-width: 1024px) { .main-grid { grid-template-columns: 1fr; } }
 
         @media (max-width: 768px) {
-            .grid-2 { grid-template-columns: 1fr; }
             .header { flex-direction: column; align-items: stretch; text-align: center; }
+            .header-status { justify-content: center; }
+            .stats-grid { grid-template-columns: repeat(4, 1fr); }
+            .settings-row { flex-direction: column; align-items: stretch; }
+            .btn-group { justify-content: center; }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .card { padding: 12px; }
         }
     </style>
 </head>
@@ -275,86 +472,129 @@
         <!-- HEADER -->
         <header class="header">
             <div class="logo">
-                <div class="logo-icon"><i class="fas fa-bolt"></i></div>
+                <div class="logo-icon">📧</div>
                 <div class="logo-text">
-                    <h1>Kick Bot Pro</h1>
-                    <span>5 Métodos | Bypass Cloudflare</span>
+                    <h1>Hotmail Checker</h1>
+                    <span>Microsoft Account Validator</span>
                 </div>
             </div>
-            <div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap;">
-                <div class="status-badge-extra" id="libsStatus">
-                    <span>📦 kscraper: <span class="unavailable" id="kscraperStatus">✗</span></span>
-                    <span>🔌 WebSocket: <span class="unavailable" id="websocketStatus">✗</span></span>
-                </div>
+            <div class="header-status">
                 <div class="status-badge">
                     <span class="status-dot ready" id="statusDot"></span>
                     <span id="statusText">Ready</span>
                 </div>
+                <span style="color:var(--text-secondary);font-size:11px;" id="uptimeText">● Online</span>
             </div>
         </header>
 
         <!-- STATS -->
         <div class="stats-grid">
-            <div class="stat-card viewers"><span class="stat-number" id="statViewers">0</span><span class="stat-label">📊 Viewers</span></div>
-            <div class="stat-card connections"><span class="stat-number" id="statConnections">0</span><span class="stat-label">🔗 Conexiones</span></div>
-            <div class="stat-card target"><span class="stat-number" id="statTarget">0</span><span class="stat-label">🎯 Objetivo</span></div>
-            <div class="stat-card followers"><span class="stat-number" id="statFollowers">0</span><span class="stat-label">👥 Seguidores</span></div>
-            <div class="stat-card live"><span class="stat-number" id="statLive">⚪</span><span class="stat-label">📡 Estado</span></div>
+            <div class="stat-card valid"><span class="stat-number" id="statValid">0</span><span class="stat-label">✅ Valid</span></div>
+            <div class="stat-card inbox"><span class="stat-number" id="statInbox">0</span><span class="stat-label">📬 Inbox Hits</span></div>
+            <div class="stat-card fa"><span class="stat-number" id="stat2FA">0</span><span class="stat-label">🔐 2FA</span></div>
+            <div class="stat-card bad"><span class="stat-number" id="statBad">0</span><span class="stat-label">❌ Invalid</span></div>
+            <div class="stat-card checked"><span class="stat-number" id="statChecked">0</span><span class="stat-label">📊 Checked</span></div>
+            <div class="stat-card total"><span class="stat-number" id="statTotal">0</span><span class="stat-label">📦 Total</span></div>
+            <div class="stat-card cpm"><span class="stat-number" id="statCPM">0</span><span class="stat-label">⚡ CPM</span></div>
         </div>
 
         <!-- MAIN GRID -->
-        <div class="grid-2">
+        <div class="main-grid">
             <!-- LEFT COLUMN -->
             <div>
-                <!-- CHANNEL INFO -->
-                <div class="card" style="margin-bottom:15px;">
-                    <div class="card-title"><i class="fas fa-search"></i> Información del Canal</div>
-                    <div class="input-group">
-                        <input type="text" id="channelInput" placeholder="Nombre del canal (ej: xqc)" value="xqc">
-                        <button class="btn btn-primary" onclick="getChannelInfo()"><i class="fas fa-search"></i> Buscar</button>
+                <!-- Accounts -->
+                <div class="card" style="margin-bottom:12px;">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-users"></i> Accounts</div>
+                        <span class="card-badge" id="accountCount">0 loaded</span>
                     </div>
-                    <div id="channelInfoContainer">
-                        <div style="color:var(--text-secondary);font-size:12px;text-align:center;padding:10px;">
-                            <i class="fas fa-info-circle"></i> Ingresa un canal para ver su información
+                    <div class="file-upload-area" id="accountDrop">
+                        <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                        <div class="upload-text"><strong>Click or drag</strong> to upload accounts.txt</div>
+                        <input type="file" id="accountFileInput" accept=".txt">
+                        <div class="file-info" id="accountFileInfo" style="display:none;">
+                            <i class="fas fa-check-circle"></i>
+                            <span class="file-name" id="accountFileName">accounts.txt</span>
+                            <span class="file-size" id="accountFileSize">0 KB</span>
+                            <button class="btn-remove" onclick="clearAccounts()">✕</button>
                         </div>
                     </div>
+                    <textarea id="accountsInput" placeholder="email1:password1&#10;email2:password2" style="margin-top:6px;min-height:80px;"></textarea>
                 </div>
 
-                <!-- VIEWERS INJECTOR -->
+                <!-- Proxies -->
                 <div class="card">
-                    <div class="card-title"><i class="fas fa-rocket"></i> Inyección de Viewers</div>
-                    
-                    <div class="input-group">
-                        <input type="text" id="viewerChannel" placeholder="Canal objetivo" value="xqc">
-                        <input type="number" id="viewerCount" placeholder="Cantidad" value="10" min="1" max="10000">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-shield-alt"></i> Proxies</div>
+                        <span class="card-badge" id="proxyCount">0 loaded</span>
                     </div>
-
-                    <div class="method-selector">
-                        <label><input type="radio" name="method" value="api" checked> API</label>
-                        <label><input type="radio" name="method" value="refresh"> Refresco</label>
-                        <label><input type="radio" name="method" value="websocket"> WebSocket</label>
-                        <label><input type="radio" name="method" value="kscraper"> kscraper</label>
-                        <label><input type="radio" name="method" value="proxy"> Proxy</label>
+                    <div class="file-upload-area" id="proxyDrop">
+                        <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                        <div class="upload-text"><strong>Click or drag</strong> to upload proxies.txt</div>
+                        <input type="file" id="proxyFileInput" accept=".txt">
+                        <div class="file-info" id="proxyFileInfo" style="display:none;">
+                            <i class="fas fa-check-circle"></i>
+                            <span class="file-name" id="proxyFileName">proxies.txt</span>
+                            <span class="file-size" id="proxyFileSize">0 KB</span>
+                            <button class="btn-remove" onclick="clearProxies()">✕</button>
+                        </div>
                     </div>
-
-                    <div class="btn-group">
-                        <button class="btn btn-success" id="startBtn" onclick="startViewers()"><i class="fas fa-play"></i> Iniciar</button>
-                        <button class="btn btn-danger" id="stopBtn" onclick="stopViewers()" disabled><i class="fas fa-stop"></i> Detener</button>
-                        <button class="btn btn-warning" onclick="clearLogs()"><i class="fas fa-trash-alt"></i> Limpiar</button>
-                    </div>
+                    <textarea id="proxiesInput" placeholder="proxy1:8080&#10;proxy2:3128" style="margin-top:6px;min-height:40px;"></textarea>
                 </div>
             </div>
 
             <!-- RIGHT COLUMN -->
             <div>
-                <!-- LOGS -->
-                <div class="card">
-                    <div class="card-title"><i class="fas fa-terminal"></i> Logs <span id="logCount" style="font-size:10px;color:var(--text-secondary);">0 entradas</span></div>
-                    <div class="log-container" id="logContainer">
-                        <div class="log-line">
-                            <span class="time">●</span>
-                            <span class="message info">Sistema listo para usar - 5 métodos disponibles</span>
+                <!-- Settings & Controls -->
+                <div class="card" style="margin-bottom:12px;">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-sliders-h"></i> Controls</div>
+                    </div>
+                    <div class="settings-row" style="margin-bottom:8px;">
+                        <label>Threads:</label>
+                        <input type="number" id="threadCount" value="50" min="1" max="200">
+                        <label style="margin-left:6px;">Keywords:</label>
+                        <textarea id="keywordsInput" class="small" style="min-height:30px;flex:1;font-size:11px;padding:4px 8px;" placeholder="Steam&#10;Netflix&#10;PayPal">Steam
+Netflix
+PayPal
+Amazon
+Security Alert</textarea>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" id="startBtn" onclick="startCheck()"><i class="fas fa-play"></i> Start</button>
+                        <button class="btn btn-danger" id="stopBtn" onclick="stopCheck()" disabled><i class="fas fa-stop"></i> Stop</button>
+                        <button class="btn btn-warning" onclick="clearLogs()"><i class="fas fa-trash-alt"></i> Clear</button>
+                    </div>
+                    <div class="export-section">
+                        <div class="title"><i class="fas fa-download"></i> Export Results</div>
+                        <div class="btn-group" style="margin:4px 0;">
+                            <button class="btn btn-success btn-sm" onclick="downloadAll()"><i class="fas fa-file-archive"></i> All (ZIP)</button>
+                            <button class="btn btn-success btn-sm" onclick="downloadFile('inbox')"><i class="fas fa-inbox"></i> Inbox</button>
+                            <button class="btn btn-success btn-sm" onclick="downloadFile('valid')"><i class="fas fa-check-circle"></i> Valid</button>
                         </div>
+                        <div class="file-list" id="fileList">
+                            <div style="color:var(--text-secondary);font-size:10px;text-align:center;padding:4px;">
+                                <i class="fas fa-spinner fa-spin"></i> Loading files...
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-info">
+                            <span id="progressText">0 / 0</span>
+                            <span id="progressPercent">0%</span>
+                        </div>
+                        <div class="progress-bar"><div class="fill" id="progressFill"></div></div>
+                    </div>
+                </div>
+
+                <!-- Logs -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-terminal"></i> Live Log</div>
+                        <span class="card-badge" id="logCount">0 entries</span>
+                    </div>
+                    <div class="log-container" id="logContainer">
+                        <div class="log-line"><span class="time">●</span><span class="message info">Ready to check accounts...</span></div>
                     </div>
                 </div>
             </div>
@@ -371,11 +611,93 @@
         // ============================================
         // DOM ELEMENTS
         // ============================================
+        const accountsInput = document.getElementById('accountsInput');
+        const proxiesInput = document.getElementById('proxiesInput');
+        const keywordsInput = document.getElementById('keywordsInput');
         const logContainer = document.getElementById('logContainer');
-        const statusDot = document.getElementById('statusDot');
-        const statusText = document.getElementById('statusText');
         const startBtn = document.getElementById('startBtn');
         const stopBtn = document.getElementById('stopBtn');
+        const statusText = document.getElementById('statusText');
+        const statusDot = document.getElementById('statusDot');
+        const accountFileInput = document.getElementById('accountFileInput');
+        const proxyFileInput = document.getElementById('proxyFileInput');
+        const fileList = document.getElementById('fileList');
+
+        // ============================================
+        // FILE UPLOAD HANDLERS
+        // ============================================
+        function setupFileUpload(input, textarea, infoDiv, nameSpan, sizeSpan, countEl, clearFn) {
+            input.addEventListener('change', function(e) {
+                const file = this.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    textarea.value = ev.target.result;
+                    infoDiv.style.display = 'flex';
+                    nameSpan.textContent = file.name;
+                    sizeSpan.textContent = (file.size / 1024).toFixed(1) + ' KB';
+                    if (countEl) {
+                        const lines = ev.target.result.split('\n').filter(l => l.trim());
+                        countEl.textContent = lines.length + ' loaded';
+                    }
+                    addLog(`📁 Loaded ${file.name} (${(file.size/1024).toFixed(1)} KB)`, 'info');
+                };
+                reader.readAsText(file);
+            });
+
+            const dropArea = input.parentElement;
+            dropArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropArea.classList.add('dragover');
+            });
+            dropArea.addEventListener('dragleave', () => {
+                dropArea.classList.remove('dragover');
+            });
+            dropArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropArea.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    input.files = files;
+                    input.dispatchEvent(new Event('change'));
+                }
+            });
+        }
+
+        setupFileUpload(
+            accountFileInput,
+            accountsInput,
+            document.getElementById('accountFileInfo'),
+            document.getElementById('accountFileName'),
+            document.getElementById('accountFileSize'),
+            document.getElementById('accountCount'),
+            clearAccounts
+        );
+
+        setupFileUpload(
+            proxyFileInput,
+            proxiesInput,
+            document.getElementById('proxyFileInfo'),
+            document.getElementById('proxyFileName'),
+            document.getElementById('proxyFileSize'),
+            document.getElementById('proxyCount'),
+            clearProxies
+        );
+
+        function clearAccounts() {
+            accountsInput.value = '';
+            document.getElementById('accountFileInfo').style.display = 'none';
+            document.getElementById('accountCount').textContent = '0 loaded';
+            accountFileInput.value = '';
+        }
+
+        function clearProxies() {
+            proxiesInput.value = '';
+            document.getElementById('proxyFileInfo').style.display = 'none';
+            document.getElementById('proxyCount').textContent = '0 loaded';
+            proxyFileInput.value = '';
+        }
 
         // ============================================
         // LOGGING
@@ -389,99 +711,69 @@
             if (logContainer.children.length > 200) {
                 logContainer.removeChild(logContainer.children[logContainer.children.length - 1]);
             }
-            document.getElementById('logCount').textContent = logContainer.children.length + ' entradas';
+            document.getElementById('logCount').textContent = logContainer.children.length + ' entries';
         }
 
         // ============================================
-        // CHANNEL INFO
+        // STATS UPDATE
         // ============================================
-        async function getChannelInfo() {
-            const channel = document.getElementById('channelInput').value.trim();
-            if (!channel) {
-                addLog('⚠️ Ingresa un nombre de canal', 'warning');
+        function updateStats(stats) {
+            document.getElementById('statValid').textContent = stats.valid || 0;
+            document.getElementById('statInbox').textContent = stats.inbox || 0;
+            document.getElementById('stat2FA').textContent = stats['2fa'] || 0;
+            document.getElementById('statBad').textContent = stats.bad || 0;
+            document.getElementById('statChecked').textContent = stats.checked || 0;
+            document.getElementById('statTotal').textContent = stats.total || 0;
+            document.getElementById('statCPM').textContent = stats.cpm || 0;
+            
+            const progress = stats.total > 0 ? (stats.checked / stats.total * 100) : 0;
+            document.getElementById('progressFill').style.width = Math.min(progress, 100) + '%';
+            document.getElementById('progressText').textContent = `${stats.checked || 0} / ${stats.total || 0}`;
+            document.getElementById('progressPercent').textContent = Math.min(progress, 100).toFixed(1) + '%';
+        }
+
+        // ============================================
+        // FILE LIST
+        // ============================================
+        function updateFileList(files) {
+            if (!files || files.length === 0) {
+                fileList.innerHTML = `<div style="color:var(--text-secondary);font-size:10px;text-align:center;padding:4px;">
+                    <i class="fas fa-info-circle"></i> No files available yet
+                </div>`;
                 return;
             }
 
-            addLog(`🔍 Buscando información de ${channel}...`, 'info');
-
-            try {
-                const response = await fetch('/api/channel/info', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ channel, method: 'all' })
-                });
-
-                const data = await response.json();
-
-                if (!data.success) {
-                    addLog(`❌ Error: ${data.error}`, 'error');
-                    return;
-                }
-
-                const container = document.getElementById('channelInfoContainer');
-                let html = '';
-
-                data.results.forEach((result, index) => {
-                    if (result.success) {
-                        const liveTag = result.is_live ? 
-                            '<span class="live-tag live">🔴 EN VIVO</span>' : 
-                            '<span class="live-tag offline">⚪ OFFLINE</span>';
-                        
-                        html += `
-                            <div class="channel-info" style="margin-top:${index > 0 ? '8px' : '0'};border-left-color:${result.is_live ? 'var(--danger)' : 'var(--text-secondary)'};">
-                                <div style="display:flex;justify-content:space-between;flex-wrap:wrap;">
-                                    <div>
-                                        <span class="label">${result.method}</span><br>
-                                        <span class="value">${result.display_name}</span>
-                                    </div>
-                                    ${liveTag}
-                                </div>
-                                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:8px;margin-top:8px;">
-                                    <div><span class="label">Seguidores</span><br><span class="value">${result.followers.toLocaleString()}</span></div>
-                                    <div><span class="label">Viewers</span><br><span class="value">${result.viewers.toLocaleString()}</span></div>
-                                    <div><span class="label">Categoría</span><br><span class="value" style="font-size:12px;">${result.category || 'N/A'}</span></div>
-                                </div>
-                                ${result.title ? `<div style="margin-top:6px;"><span class="label">Título</span><br><span class="value" style="font-size:13px;">${result.title}</span></div>` : ''}
-                            </div>
-                        `;
-
-                        document.getElementById('statFollowers').textContent = result.followers.toLocaleString();
-                        document.getElementById('statLive').textContent = result.is_live ? '🔴 EN VIVO' : '⚪ OFFLINE';
-                        document.getElementById('statLive').style.color = result.is_live ? 'var(--danger)' : 'var(--text-secondary)';
-                    }
-                });
-
-                if (!html) {
-                    html = `<div style="color:var(--warning);font-size:12px;text-align:center;padding:10px;">
-                        ⚠️ No se pudo obtener información del canal
-                    </div>`;
-                }
-
-                container.innerHTML = html;
-                addLog(`✅ Información de ${channel} obtenida correctamente`, 'success');
-
-            } catch (error) {
-                addLog(`❌ Error: ${error.message}`, 'error');
-            }
+            let html = '';
+            files.forEach(file => {
+                const size = file.size > 1024 * 1024 
+                    ? (file.size / (1024 * 1024)).toFixed(2) + ' MB'
+                    : (file.size / 1024).toFixed(1) + ' KB';
+                const name = file.name;
+                html += `
+                    <div class="file-item">
+                        <span class="name">${name}</span>
+                        <span class="size">${size}</span>
+                        <button class="download-btn" onclick="downloadSpecificFile('${name}')">⬇️</button>
+                    </div>
+                `;
+            });
+            
+            fileList.innerHTML = html;
         }
 
         // ============================================
-        // VIEWERS INJECTION
+        // MAIN FUNCTIONS
         // ============================================
-        async function startViewers() {
+        async function startCheck() {
             if (running) return;
 
-            const channel = document.getElementById('viewerChannel').value.trim();
-            const count = parseInt(document.getElementById('viewerCount').value) || 10;
-            const method = document.querySelector('input[name="method"]:checked').value;
+            const accounts = accountsInput.value;
+            const keywords = keywordsInput.value;
+            const proxies = proxiesInput.value;
+            const threads = parseInt(document.getElementById('threadCount').value) || 50;
 
-            if (!channel) {
-                addLog('⚠️ Ingresa un canal objetivo', 'warning');
-                return;
-            }
-
-            if (count < 1 || count > 10000) {
-                addLog('⚠️ La cantidad debe estar entre 1 y 10000', 'warning');
+            if (!accounts.trim()) {
+                addLog('⚠️ Please enter accounts or upload a file', 'warning');
                 return;
             }
 
@@ -489,21 +781,20 @@
             startBtn.disabled = true;
             stopBtn.disabled = false;
             statusDot.className = 'status-dot running';
-            statusText.textContent = 'Inyectando...';
+            statusText.textContent = 'Running...';
 
-            addLog(`🚀 Iniciando inyección en ${channel} (${count} viewers, método: ${method})`, 'info');
+            addLog('🚀 Starting check...', 'info');
 
             try {
-                const response = await fetch('/api/viewers/start', {
+                const response = await fetch('/api/start', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ channel, count, method })
+                    body: JSON.stringify({ accounts, keywords, proxies, threads })
                 });
 
                 const data = await response.json();
-
                 if (data.error) {
-                    addLog(`❌ ${data.error}`, 'error');
+                    addLog(`⚠️ ${data.error}`, 'error');
                     running = false;
                     startBtn.disabled = false;
                     stopBtn.disabled = true;
@@ -512,13 +803,13 @@
                     return;
                 }
 
-                addLog(`✅ Inyección iniciada: ${data.count} viewers en ${data.channel}`, 'success');
-
+                addLog(`✅ Started: ${data.total} accounts`, 'success');
+                
                 if (updateInterval) clearInterval(updateInterval);
-                updateInterval = setInterval(fetchStatus, 2000);
+                updateInterval = setInterval(fetchStatus, 1500);
 
             } catch (error) {
-                addLog(`❌ Error: ${error.message}`, 'error');
+                addLog(`⚠️ Error: ${error.message}`, 'error');
                 running = false;
                 startBtn.disabled = false;
                 stopBtn.disabled = true;
@@ -527,91 +818,128 @@
             }
         }
 
-        async function stopViewers() {
+        async function stopCheck() {
             if (!running) return;
-
+            
             try {
-                await fetch('/api/viewers/stop', { method: 'POST' });
-                addLog('⏹️ Deteniendo inyección...', 'warning');
+                await fetch('/api/stop', { method: 'POST' });
+                addLog('⏹️ Stopping...', 'warning');
             } catch (error) {
-                addLog(`❌ Error al detener: ${error.message}`, 'error');
+                addLog(`⚠️ Stop error: ${error.message}`, 'error');
             }
         }
 
-        // ============================================
-        // STATUS FETCH
-        // ============================================
         async function fetchStatus() {
             try {
                 const response = await fetch('/api/status');
                 const data = await response.json();
-
-                document.getElementById('statViewers').textContent = data.viewers_injected || 0;
-                document.getElementById('statConnections').textContent = data.active_connections || 0;
-                document.getElementById('statTarget').textContent = data.target || 0;
-
-                // Actualizar estado de librerías
-                document.getElementById('kscraperStatus').textContent = data.kscraper_available ? '✓' : '✗';
-                document.getElementById('kscraperStatus').className = data.kscraper_available ? 'available' : 'unavailable';
-                document.getElementById('websocketStatus').textContent = data.websocket_available ? '✓' : '✗';
-                document.getElementById('websocketStatus').className = data.websocket_available ? 'available' : 'unavailable';
-
+                
+                updateStats(data.stats);
+                
                 if (data.logs && data.logs.length > 0) {
-                    data.logs.forEach(log => {
-                        const exists = Array.from(logContainer.querySelectorAll('.log-line')).some(
-                            el => el.textContent.includes(log.message)
-                        );
-                        if (!exists) {
-                            addLog(log.message, log.level);
-                        }
+                    data.logs.reverse().forEach(log => {
+                        addLog(log.message, log.level);
                     });
                 }
-
+                
+                if (data.export_ready && data.export_files) {
+                    updateFileList(data.export_files);
+                }
+                
                 if (!data.running && running) {
                     running = false;
                     startBtn.disabled = false;
                     stopBtn.disabled = true;
                     statusDot.className = 'status-dot stopped';
-                    statusText.textContent = 'Completado';
+                    statusText.textContent = 'Stopped';
                     if (updateInterval) {
                         clearInterval(updateInterval);
                         updateInterval = null;
                     }
-                    addLog('✅ Proceso completado', 'success');
+                    addLog('✅ Check completed', 'success');
                 }
-
+                
+                if (data.stats.total > 0 && data.stats.checked >= data.stats.total) {
+                    running = false;
+                    startBtn.disabled = false;
+                    stopBtn.disabled = true;
+                    statusDot.className = 'status-dot complete';
+                    statusText.textContent = 'Complete';
+                    if (updateInterval) {
+                        clearInterval(updateInterval);
+                        updateInterval = null;
+                    }
+                }
+                
             } catch (error) {
                 console.error('Status fetch error:', error);
             }
         }
 
         // ============================================
-        // LOGS
+        // DOWNLOAD FUNCTIONS
         // ============================================
-        async function clearLogs() {
-            try {
-                await fetch('/api/logs/clear', { method: 'POST' });
-                logContainer.innerHTML = '<div class="log-line"><span class="time">●</span><span class="message info">Logs limpiados</span></div>';
-                document.getElementById('logCount').textContent = '1 entrada';
-                addLog('🗑️ Logs limpiados', 'info');
-            } catch (error) {
-                addLog(`❌ Error al limpiar logs: ${error.message}`, 'error');
+        function downloadSpecificFile(filename) {
+            const url = `/api/download/${encodeURIComponent(filename)}`;
+            window.open(url, '_blank');
+            addLog(`📤 Downloading: ${filename}`, 'info');
+        }
+
+        function downloadFile(type) {
+            const endpoints = {
+                'inbox': '/api/download/inbox',
+                'valid': '/api/download/valid'
+            };
+            
+            const url = endpoints[type];
+            if (!url) {
+                addLog('⚠️ Invalid file type', 'warning');
+                return;
             }
+            
+            window.open(url, '_blank');
+            addLog(`📤 Downloading ${type}.txt...`, 'info');
+        }
+
+        function downloadAll() {
+            window.open('/api/download/all', '_blank');
+            addLog('📤 Downloading all results as ZIP...', 'info');
+        }
+
+        function clearLogs() {
+            logContainer.innerHTML = '<div class="log-line"><span class="time">●</span><span class="message info">Logs cleared</span></div>';
+            document.getElementById('logCount').textContent = '1 entries';
+            addLog('🗑️ Logs cleared', 'info');
         }
 
         // ============================================
-        // AUTO FETCH
+        // LOAD FILES ON STARTUP
         // ============================================
+        async function loadFiles() {
+            try {
+                const response = await fetch('/api/files');
+                const data = await response.json();
+                if (data.files) {
+                    updateFileList(data.files);
+                }
+            } catch (e) {
+                console.error('Error loading files:', e);
+            }
+        }
+
+        // Auto fetch status and files
         setInterval(() => {
             if (!running) {
                 fetchStatus();
             }
         }, 5000);
 
-        addLog('🔧 Kick Bot Pro listo - 5 métodos disponibles', 'info');
-        addLog('💡 Busca un canal para ver su información', 'info');
-        addLog('🚀 Selecciona un método y cantidad para inyectar viewers', 'info');
-        addLog('📦 kscraper y WebSocket son opcionales para bypass', 'info');
+        loadFiles();
+
+        addLog('🔧 Hotmail Checker Pro ready', 'info');
+        addLog('💡 Upload accounts.txt or paste credentials', 'info');
+        addLog('📁 Drag & drop files supported', 'info');
+        addLog('📤 Results are automatically saved', 'info');
     </script>
 </body>
 </html>
