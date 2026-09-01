@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kick Bot Pro</title>
+    <title>Kick Bot Pro - 5 Métodos</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
             --bg-primary: #0a0e17;
-            --bg-secondary: #111927;
             --bg-card: rgba(17, 25, 45, 0.85);
             --border-color: #1a2a44;
             --text-primary: #e8edf5;
@@ -20,14 +19,13 @@
             --warning: #ffa502;
             --danger: #ff4757;
             --purple: #a29bfe;
-            --pink: #e056a0;
             --gold: #ffd700;
         }
 
         body {
             background: var(--bg-primary);
             color: var(--text-primary);
-            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             min-height: 100vh;
             padding: 15px;
         }
@@ -47,15 +45,9 @@
             gap: 10px;
         }
 
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
+        .logo { display: flex; align-items: center; gap: 12px; }
         .logo-icon {
-            width: 40px;
-            height: 40px;
+            width: 40px; height: 40px;
             background: linear-gradient(135deg, var(--accent), #0088cc);
             border-radius: 10px;
             display: flex;
@@ -64,15 +56,7 @@
             font-size: 20px;
             color: #fff;
         }
-
-        .logo-text h1 {
-            font-size: 18px;
-            font-weight: 700;
-            background: linear-gradient(90deg, var(--accent), #66e0ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
+        .logo-text h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
         .logo-text span { font-size: 11px; color: var(--text-secondary); }
 
         .status-badge {
@@ -86,10 +70,8 @@
             background: rgba(255,255,255,0.05);
             border: 1px solid var(--border-color);
         }
-
         .status-dot {
-            width: 10px;
-            height: 10px;
+            width: 10px; height: 10px;
             border-radius: 50%;
             display: inline-block;
         }
@@ -102,12 +84,7 @@
             50% { opacity: 0.5; transform: scale(0.9); }
         }
 
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
 
         .card {
             background: var(--bg-card);
@@ -129,9 +106,7 @@
             gap: 8px;
         }
 
-        .card-title i { font-size: 14px; }
-
-        input, select, textarea {
+        input, select {
             width: 100%;
             background: rgba(10, 14, 23, 0.8);
             border: 1px solid var(--border-color);
@@ -141,19 +116,16 @@
             font-size: 13px;
             transition: border-color 0.3s;
         }
-
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
+        input:focus, select:focus { outline: none; border-color: var(--accent); }
 
         .input-group {
             display: flex;
             gap: 10px;
             margin-top: 8px;
+            flex-wrap: wrap;
         }
-
         .input-group input { flex: 1; }
+        .input-group input[type="number"] { width: 100px; flex: none; }
 
         .btn {
             padding: 10px 20px;
@@ -169,46 +141,28 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--accent), #0088cc);
-            color: #0a0e17;
-        }
+        .btn-primary { background: linear-gradient(135deg, var(--accent), #0088cc); color: #0a0e17; }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,212,255,0.3); }
         .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .btn-success {
-            background: var(--success);
-            color: #0a0e17;
-        }
+        .btn-success { background: var(--success); color: #0a0e17; }
         .btn-success:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(46,213,115,0.3); }
 
-        .btn-danger {
-            background: var(--danger);
-            color: #fff;
-        }
+        .btn-danger { background: var(--danger); color: #fff; }
         .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255,71,87,0.3); }
 
-        .btn-warning {
-            background: var(--warning);
-            color: #0a0e17;
-        }
+        .btn-warning { background: var(--warning); color: #0a0e17; }
         .btn-warning:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255,165,2,0.3); }
 
-        .btn-purple {
-            background: var(--purple);
-            color: #0a0e17;
-        }
+        .btn-purple { background: var(--purple); color: #0a0e17; }
         .btn-purple:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(162,155,254,0.3); }
+
+        .btn-gold { background: var(--gold); color: #0a0e17; }
+        .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255,215,0,0.3); }
 
         .btn-sm { padding: 6px 14px; font-size: 11px; }
 
-        .btn-group {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-top: 10px;
-        }
+        .btn-group { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
 
         .stats-grid {
             display: grid;
@@ -224,36 +178,46 @@
             padding: 10px;
             text-align: center;
         }
-
-        .stat-number {
-            font-size: 22px;
-            font-weight: 700;
-            display: block;
-        }
-        .stat-label {
-            font-size: 9px;
-            text-transform: uppercase;
-            color: var(--text-secondary);
-            margin-top: 3px;
-        }
+        .stat-number { font-size: 22px; font-weight: 700; display: block; }
+        .stat-label { font-size: 9px; text-transform: uppercase; color: var(--text-secondary); margin-top: 3px; }
         .stat-card.viewers .stat-number { color: var(--success); }
         .stat-card.connections .stat-number { color: var(--accent); }
         .stat-card.target .stat-number { color: var(--gold); }
         .stat-card.followers .stat-number { color: var(--purple); }
         .stat-card.live .stat-number { color: var(--danger); }
 
+        .method-selector {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 8px 0;
+        }
+        .method-selector label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s;
+        }
+        .method-selector label:hover { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+        .method-selector input[type="radio"] { width: auto; accent-color: var(--accent); }
+
         .log-container {
             background: rgba(10, 14, 23, 0.9);
             border-radius: 8px;
             padding: 10px;
-            max-height: 300px;
+            max-height: 350px;
             overflow-y: auto;
-            font-family: 'Consolas', 'Courier New', monospace;
+            font-family: 'Consolas', monospace;
             font-size: 11px;
             line-height: 1.6;
             border: 1px solid var(--border-color);
         }
-
         .log-container::-webkit-scrollbar { width: 4px; }
         .log-container::-webkit-scrollbar-track { background: rgba(10,14,23,0.5); }
         .log-container::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
@@ -264,7 +228,6 @@
             display: flex;
             gap: 8px;
         }
-
         .log-line .time { color: var(--text-secondary); min-width: 50px; font-size: 10px; }
         .log-line .message { word-break: break-all; }
         .log-line .message.success { color: var(--success); }
@@ -279,48 +242,27 @@
             padding: 12px;
             margin-top: 10px;
         }
-
         .channel-info .label { color: var(--text-secondary); font-size: 11px; }
         .channel-info .value { color: var(--text-primary); font-size: 14px; font-weight: 600; }
-        .channel-info .live-tag {
+        .live-tag {
             display: inline-block;
             padding: 2px 10px;
             border-radius: 4px;
             font-size: 11px;
             font-weight: 700;
         }
-        .channel-info .live-tag.live { background: var(--danger); color: #fff; }
-        .channel-info .live-tag.offline { background: var(--text-secondary); color: #fff; }
+        .live-tag.live { background: var(--danger); color: #fff; }
+        .live-tag.offline { background: var(--text-secondary); color: #fff; }
 
-        .method-selector {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin: 8px 0;
-        }
-
-        .method-selector label {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 12px;
+        .status-badge-extra {
+            font-size: 10px;
             color: var(--text-secondary);
-            cursor: pointer;
-            padding: 4px 10px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            transition: all 0.3s;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
         }
-
-        .method-selector label:hover {
-            border-color: var(--accent);
-            background: rgba(0,212,255,0.05);
-        }
-
-        .method-selector input[type="radio"] {
-            width: auto;
-            accent-color: var(--accent);
-        }
+        .status-badge-extra .available { color: var(--success); }
+        .status-badge-extra .unavailable { color: var(--danger); }
 
         @media (max-width: 768px) {
             .grid-2 { grid-template-columns: 1fr; }
@@ -336,19 +278,25 @@
                 <div class="logo-icon"><i class="fas fa-bolt"></i></div>
                 <div class="logo-text">
                     <h1>Kick Bot Pro</h1>
-                    <span>Channel Info + Viewers Injector</span>
+                    <span>5 Métodos | Bypass Cloudflare</span>
                 </div>
             </div>
-            <div class="status-badge">
-                <span class="status-dot ready" id="statusDot"></span>
-                <span id="statusText">Ready</span>
+            <div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap;">
+                <div class="status-badge-extra" id="libsStatus">
+                    <span>📦 kscraper: <span class="unavailable" id="kscraperStatus">✗</span></span>
+                    <span>🔌 WebSocket: <span class="unavailable" id="websocketStatus">✗</span></span>
+                </div>
+                <div class="status-badge">
+                    <span class="status-dot ready" id="statusDot"></span>
+                    <span id="statusText">Ready</span>
+                </div>
             </div>
         </header>
 
         <!-- STATS -->
         <div class="stats-grid">
-            <div class="stat-card viewers"><span class="stat-number" id="statViewers">0</span><span class="stat-label">📊 Viewers Inyectados</span></div>
-            <div class="stat-card connections"><span class="stat-number" id="statConnections">0</span><span class="stat-label">🔗 Conexiones Activas</span></div>
+            <div class="stat-card viewers"><span class="stat-number" id="statViewers">0</span><span class="stat-label">📊 Viewers</span></div>
+            <div class="stat-card connections"><span class="stat-number" id="statConnections">0</span><span class="stat-label">🔗 Conexiones</span></div>
             <div class="stat-card target"><span class="stat-number" id="statTarget">0</span><span class="stat-label">🎯 Objetivo</span></div>
             <div class="stat-card followers"><span class="stat-number" id="statFollowers">0</span><span class="stat-label">👥 Seguidores</span></div>
             <div class="stat-card live"><span class="stat-number" id="statLive">⚪</span><span class="stat-label">📡 Estado</span></div>
@@ -378,19 +326,21 @@
                     
                     <div class="input-group">
                         <input type="text" id="viewerChannel" placeholder="Canal objetivo" value="xqc">
-                        <input type="number" id="viewerCount" placeholder="Cantidad" value="10" min="1" max="10000" style="width:100px;">
+                        <input type="number" id="viewerCount" placeholder="Cantidad" value="10" min="1" max="10000">
                     </div>
 
                     <div class="method-selector">
-                        <label><input type="radio" name="method" value="websocket" checked> WebSocket</label>
-                        <label><input type="radio" name="method" value="requests"> HTTP</label>
-                        <label><input type="radio" name="method" value="proxy_websocket"> Proxy + WS</label>
+                        <label><input type="radio" name="method" value="api" checked> API</label>
+                        <label><input type="radio" name="method" value="refresh"> Refresco</label>
+                        <label><input type="radio" name="method" value="websocket"> WebSocket</label>
+                        <label><input type="radio" name="method" value="kscraper"> kscraper</label>
+                        <label><input type="radio" name="method" value="proxy"> Proxy</label>
                     </div>
 
                     <div class="btn-group">
                         <button class="btn btn-success" id="startBtn" onclick="startViewers()"><i class="fas fa-play"></i> Iniciar</button>
                         <button class="btn btn-danger" id="stopBtn" onclick="stopViewers()" disabled><i class="fas fa-stop"></i> Detener</button>
-                        <button class="btn btn-warning" onclick="clearLogs()"><i class="fas fa-trash-alt"></i> Limpiar Logs</button>
+                        <button class="btn btn-warning" onclick="clearLogs()"><i class="fas fa-trash-alt"></i> Limpiar</button>
                     </div>
                 </div>
             </div>
@@ -403,7 +353,7 @@
                     <div class="log-container" id="logContainer">
                         <div class="log-line">
                             <span class="time">●</span>
-                            <span class="message info">Sistema listo para usar</span>
+                            <span class="message info">Sistema listo para usar - 5 métodos disponibles</span>
                         </div>
                     </div>
                 </div>
@@ -468,7 +418,6 @@
                     return;
                 }
 
-                // Mostrar resultados
                 const container = document.getElementById('channelInfoContainer');
                 let html = '';
 
@@ -496,7 +445,6 @@
                             </div>
                         `;
 
-                        // Actualizar stats
                         document.getElementById('statFollowers').textContent = result.followers.toLocaleString();
                         document.getElementById('statLive').textContent = result.is_live ? '🔴 EN VIVO' : '⚪ OFFLINE';
                         document.getElementById('statLive').style.color = result.is_live ? 'var(--danger)' : 'var(--text-secondary)';
@@ -602,10 +550,14 @@
                 document.getElementById('statConnections').textContent = data.active_connections || 0;
                 document.getElementById('statTarget').textContent = data.target || 0;
 
-                // Actualizar logs si hay nuevos
+                // Actualizar estado de librerías
+                document.getElementById('kscraperStatus').textContent = data.kscraper_available ? '✓' : '✗';
+                document.getElementById('kscraperStatus').className = data.kscraper_available ? 'available' : 'unavailable';
+                document.getElementById('websocketStatus').textContent = data.websocket_available ? '✓' : '✗';
+                document.getElementById('websocketStatus').className = data.websocket_available ? 'available' : 'unavailable';
+
                 if (data.logs && data.logs.length > 0) {
                     data.logs.forEach(log => {
-                        // Solo agregar si no existe ya en el DOM
                         const exists = Array.from(logContainer.querySelectorAll('.log-line')).some(
                             el => el.textContent.includes(log.message)
                         );
@@ -656,9 +608,10 @@
             }
         }, 5000);
 
-        addLog('🔧 Kick Bot Pro listo', 'info');
+        addLog('🔧 Kick Bot Pro listo - 5 métodos disponibles', 'info');
         addLog('💡 Busca un canal para ver su información', 'info');
-        addLog('🚀 Configura la cantidad y método para inyectar viewers', 'info');
+        addLog('🚀 Selecciona un método y cantidad para inyectar viewers', 'info');
+        addLog('📦 kscraper y WebSocket son opcionales para bypass', 'info');
     </script>
 </body>
 </html>
