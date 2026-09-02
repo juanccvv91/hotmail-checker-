@@ -20,7 +20,16 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # ============================================
 # IMPORTAR CHECKERS
 # ============================================
-from checkers import CrunchyrollChecker, ParamountChecker, HotmailChecker
+from checkers import (
+    CrunchyrollChecker,
+    CrunchyrollCheckerV2,
+    ParamountChecker,
+    HotmailChecker,
+    MubiChecker,
+    SteamChecker,
+    MinecraftChecker,
+    NetflixChecker
+)
 
 # ============================================
 # CONFIGURACIÓN FLASK
@@ -77,6 +86,7 @@ def load_accounts_from_text(content):
         if not line or line.startswith('#'):
             continue
         
+        # Probar diferentes separadores
         for sep in [':', '|', ';', ',', '\t']:
             if sep in line:
                 parts = line.split(sep, 1)
@@ -88,6 +98,14 @@ def load_accounts_from_text(content):
                         break
     return accounts
 
+def load_cookies_from_text(content):
+    """Carga cookies desde texto (para Netflix)"""
+    cookies = []
+    # Si es un archivo de cookies, lo guardamos como un solo item
+    if 'NetflixId' in content or 'SecureNetflixId' in content:
+        cookies.append(content.strip())
+    return cookies
+
 def load_proxies_from_text(content):
     """Carga proxies desde texto"""
     proxies = []
@@ -98,6 +116,7 @@ def load_proxies_from_text(content):
     return proxies
 
 def format_proxy(proxy):
+    """Formatea proxy para requests"""
     if not proxy:
         return None
     proxy = proxy.strip()
@@ -115,8 +134,8 @@ def format_proxy(proxy):
 # ============================================
 # FUNCIONES DE CHECKER
 # ============================================
-def run_crunchyroll_checker(accounts, proxies, stop_event):
-    """Ejecuta checker de Crunchyroll"""
+def run_checker_thread(checker_type, accounts, proxies, stop_event):
+    """Ejecuta el checker seleccionado en un thread"""
     global checker_status, current_hits
     
     total = len(accounts)
@@ -129,7 +148,29 @@ def run_crunchyroll_checker(accounts, proxies, stop_event):
     checker_status['results'] = []
     current_hits = []
     checker_status['start_time'] = time.time()
-    checker_status['checker'] = 'crunchyroll'
+    checker_status['checker'] = checker_type
+    
+    # Mapeo de checkers
+    checker_map = {
+        'crunchyroll': run_crunchyroll_checker,
+        'crunchyroll_v2': run_crunchyroll_v2_checker,
+        'paramount': run_paramount_checker,
+        'hotmail': run_hotmail_checker,
+        'steam': run_steam_checker,
+        'minecraft': run_minecraft_checker,
+        'netflix': run_netflix_checker,
+        'mubi': run_mubi_checker
+    }
+    
+    if checker_type in checker_map:
+        checker_map[checker_type](accounts, proxies, stop_event)
+    else:
+        checker_status['logs'].append(f"[ERROR] Checker {checker_type} no encontrado")
+        checker_status['running'] = False
+
+def run_crunchyroll_checker(accounts, proxies, stop_event):
+    """Ejecuta checker de Crunchyroll (versión asíncrona)"""
+    global checker_status, current_hits
     
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
@@ -146,11 +187,11 @@ def run_crunchyroll_checker(accounts, proxies, stop_event):
             if proxies:
                 proxy = random.choice(proxies)
             
-            tasks.append(process_single_crunchyroll(email, password, proxy, sem, i, total))
+            tasks.append(process_single_crunchyroll(email, password, proxy, sem, i))
         
         await asyncio.gather(*tasks, return_exceptions=True)
     
-    async def process_single_crunchyroll(email, password, proxy, sem, index, total):
+    async def process_single_crunchyroll(email, password, proxy, sem, index):
         global checker_status, current_hits
         
         async with sem:
@@ -213,21 +254,24 @@ def run_crunchyroll_checker(accounts, proxies, stop_event):
         checker_status['elapsed'] = int(time.time() - checker_status['start_time'])
         checker_status['logs'].append("[INFO] Checker finalizado")
 
+def run_crunchyroll_v2_checker(accounts, proxies, stop_event):
+    """Ejecuta checker de Crunchyroll (versión con threads)"""
+    global checker_status, current_hits
+    
+    results, stats = CrunchyrollCheckerV2.process_batch(accounts, proxies, threads=10)
+    
+    checker_status['processed'] = stats.get('total', 0)
+    checker_status['hits'] = stats.get('hit', 0)
+    checker_status['invalid'] = stats.get('bad', 0)
+    checker_status['errors'] = stats.get('error', 0)
+    checker_status['results'] = results
+    checker_status['running'] = False
+    checker_status['elapsed'] = int(time.time() - checker_status['start_time'])
+    checker_status['logs'].append("[INFO] Checker finalizado")
+
 def run_paramount_checker(accounts, proxies, stop_event):
     """Ejecuta checker de Paramount+"""
     global checker_status, current_hits
-    
-    total = len(accounts)
-    checker_status['total'] = total
-    checker_status['processed'] = 0
-    checker_status['hits'] = 0
-    checker_status['errors'] = 0
-    checker_status['invalid'] = 0
-    checker_status['logs'] = []
-    checker_status['results'] = []
-    current_hits = []
-    checker_status['start_time'] = time.time()
-    checker_status['checker'] = 'paramount'
     
     for i, (email, password) in enumerate(accounts):
         if stop_event.is_set():
@@ -281,73 +325,146 @@ def run_paramount_checker(accounts, proxies, stop_event):
     checker_status['logs'].append("[INFO] Checker finalizado")
 
 def run_hotmail_checker(accounts, proxies, stop_event):
-    """Ejecuta checker de Hotmail"""
+    """Ejecuta checker de Hotmail con threads"""
     global checker_status, current_hits
     
-    total = len(accounts)
-    checker_status['total'] = total
-    checker_status['processed'] = 0
-    checker_status['hits'] = 0
-    checker_status['errors'] = 0
-    checker_status['invalid'] = 0
-    checker_status['logs'] = []
-    checker_status['results'] = []
-    current_hits = []
-    checker_status['start_time'] = time.time()
-    checker_status['checker'] = 'hotmail'
+    results, stats = HotmailChecker.process_batch(accounts, proxies, threads=10)
     
-    for i, (email, password) in enumerate(accounts):
-        if stop_event.is_set():
-            break
-        
-        proxy = None
-        if proxies:
-            proxy = random.choice(proxies)
-        
-        try:
-            result = HotmailChecker.check(email, password, proxy)
-            
-            checker_status['processed'] += 1
-            
-            if result.get('status') == 'HIT':
-                checker_status['hits'] += 1
-                current_hits.append(result)
-                checker_status['results'].append(result)
-                
-                inbox_info = ""
-                if result.get('inbox_count', 0) > 0:
-                    inbox_info = f" | Inbox: {result.get('inbox_count')} emails"
-                
-                log_msg = f"[HIT] {email} | {result.get('country', 'Unknown')}{inbox_info}"
-                checker_status['logs'].append(log_msg)
-                
-                hit_file = HITS_DIR / f"hotmail_hits_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
-                with open(hit_file, 'a', encoding='utf-8') as f:
-                    f.write(f"{email}:{password} | {result.get('country', 'Unknown')}{inbox_info}\n")
-            
-            elif result.get('status') == '2FA':
-                log_msg = f"[2FA] {email}"
-                checker_status['logs'].append(log_msg)
-            
-            elif result.get('status') == 'INVALID':
-                checker_status['invalid'] += 1
-                log_msg = f"[INVALID] {email}"
-                checker_status['logs'].append(log_msg)
-            
-            else:
-                checker_status['errors'] += 1
-                log_msg = f"[ERROR] {email} | {result.get('error', 'Unknown error')}"
-                checker_status['logs'].append(log_msg)
-            
-            if len(checker_status['logs']) > 200:
-                checker_status['logs'] = checker_status['logs'][-200:]
-            
-            checker_status['elapsed'] = int(time.time() - checker_status['start_time'])
-            
-        except Exception as e:
+    for result in results:
+        if result.get('status') == 'HIT':
+            current_hits.append(result)
+            checker_status['results'].append(result)
+            checker_status['hits'] += 1
+            log_msg = f"[HIT] {result.get('email')} | {result.get('country', 'Unknown')}"
+            if result.get('inbox_count', 0) > 0:
+                log_msg += f" | Inbox: {result.get('inbox_count')} emails"
+            checker_status['logs'].append(log_msg)
+        elif result.get('status') == '2FA':
+            checker_status['invalid'] += 1
+            checker_status['logs'].append(f"[2FA] {result.get('email')}")
+        elif result.get('status') == 'INVALID':
+            checker_status['invalid'] += 1
+            checker_status['logs'].append(f"[INVALID] {result.get('email')}")
+        else:
             checker_status['errors'] += 1
-            checker_status['logs'].append(f"[ERROR] {email} | {str(e)}")
+            checker_status['logs'].append(f"[ERROR] {result.get('email')} | {result.get('error', 'Unknown error')}")
     
+    checker_status['processed'] = stats.get('total', 0)
+    checker_status['running'] = False
+    checker_status['elapsed'] = int(time.time() - checker_status['start_time'])
+    checker_status['logs'].append("[INFO] Checker finalizado")
+
+def run_steam_checker(accounts, proxies, stop_event):
+    """Ejecuta checker de Steam"""
+    global checker_status, current_hits
+    
+    results, stats = SteamChecker.process_batch(accounts, proxies, threads=10)
+    
+    for result in results:
+        if result.get('status') == 'HIT':
+            current_hits.append(result)
+            checker_status['results'].append(result)
+            checker_status['hits'] += 1
+            log_msg = f"[HIT] {result.get('email')} | SteamID: {result.get('steam_id')} | Level: {result.get('level', '?')} | Games: {result.get('games', 0)}"
+            checker_status['logs'].append(log_msg)
+        elif result.get('status') == '2FA':
+            checker_status['logs'].append(f"[2FA] {result.get('email')}")
+        elif result.get('status') == 'BANNED':
+            checker_status['invalid'] += 1
+            checker_status['logs'].append(f"[BAN] {result.get('email')}")
+        elif result.get('status') == 'INVALID':
+            checker_status['invalid'] += 1
+            checker_status['logs'].append(f"[INVALID] {result.get('email')}")
+        else:
+            checker_status['errors'] += 1
+            checker_status['logs'].append(f"[ERROR] {result.get('email')} | {result.get('error', 'Unknown error')}")
+    
+    checker_status['processed'] = stats.get('total', 0)
+    checker_status['running'] = False
+    checker_status['elapsed'] = int(time.time() - checker_status['start_time'])
+    checker_status['logs'].append("[INFO] Checker finalizado")
+
+def run_minecraft_checker(accounts, proxies, stop_event):
+    """Ejecuta checker de Minecraft"""
+    global checker_status, current_hits
+    
+    results, stats = MinecraftChecker.process_batch(accounts, proxies, threads=10)
+    
+    for result in results:
+        if result.get('status') == 'HIT':
+            current_hits.append(result)
+            checker_status['results'].append(result)
+            checker_status['hits'] += 1
+            log_msg = f"[HIT] {result.get('email')}"
+            if result.get('name'):
+                log_msg += f" | {result.get('name')}"
+            if result.get('country'):
+                log_msg += f" | {result.get('country')}"
+            checker_status['logs'].append(log_msg)
+        elif result.get('status') == '2FA':
+            checker_status['logs'].append(f"[2FA] {result.get('email')}")
+        elif result.get('status') == 'INVALID':
+            checker_status['invalid'] += 1
+            checker_status['logs'].append(f"[INVALID] {result.get('email')}")
+        else:
+            checker_status['errors'] += 1
+            checker_status['logs'].append(f"[ERROR] {result.get('email')} | {result.get('error', 'Unknown error')}")
+    
+    checker_status['processed'] = stats.get('total', 0)
+    checker_status['running'] = False
+    checker_status['elapsed'] = int(time.time() - checker_status['start_time'])
+    checker_status['logs'].append("[INFO] Checker finalizado")
+
+def run_netflix_checker(accounts, proxies, stop_event):
+    """Ejecuta checker de Netflix (cookies)"""
+    global checker_status, current_hits
+    
+    # Para Netflix, cada "cuenta" es un texto de cookies
+    cookie_files = accounts
+    
+    results, stats = NetflixChecker.process_batch(cookie_files, proxies, threads=5)
+    
+    for result in results:
+        if result.get('status') == 'HIT':
+            current_hits.append(result)
+            checker_status['results'].append(result)
+            checker_status['hits'] += 1
+            log_msg = f"[HIT] {result.get('email', 'Unknown')} | {result.get('plan', 'Unknown')} | {result.get('country', 'Unknown')}"
+            checker_status['logs'].append(log_msg)
+        elif result.get('status') == 'INVALID':
+            checker_status['invalid'] += 1
+            checker_status['logs'].append(f"[INVALID] {result.get('source', 'Unknown')}")
+        else:
+            checker_status['errors'] += 1
+            checker_status['logs'].append(f"[ERROR] {result.get('source', 'Unknown')} | {result.get('error', 'Unknown error')}")
+    
+    checker_status['processed'] = stats.get('total', 0)
+    checker_status['running'] = False
+    checker_status['elapsed'] = int(time.time() - checker_status['start_time'])
+    checker_status['logs'].append("[INFO] Checker finalizado")
+
+def run_mubi_checker(accounts, proxies, stop_event):
+    """Ejecuta checker de MUBI (genera códigos)"""
+    global checker_status, current_hits
+    
+    # MUBI genera sus propios códigos, no usa accounts
+    results, stats = MubiChecker.process_batch(accounts, proxies, threads=10)
+    
+    for result in results:
+        if result.get('status') == 'HIT':
+            current_hits.append(result)
+            checker_status['results'].append(result)
+            checker_status['hits'] += 1
+            log_msg = f"[HIT] {result.get('code')} | {result.get('type', 'Unknown')} | Days: {result.get('days', '?')}"
+            checker_status['logs'].append(log_msg)
+        elif result.get('status') == 'BAD':
+            checker_status['invalid'] += 1
+            # No logueamos BAD para no llenar logs
+        else:
+            checker_status['errors'] += 1
+            checker_status['logs'].append(f"[ERROR] {result.get('code')} | {result.get('error', 'Unknown error')}")
+    
+    checker_status['processed'] = stats.get('total', 0)
     checker_status['running'] = False
     checker_status['elapsed'] = int(time.time() - checker_status['start_time'])
     checker_status['logs'].append("[INFO] Checker finalizado")
@@ -358,10 +475,13 @@ def run_hotmail_checker(accounts, proxies, stop_event):
 
 @app.route('/')
 def index():
+    """Página principal"""
+    # Renderizar el HTML embebido
     return render_template_string(HTML_TEMPLATE)
 
 @app.route('/health')
 def health():
+    """Health check para Render"""
     return jsonify({"status": "healthy", "timestamp": datetime.now().isoformat()})
 
 @app.route('/api/upload', methods=['POST'])
@@ -382,25 +502,41 @@ def upload_file():
         file_type = request.form.get('type', 'accounts')
         
         if file_type == 'accounts':
+            # Intentar cargar como cuentas (email:password)
             accounts = load_accounts_from_text(content)
-            if not accounts:
-                return jsonify({'error': 'No valid accounts found'}), 400
             
-            uploaded_accounts = accounts  # ✅ GUARDAR TODAS LAS CUENTAS
+            # Si no hay cuentas, intentar como cookies (Netflix)
+            if not accounts:
+                cookies = load_cookies_from_text(content)
+                if cookies:
+                    uploaded_accounts = cookies
+                    return jsonify({
+                        'success': True,
+                        'count': len(cookies),
+                        'type': 'cookies',
+                        'content': content,
+                        'preview': cookies[:5]
+                    })
+                else:
+                    return jsonify({'error': 'No valid accounts or cookies found'}), 400
+            
+            uploaded_accounts = accounts
             
             return jsonify({
                 'success': True,
                 'count': len(accounts),
                 'type': 'accounts',
+                'content': content,
                 'preview': accounts[:5]
             })
         else:
             proxies = load_proxies_from_text(content)
-            uploaded_proxies = proxies  # ✅ GUARDAR TODOS LOS PROXIES
+            uploaded_proxies = proxies
             return jsonify({
                 'success': True,
                 'count': len(proxies),
                 'type': 'proxies',
+                'content': content,
                 'preview': proxies[:5]
             })
             
@@ -420,20 +556,46 @@ def start_checker():
         return jsonify({'error': 'No data provided'}), 400
     
     checker_type = data.get('checker')
+    content = data.get('content', '')
+    proxies_content = data.get('proxies', '')
+    
     current_checker_type = checker_type
     
-    # ✅ USAR LAS VARIABLES GLOBALES
-    accounts = uploaded_accounts
-    proxies = uploaded_proxies
+    # Procesar cuentas según el checker
+    accounts = []
+    proxies = []
     
-    if not accounts:
-        return jsonify({'error': 'No hay cuentas cargadas. Sube un archivo primero.'}), 400
+    # Cargar proxies si hay
+    if proxies_content:
+        proxies = load_proxies_from_text(proxies_content)
+    
+    # Para MUBI, generamos códigos automáticamente (1000 por defecto)
+    if checker_type == 'mubi':
+        import string
+        accounts = [''.join(random.choices(string.ascii_lowercase, k=6)) for _ in range(1000)]
+    else:
+        # Para los demás, cargar cuentas
+        if content:
+            # Intentar como cuentas normales
+            accounts = load_accounts_from_text(content)
+            
+            # Si no hay, intentar como cookies (Netflix)
+            if not accounts and 'NetflixId' in content:
+                accounts = [content.strip()]
+        
+        if not accounts:
+            return jsonify({'error': 'No hay cuentas válidas'}), 400
     
     # Mapeo de checkers
     checker_map = {
         'crunchyroll': run_crunchyroll_checker,
+        'crunchyroll_v2': run_crunchyroll_v2_checker,
         'paramount': run_paramount_checker,
-        'hotmail': run_hotmail_checker
+        'hotmail': run_hotmail_checker,
+        'steam': run_steam_checker,
+        'minecraft': run_minecraft_checker,
+        'netflix': run_netflix_checker,
+        'mubi': run_mubi_checker
     }
     
     if checker_type not in checker_map:
@@ -456,8 +618,8 @@ def start_checker():
     
     # Iniciar thread
     checker_thread = threading.Thread(
-        target=checker_map[checker_type],
-        args=(accounts, proxies, stop_event),
+        target=run_checker_thread,
+        args=(checker_type, accounts, proxies, stop_event),
         daemon=True
     )
     checker_thread.start()
@@ -519,16 +681,33 @@ def export_hits():
         f.write("=" * 70 + "\n\n")
         
         for i, hit in enumerate(current_hits, 1):
-            email = hit.get('email', 'Unknown')
-            password = hit.get('password', 'Unknown')
-            country = hit.get('country', 'Unknown')
-            plan = hit.get('plan', hit.get('tipo', 'Unknown'))
+            email = hit.get('email', hit.get('code', 'Unknown'))
+            password = hit.get('password', '')
+            country = hit.get('country', '')
+            plan = hit.get('plan', hit.get('type', hit.get('tipo', 'Unknown')))
             
             f.write(f"#{i}\n")
-            f.write(f"📧 Email: {email}\n")
-            f.write(f"🔑 Password: {password}\n")
-            f.write(f"🌍 País: {country}\n")
-            f.write(f"📡 Plan: {plan}\n")
+            f.write(f"📧 Email/Código: {email}\n")
+            if password:
+                f.write(f"🔑 Password: {password}\n")
+            if country:
+                f.write(f"🌍 País: {country}\n")
+            f.write(f"📡 Plan/Tipo: {plan}\n")
+            
+            # Campos adicionales
+            if hit.get('steam_id'):
+                f.write(f"🆔 SteamID: {hit.get('steam_id')}\n")
+            if hit.get('level'):
+                f.write(f"📊 Nivel: {hit.get('level')}\n")
+            if hit.get('games'):
+                f.write(f"🎮 Juegos: {hit.get('games')}\n")
+            if hit.get('inbox_count'):
+                f.write(f"📨 Inbox: {hit.get('inbox_count')} emails\n")
+            if hit.get('expires'):
+                f.write(f"📅 Expira: {hit.get('expires')}\n")
+            if hit.get('profiles'):
+                f.write(f"👥 Perfiles: {', '.join(hit.get('profiles', []))}\n")
+            
             f.write("-" * 50 + "\n\n")
     
     return send_file(filepath, as_attachment=True, download_name=filename)
@@ -548,7 +727,7 @@ def clear_hits():
     return jsonify({'success': True})
 
 # ============================================
-# HTML TEMPLATE (MEJORADO)
+# HTML TEMPLATE (EMBEBIDO)
 # ============================================
 HTML_TEMPLATE = '''
 <!DOCTYPE html>
@@ -577,7 +756,7 @@ HTML_TEMPLATE = '''
         .header {
             background: #15161a;
             border-bottom: 2px solid #E4751E;
-            padding: 15px 30px;
+            padding: 12px 25px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -587,44 +766,50 @@ HTML_TEMPLATE = '''
         .header-left {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
         }
-        .header-logo { font-size: 32px; }
+        .header-logo { font-size: 28px; }
         .header-title {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: bold;
             color: #E4751E;
         }
         .header-subtitle {
             color: #8a8c9e;
-            font-size: 14px;
+            font-size: 12px;
         }
         .header-right {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
             flex-wrap: wrap;
         }
         .header-badge {
-            padding: 5px 15px;
+            padding: 4px 14px;
             border-radius: 20px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
         }
         .badge-stopped { background: #ff4444; color: #fff; }
-        .badge-running { background: #00cc88; color: #0a0a0f; }
+        .badge-running { background: #00cc88; color: #0a0a0f; animation: pulse-badge 1.5s infinite; }
         .badge-waiting { background: #ffaa44; color: #0a0a0f; }
+        .badge-done { background: #E4751E; color: #fff; }
+        
+        @keyframes pulse-badge {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
         
         /* ===== MAIN LAYOUT ===== */
         .main {
             max-width: 1500px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 15px;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
+            gap: 15px;
         }
-        @media (max-width: 900px) {
+        @media (max-width: 950px) {
             .main { grid-template-columns: 1fr; }
         }
         
@@ -633,20 +818,20 @@ HTML_TEMPLATE = '''
             background: #15161a;
             border: 1px solid #2a2b35;
             border-radius: 12px;
-            padding: 20px;
+            padding: 16px;
         }
         .card-title {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: bold;
             color: #E4751E;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 8px;
         }
         .card-title .badge {
-            font-size: 11px;
+            font-size: 10px;
             font-weight: normal;
             color: #8a8c9e;
             background: #0a0a0f;
@@ -654,24 +839,24 @@ HTML_TEMPLATE = '''
             border-radius: 12px;
         }
         
-        /* ===== FORMS ===== */
+        /* ===== FORMULARIOS ===== */
         .form-group {
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
         .form-group label {
             display: block;
-            font-size: 12px;
+            font-size: 11px;
             color: #8a8c9e;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
         }
         .form-group input {
             width: 100%;
-            padding: 10px 12px;
+            padding: 8px 12px;
             background: #0a0a0f;
             border: 1px solid #2a2b35;
-            border-radius: 8px;
+            border-radius: 6px;
             color: #fff;
-            font-size: 14px;
+            font-size: 13px;
             transition: border 0.3s;
         }
         .form-group input:focus {
@@ -679,28 +864,72 @@ HTML_TEMPLATE = '''
             border-color: #E4751E;
         }
         .form-group input[type="file"] {
-            padding: 8px;
+            padding: 6px;
             cursor: pointer;
         }
         .form-group input[type="file"]::file-selector-button {
             background: #E4751E;
             border: none;
             color: #fff;
-            padding: 6px 16px;
-            border-radius: 6px;
+            padding: 5px 14px;
+            border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
+            font-size: 12px;
         }
         .form-group input[type="file"]::file-selector-button:hover {
             background: #c9651a;
         }
         
-        /* ===== BUTTONS ===== */
-        .btn {
-            padding: 10px 20px;
-            border: none;
+        /* ===== CHECKER SELECTOR ===== */
+        .checker-selector {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        @media (max-width: 600px) {
+            .checker-selector { grid-template-columns: repeat(2, 1fr); }
+        }
+        .checker-option {
+            padding: 10px;
+            background: #0a0a0f;
+            border: 2px solid #2a2b35;
             border-radius: 8px;
-            font-size: 13px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .checker-option:hover { border-color: #E4751E66; }
+        .checker-option.active {
+            border-color: #E4751E;
+            background: #E4751E15;
+        }
+        .checker-option .icon { font-size: 24px; }
+        .checker-option .name { font-size: 11px; font-weight: bold; margin-top: 3px; }
+        .checker-option .desc { font-size: 9px; color: #8a8c9e; }
+        .checker-option .status-dot {
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            margin-top: 3px;
+        }
+        .dot-idle { background: #555; }
+        .dot-running { background: #00cc88; animation: pulse-dot 1s infinite; }
+        .dot-done { background: #ffaa44; }
+        
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        /* ===== BOTONES ===== */
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s;
@@ -722,71 +951,31 @@ HTML_TEMPLATE = '''
         
         .btn-group {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             flex-wrap: wrap;
-            margin-top: 10px;
+            margin-top: 8px;
         }
         
-        /* ===== CHECKER SELECTOR ===== */
-        .checker-selector {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        .checker-option {
-            padding: 12px;
-            background: #0a0a0f;
-            border: 2px solid #2a2b35;
-            border-radius: 8px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .checker-option:hover { border-color: #E4751E66; }
-        .checker-option.active {
-            border-color: #E4751E;
-            background: #E4751E15;
-        }
-        .checker-option .icon { font-size: 28px; }
-        .checker-option .name { font-size: 13px; font-weight: bold; margin-top: 4px; }
-        .checker-option .desc { font-size: 10px; color: #8a8c9e; }
-        .checker-option .status-dot {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            margin-top: 4px;
-        }
-        .dot-idle { background: #555; }
-        .dot-running { background: #00cc88; animation: pulse 1s infinite; }
-        .dot-done { background: #ffaa44; }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-        
-        /* ===== STATS ===== */
+        /* ===== ESTADÍSTICAS ===== */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            gap: 8px;
-            margin-bottom: 12px;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 6px;
+            margin-bottom: 10px;
         }
         .stat-item {
             background: #0a0a0f;
-            border-radius: 8px;
-            padding: 10px;
+            border-radius: 6px;
+            padding: 8px;
             text-align: center;
         }
         .stat-value {
-            font-size: 22px;
+            font-size: 18px;
             font-weight: bold;
             color: #E4751E;
         }
         .stat-label {
-            font-size: 10px;
+            font-size: 9px;
             color: #8a8c9e;
             margin-top: 2px;
         }
@@ -795,24 +984,24 @@ HTML_TEMPLATE = '''
         .stat-invalid { color: #ffaa44; }
         .stat-total { color: #E4751E; }
         
-        /* ===== PROGRESS ===== */
+        /* ===== PROGRESO ===== */
         .progress-bar {
             width: 100%;
-            height: 8px;
+            height: 6px;
             background: #2a2b35;
-            border-radius: 4px;
+            border-radius: 3px;
             overflow: hidden;
-            margin: 8px 0;
+            margin: 6px 0;
         }
         .progress-fill {
             height: 100%;
             background: linear-gradient(90deg, #E4751E, #ff9a44);
-            border-radius: 4px;
+            border-radius: 3px;
             transition: width 0.5s;
             width: 0%;
         }
         .progress-text {
-            font-size: 12px;
+            font-size: 11px;
             color: #8a8c9e;
             text-align: right;
         }
@@ -820,13 +1009,13 @@ HTML_TEMPLATE = '''
         /* ===== LOGS ===== */
         .log-container {
             background: #0a0a0f;
-            border-radius: 8px;
-            padding: 10px;
-            max-height: 280px;
+            border-radius: 6px;
+            padding: 8px;
+            max-height: 250px;
             overflow-y: auto;
             font-family: 'Courier New', monospace;
-            font-size: 11px;
-            line-height: 1.5;
+            font-size: 10px;
+            line-height: 1.4;
         }
         .log-line { padding: 2px 0; border-bottom: 1px solid #0f0f14; }
         .log-hit { color: #00ff88; }
@@ -836,72 +1025,66 @@ HTML_TEMPLATE = '''
         .log-info { color: #E4751E; }
         .log-2fa { color: #ff8800; }
         .log-custom { color: #cc88ff; }
+        .log-ban { color: #ff0066; }
         
         /* ===== HITS ===== */
         .hits-container {
             background: #0a0a0f;
-            border-radius: 8px;
-            padding: 10px;
-            max-height: 280px;
+            border-radius: 6px;
+            padding: 8px;
+            max-height: 250px;
             overflow-y: auto;
             font-family: 'Courier New', monospace;
-            font-size: 11px;
+            font-size: 10px;
         }
         .hit-item {
-            padding: 4px 8px;
+            padding: 3px 6px;
             border-bottom: 1px solid #0f0f14;
             color: #00ff88;
         }
         .hit-item .badge-plan {
             background: #E4751E33;
-            padding: 1px 8px;
-            border-radius: 10px;
-            font-size: 10px;
+            padding: 1px 6px;
+            border-radius: 8px;
+            font-size: 9px;
             color: #E4751E;
         }
         
         /* ===== UPLOAD STATUS ===== */
         .upload-status {
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            margin-top: 4px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 11px;
+            margin-top: 3px;
+            display: none;
         }
-        .upload-success { background: #00cc8822; color: #00cc88; border: 1px solid #00cc8844; }
-        .upload-error { background: #ff444422; color: #ff4444; border: 1px solid #ff444444; }
-        .upload-waiting { background: #ffaa4422; color: #ffaa44; border: 1px solid #ffaa4444; }
+        .upload-success { background: #00cc8822; color: #00cc88; border: 1px solid #00cc8844; display: block; }
+        .upload-error { background: #ff444422; color: #ff4444; border: 1px solid #ff444444; display: block; }
+        .upload-waiting { background: #ffaa4422; color: #ffaa44; border: 1px solid #ffaa4444; display: block; }
         
         /* ===== STATUS INDICATOR ===== */
         .status-indicator {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
+            gap: 6px;
+            padding: 4px 10px;
             background: #0a0a0f;
-            border-radius: 8px;
+            border-radius: 6px;
         }
         .status-indicator .led {
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             display: inline-block;
         }
         .led-red { background: #ff4444; }
-        .led-green { background: #00cc88; animation: pulse 1s infinite; }
+        .led-green { background: #00cc88; animation: pulse-dot 1s infinite; }
         .led-yellow { background: #ffaa44; }
-        
-        /* ===== RESPONSIVE ===== */
-        @media (max-width: 600px) {
-            .header-title { font-size: 16px; }
-            .stats-grid { grid-template-columns: repeat(3, 1fr); }
-            .btn { padding: 8px 14px; font-size: 12px; }
-            .checker-selector { grid-template-columns: repeat(3, 1fr); }
-        }
         
         /* ===== TIMER ===== */
         .timer-display {
             font-family: 'Courier New', monospace;
-            font-size: 16px;
+            font-size: 14px;
             color: #E4751E;
             font-weight: bold;
         }
@@ -909,11 +1092,22 @@ HTML_TEMPLATE = '''
         /* ===== EMPTY STATE ===== */
         .empty-state {
             text-align: center;
-            padding: 30px 20px;
+            padding: 20px;
             color: #8a8c9e;
         }
-        .empty-state .icon { font-size: 40px; }
-        .empty-state .text { font-size: 14px; margin-top: 8px; }
+        .empty-state .icon { font-size: 30px; }
+        .empty-state .text { font-size: 12px; margin-top: 5px; }
+        
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 600px) {
+            .header-title { font-size: 14px; }
+            .header-subtitle { font-size: 10px; }
+            .stats-grid { grid-template-columns: repeat(3, 1fr); }
+            .btn { padding: 6px 12px; font-size: 11px; }
+            .checker-option { padding: 6px; }
+            .checker-option .icon { font-size: 18px; }
+            .checker-option .name { font-size: 9px; }
+        }
     </style>
 </head>
 <body>
@@ -923,13 +1117,13 @@ HTML_TEMPLATE = '''
             <span class="header-logo">🚀</span>
             <div>
                 <div class="header-title">Checker Dashboard Pro</div>
-                <div class="header-subtitle">Multi-Checker Unificado v2.0</div>
+                <div class="header-subtitle">Multi-Checker Unificado v3.0</div>
             </div>
         </div>
         <div class="header-right">
             <div class="status-indicator">
                 <span class="led led-red" id="statusLed"></span>
-                <span id="statusText" style="font-size:13px;font-weight:bold;color:#ff4444;">Detenido</span>
+                <span id="statusText" style="font-size:12px;font-weight:bold;color:#ff4444;">Detenido</span>
             </div>
             <span class="timer-display" id="timerDisplay">00:00:00</span>
         </div>
@@ -952,47 +1146,77 @@ HTML_TEMPLATE = '''
                         <div class="checker-option active" data-checker="crunchyroll" onclick="selectChecker(this)">
                             <div class="icon">🍥</div>
                             <div class="name">Crunchyroll</div>
-                            <div class="desc">Premium Accounts</div>
+                            <div class="desc">Premium</div>
                             <span class="status-dot dot-idle" id="dot-crunchyroll"></span>
                         </div>
                         <div class="checker-option" data-checker="paramount" onclick="selectChecker(this)">
                             <div class="icon">🎬</div>
                             <div class="name">Paramount+</div>
-                            <div class="desc">Streaming Accounts</div>
+                            <div class="desc">Streaming</div>
                             <span class="status-dot dot-idle" id="dot-paramount"></span>
                         </div>
                         <div class="checker-option" data-checker="hotmail" onclick="selectChecker(this)">
                             <div class="icon">📧</div>
                             <div class="name">Hotmail</div>
-                            <div class="desc">Inbox Checker</div>
+                            <div class="desc">Inbox</div>
                             <span class="status-dot dot-idle" id="dot-hotmail"></span>
+                        </div>
+                        <div class="checker-option" data-checker="steam" onclick="selectChecker(this)">
+                            <div class="icon">🎮</div>
+                            <div class="name">Steam</div>
+                            <div class="desc">Games</div>
+                            <span class="status-dot dot-idle" id="dot-steam"></span>
+                        </div>
+                        <div class="checker-option" data-checker="minecraft" onclick="selectChecker(this)">
+                            <div class="icon">⛏️</div>
+                            <div class="name">Minecraft</div>
+                            <div class="desc">Microsoft</div>
+                            <span class="status-dot dot-idle" id="dot-minecraft"></span>
+                        </div>
+                        <div class="checker-option" data-checker="netflix" onclick="selectChecker(this)">
+                            <div class="icon">🎬</div>
+                            <div class="name">Netflix</div>
+                            <div class="desc">Cookies</div>
+                            <span class="status-dot dot-idle" id="dot-netflix"></span>
+                        </div>
+                        <div class="checker-option" data-checker="mubi" onclick="selectChecker(this)">
+                            <div class="icon">🎥</div>
+                            <div class="name">MUBI</div>
+                            <div class="desc">Gen Codes</div>
+                            <span class="status-dot dot-idle" id="dot-mubi"></span>
+                        </div>
+                        <div class="checker-option" data-checker="crunchyroll_v2" onclick="selectChecker(this)">
+                            <div class="icon">🍥</div>
+                            <div class="name">CR V2</div>
+                            <div class="desc">Threads</div>
+                            <span class="status-dot dot-idle" id="dot-crunchyroll_v2"></span>
                         </div>
                     </div>
                 </div>
                 
                 <div class="form-group">
-                    <label>📄 Cuentas (email:password)</label>
-                    <input type="file" id="accountsFile" accept=".txt" onchange="uploadFile('accounts')">
-                    <div id="accountsStatus" class="upload-status upload-waiting" style="display:none;">Esperando archivo...</div>
+                    <label>📄 Archivo de entrada</label>
+                    <input type="file" id="inputFile" accept=".txt,.json" onchange="uploadFile()">
+                    <div id="uploadStatus" class="upload-status upload-waiting">Esperando archivo...</div>
                 </div>
                 
                 <div class="form-group">
                     <label>🌐 Proxies (opcional)</label>
-                    <input type="file" id="proxiesFile" accept=".txt" onchange="uploadFile('proxies')">
-                    <div id="proxiesStatus" class="upload-status upload-waiting" style="display:none;">Esperando archivo...</div>
+                    <input type="file" id="proxyFile" accept=".txt" onchange="uploadProxy()">
+                    <div id="proxyStatus" class="upload-status upload-waiting">Esperando archivo...</div>
                 </div>
                 
                 <div class="btn-group">
                     <button class="btn btn-primary" id="btnStart" onclick="startChecker()">▶ Iniciar</button>
                     <button class="btn btn-danger" id="btnStop" onclick="stopChecker()" disabled>⏹ Detener</button>
-                    <button class="btn btn-success" id="btnExport" onclick="exportHits()">💾 Exportar Hits</button>
+                    <button class="btn btn-success" id="btnExport" onclick="exportHits()">💾 Exportar</button>
                     <button class="btn btn-secondary" onclick="clearLogs()">🗑 Logs</button>
                     <button class="btn btn-secondary" onclick="clearHits()">🗑 Hits</button>
                 </div>
             </div>
             
             <!-- Estadísticas -->
-            <div class="card" style="margin-top:20px;">
+            <div class="card" style="margin-top:12px;">
                 <div class="card-title">
                     📊 Estadísticas
                     <span class="badge" id="progressText">0%</span>
@@ -1043,7 +1267,7 @@ HTML_TEMPLATE = '''
             </div>
             
             <!-- Hits -->
-            <div class="card" style="margin-top:20px;">
+            <div class="card" style="margin-top:12px;">
                 <div class="card-title">
                     🏆 Hits
                     <span class="badge" id="hitCount">(0)</span>
@@ -1051,7 +1275,7 @@ HTML_TEMPLATE = '''
                 <div class="hits-container" id="hitsContainer">
                     <div class="empty-state">
                         <div class="icon">🎯</div>
-                        <div class="text">Esperando hits premium...</div>
+                        <div class="text">Esperando hits...</div>
                     </div>
                 </div>
             </div>
@@ -1062,15 +1286,15 @@ HTML_TEMPLATE = '''
     <script>
         // ===== VARIABLES =====
         let currentChecker = 'crunchyroll';
-        let accountsData = [];
-        let proxiesData = [];
+        let fileContent = '';
+        let proxyContent = '';
         let isRunning = false;
         let statusInterval = null;
         let timerInterval = null;
+        let speedInterval = null;
         let elapsedSeconds = 0;
         let lastProcessed = 0;
-        let speedTimer = null;
-        
+
         // ===== SELECTOR DE CHECKER =====
         function selectChecker(el) {
             if (isRunning) {
@@ -1081,8 +1305,23 @@ HTML_TEMPLATE = '''
             el.classList.add('active');
             currentChecker = el.dataset.checker;
             updateCheckerDots();
+            
+            // Actualizar badge
+            const names = {
+                'crunchyroll': 'Crunchyroll',
+                'crunchyroll_v2': 'Crunchyroll V2',
+                'paramount': 'Paramount+',
+                'hotmail': 'Hotmail',
+                'steam': 'Steam',
+                'minecraft': 'Minecraft',
+                'netflix': 'Netflix Cookies',
+                'mubi': 'MUBI Gen'
+            };
+            document.getElementById('statusText').textContent = `Seleccionado: ${names[currentChecker] || currentChecker}`;
+            document.getElementById('statusText').style.color = '#E4751E';
+            document.getElementById('statusLed').className = 'led led-yellow';
         }
-        
+
         function updateCheckerDots() {
             document.querySelectorAll('.checker-option').forEach(c => {
                 const dot = c.querySelector('.status-dot');
@@ -1093,18 +1332,18 @@ HTML_TEMPLATE = '''
                 }
             });
         }
-        
+
         // ===== SUBIDA DE ARCHIVOS =====
-        async function uploadFile(type) {
-            const input = document.getElementById(type === 'accounts' ? 'accountsFile' : 'proxiesFile');
-            const status = document.getElementById(type === 'accounts' ? 'accountsStatus' : 'proxiesStatus');
+        async function uploadFile() {
+            const input = document.getElementById('inputFile');
+            const status = document.getElementById('uploadStatus');
             
             if (!input.files || !input.files[0]) return;
             
             const file = input.files[0];
             const formData = new FormData();
             formData.append('file', file);
-            formData.append('type', type);
+            formData.append('type', 'accounts');
             
             status.style.display = 'block';
             status.className = 'upload-status';
@@ -1119,14 +1358,9 @@ HTML_TEMPLATE = '''
                 
                 if (data.success) {
                     status.className = 'upload-status upload-success';
-                    status.textContent = `✅ ${data.count} ${type === 'accounts' ? 'cuentas' : 'proxies'} cargados`;
-                    
-                    if (type === 'accounts') {
-                        accountsData = data.preview || [];
-                        document.getElementById('accountsCount').textContent = `${data.count} cuentas`;
-                    } else {
-                        proxiesData = data.preview || [];
-                    }
+                    status.textContent = `✅ ${data.count} cuentas cargadas`;
+                    fileContent = data.content || '';
+                    document.getElementById('accountsCount').textContent = `${data.count} cuentas`;
                 } else {
                     status.className = 'upload-status upload-error';
                     status.textContent = `❌ ${data.error || 'Error al subir'}`;
@@ -1136,13 +1370,49 @@ HTML_TEMPLATE = '''
                 status.textContent = `❌ Error: ${e.message}`;
             }
         }
-        
+
+        async function uploadProxy() {
+            const input = document.getElementById('proxyFile');
+            const status = document.getElementById('proxyStatus');
+            
+            if (!input.files || !input.files[0]) return;
+            
+            const file = input.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('type', 'proxies');
+            
+            status.style.display = 'block';
+            status.className = 'upload-status';
+            status.textContent = '⏳ Subiendo...';
+            
+            try {
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    status.className = 'upload-status upload-success';
+                    status.textContent = `✅ ${data.count} proxies cargados`;
+                    proxyContent = data.content || '';
+                } else {
+                    status.className = 'upload-status upload-error';
+                    status.textContent = `❌ ${data.error || 'Error al subir'}`;
+                }
+            } catch (e) {
+                status.className = 'upload-status upload-error';
+                status.textContent = `❌ Error: ${e.message}`;
+            }
+        }
+
         // ===== INICIAR CHECKER =====
         async function startChecker() {
             if (isRunning) return;
             
-            if (!accountsData.length) {
-                alert('⚠️ Carga un archivo de cuentas primero.');
+            if (!fileContent) {
+                alert('⚠️ Carga un archivo de entrada primero.');
                 return;
             }
             
@@ -1156,8 +1426,8 @@ HTML_TEMPLATE = '''
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         checker: currentChecker,
-                        accounts: accountsData,
-                        proxies: proxiesData
+                        content: fileContent,
+                        proxies: proxyContent
                     })
                 });
                 const data = await response.json();
@@ -1170,7 +1440,6 @@ HTML_TEMPLATE = '''
                     document.getElementById('statusText').style.color = '#00cc88';
                     document.getElementById('statusLed').className = 'led led-green';
                     
-                    // Actualizar dots
                     document.querySelectorAll('.checker-option').forEach(c => {
                         const dot = c.querySelector('.status-dot');
                         if (c.dataset.checker === currentChecker) {
@@ -1183,11 +1452,11 @@ HTML_TEMPLATE = '''
                     
                     if (statusInterval) clearInterval(statusInterval);
                     if (timerInterval) clearInterval(timerInterval);
-                    if (speedTimer) clearInterval(speedTimer);
+                    if (speedInterval) clearInterval(speedInterval);
                     
                     statusInterval = setInterval(fetchStatus, 800);
                     timerInterval = setInterval(updateTimer, 1000);
-                    speedTimer = setInterval(updateSpeed, 2000);
+                    speedInterval = setInterval(updateSpeed, 2000);
                     
                     document.getElementById('logContainer').innerHTML = '';
                     document.getElementById('hitsContainer').innerHTML = '';
@@ -1202,7 +1471,7 @@ HTML_TEMPLATE = '''
             btn.disabled = false;
             btn.textContent = '▶ Iniciar';
         }
-        
+
         // ===== DETENER CHECKER =====
         async function stopChecker() {
             if (!isRunning) return;
@@ -1226,13 +1495,13 @@ HTML_TEMPLATE = '''
                     
                     if (statusInterval) clearInterval(statusInterval);
                     if (timerInterval) clearInterval(timerInterval);
-                    if (speedTimer) clearInterval(speedTimer);
+                    if (speedInterval) clearInterval(speedInterval);
                 }
             } catch (e) {
                 alert('Error: ' + e.message);
             }
         }
-        
+
         // ===== EXPORTAR HITS =====
         async function exportHits() {
             try {
@@ -1255,7 +1524,7 @@ HTML_TEMPLATE = '''
                 alert('Error: ' + e.message);
             }
         }
-        
+
         // ===== LIMPIAR LOGS =====
         async function clearLogs() {
             try {
@@ -1266,7 +1535,7 @@ HTML_TEMPLATE = '''
                 console.error(e);
             }
         }
-        
+
         // ===== LIMPIAR HITS =====
         async function clearHits() {
             try {
@@ -1282,7 +1551,7 @@ HTML_TEMPLATE = '''
                 console.error(e);
             }
         }
-        
+
         // ===== ACTUALIZAR ESTADO =====
         async function fetchStatus() {
             try {
@@ -1310,6 +1579,7 @@ HTML_TEMPLATE = '''
                         else if (log.includes('[ERROR]')) className = 'log-error';
                         else if (log.includes('[2FA]')) className = 'log-2fa';
                         else if (log.includes('[CUSTOM]')) className = 'log-custom';
+                        else if (log.includes('[BAN]')) className = 'log-ban';
                         return `<div class="log-line ${className}">${escapeHtml(log)}</div>`;
                     }).join('');
                     container.scrollTop = container.scrollHeight;
@@ -1322,10 +1592,10 @@ HTML_TEMPLATE = '''
                     const hits = data.results.slice(-15);
                     if (hits.length > 0) {
                         container.innerHTML = hits.map(hit => {
-                            const email = hit.email || 'Unknown';
-                            const plan = hit.plan || hit.tipo || 'Unknown';
-                            const country = hit.country || 'Unknown';
-                            return `<div class="hit-item">✅ ${email} | <span class="badge-plan">${plan}</span> | ${country}</div>`;
+                            const email = hit.email || hit.code || 'Unknown';
+                            const plan = hit.plan || hit.type || hit.tipo || 'Unknown';
+                            const extra = hit.country || hit.days || '';
+                            return `<div class="hit-item">✅ ${email} | <span class="badge-plan">${plan}</span> ${extra ? '| '+extra : ''}</div>`;
                         }).join('');
                     }
                     document.getElementById('hitCount').textContent = `(${data.hits || 0})`;
@@ -1349,7 +1619,7 @@ HTML_TEMPLATE = '''
                     
                     if (statusInterval) clearInterval(statusInterval);
                     if (timerInterval) clearInterval(timerInterval);
-                    if (speedTimer) clearInterval(speedTimer);
+                    if (speedInterval) clearInterval(speedInterval);
                 }
                 
                 elapsedSeconds = data.elapsed || 0;
@@ -1358,7 +1628,7 @@ HTML_TEMPLATE = '''
                 console.error('Error fetching status:', e);
             }
         }
-        
+
         // ===== TIMER =====
         function updateTimer() {
             elapsedSeconds++;
@@ -1367,22 +1637,22 @@ HTML_TEMPLATE = '''
             const seconds = String(elapsedSeconds % 60).padStart(2, '0');
             document.getElementById('timerDisplay').textContent = `${hours}:${minutes}:${seconds}`;
         }
-        
+
         // ===== SPEED =====
         function updateSpeed() {
             const processed = parseInt(document.getElementById('statProcessed').textContent) || 0;
-            const speed = Math.round((processed - lastProcessed) * 30); // *30 porque cada 2s
+            const speed = Math.round((processed - lastProcessed) * 30);
             document.getElementById('statSpeed').textContent = speed > 0 ? speed : 0;
             lastProcessed = processed;
         }
-        
+
         // ===== UTILS =====
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
-        
+
         // ===== POLLING INICIAL =====
         setTimeout(() => {
             fetchStatus();
