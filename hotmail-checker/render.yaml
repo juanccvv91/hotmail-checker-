@@ -1,11 +1,11 @@
 services:
   - type: web
-    name: checker-dashboard
+    name: telegram-bot
     runtime: python
     plan: free
     buildCommand: |
       pip install -r requirements.txt
-    startCommand: gunicorn --bind 0.0.0.0:$PORT app:app
+    startCommand: gunicorn --bind 0.0.0.0:$PORT app:flask_app
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
