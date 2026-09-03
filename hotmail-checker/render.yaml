@@ -1,6 +1,7 @@
 services:
+  # ===== SERVICIO 1: FLASK (KEEPER) =====
   - type: web
-    name: telegram-bot
+    name: flask-keeper
     runtime: python
     plan: free
     buildCommand: |
@@ -12,4 +13,19 @@ services:
       - key: PYTHONUNBUFFERED
         value: 1
     healthCheckPath: /health
+    autoDeploy: true
+
+  # ===== SERVICIO 2: BOT (WORKER) =====
+  - type: worker
+    name: telegram-bot
+    runtime: python
+    plan: free
+    buildCommand: |
+      pip install -r requirements.txt
+    startCommand: python bot.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: PYTHONUNBUFFERED
+        value: 1
     autoDeploy: true
