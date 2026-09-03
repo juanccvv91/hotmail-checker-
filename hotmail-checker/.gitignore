@@ -9,8 +9,6 @@ venv/
 ENV/
 .env
 .venv
-.env.local
-.env.production
 
 # IDE
 .vscode/
@@ -18,71 +16,17 @@ ENV/
 *.swp
 *.swo
 *~
-*.sublime-workspace
-*.sublime-project
 
 # OS
 .DS_Store
 Thumbs.db
 *.log
 
-# Distribution
-dist/
-build/
-*.egg-info/
-*.egg
-
-# Secrets
-*.key
-*.pem
-*.secret
-*.env
-
-# Cache
-.cache/
-.pytest_cache/
-.mypy_cache/
-
-# Data
-*.db
-*.sqlite
-*.sqlite3
-data/
-results/
-uploads/
-
-# Temp
-tmp/
-temp/
-*.tmp
-*.bak
-
-# Render
-render.yaml
-!render.yaml
-
-# Gunicorn
-gunicorn.log
-*.pid
+# Sessions
+*.session
+*.session-journal
+sessions/
 
 # Flask
 instance/
 .flaskenv
-
-# Exe
-*.exe
-*.dll
-*.so
-*.dylib
-
-# Misc
-*.zip
-*.tar.gz
-*.7z
-*.rar
-
-# Output
-output/
-hits/
-*.txt
-!requirements.txt
