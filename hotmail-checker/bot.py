@@ -1,5 +1,5 @@
-# bot.py - Bot de Telegram con Pyrogram
-import asyncio
+# app.py - Bot de Telegram con Pyrogram
+import os
 from pyrogram import Client, filters
 from pyrogram.types import Message
 
