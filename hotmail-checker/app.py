@@ -42,7 +42,7 @@ def start_bot():
         await message.reply_text("Comando no reconocido. Usa /start o /ping.")
 
     try:
-        loop.run_until_complete(bot.start())
+        bot.start()
         print("🤖 Bot iniciado correctamente y escuchando mensajes.", flush=True)
         loop.run_forever()
     except Exception:
@@ -51,7 +51,7 @@ def start_bot():
     finally:
         try:
             if bot.is_connected:
-                loop.run_until_complete(bot.stop())
+                bot.stop()
         except Exception:
             traceback.print_exc()
         finally:
