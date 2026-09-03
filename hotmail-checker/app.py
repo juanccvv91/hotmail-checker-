@@ -2,6 +2,8 @@
 import os
 from pyrogram import Client, filters
 from pyrogram.types import Message
+import threading
+import time
 
 # ============================================
 # CONFIGURACIÓN
@@ -67,9 +69,45 @@ async def echo(client: Client, message: Message):
     )
 
 # ============================================
-# INICIO
+# FUNCIÓN PARA EJECUTAR EL BOT EN UN THREAD
 # ============================================
-if __name__ == "__main__":
+def run_bot():
+    """Ejecuta el bot en un thread separado"""
     print("🤖 Bot iniciado...")
     print(f"📌 Conectado con token: {BOT_TOKEN[:10]}...")
     app.run()
+
+# ============================================
+# FLASK APP PARA GUNICORN (REQUERIDO PARA RENDER)
+# ============================================
+from flask import Flask, jsonify
+
+flask_app = Flask(__name__)
+
+@flask_app.route('/')
+def index():
+    return jsonify({
+        "status": "running",
+        "service": "Telegram Bot",
+        "bot": "@" + BOT_TOKEN.split(":")[0] if BOT_TOKEN else "unknown"
+    })
+
+@flask_app.route('/health')
+def health():
+    return jsonify({"status": "healthy", "bot": "active"})
+
+# ============================================
+# INICIO DEL BOT EN THREAD SEPARADO
+# ============================================
+if __name__ == "__main__":
+    # Ejecutar el bot en un thread separado
+    bot_thread = threading.Thread(target=run_bot, daemon=True)
+    bot_thread.start()
+    
+    # Iniciar Flask para Gunicorn
+    port = int(os.environ.get("PORT", 5000))
+    flask_app.run(host='0.0.0.0', port=port)
+else:
+    # Para Gunicorn: iniciar el bot en un thread separado
+    bot_thread = threading.Thread(target=run_bot, daemon=True)
+    bot_thread.start()
