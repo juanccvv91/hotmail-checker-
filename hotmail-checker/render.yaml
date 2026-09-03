@@ -1,12 +1,12 @@
 services:
-  # ===== SERVICIO 1: FLASK (KEEPER) =====
+  # ===== SERVICIO 1: WEB (KEEPER) - Mantiene vivo =====
   - type: web
     name: flask-keeper
     runtime: python
     plan: free
     buildCommand: |
       pip install -r requirements.txt
-    startCommand: gunicorn --bind 0.0.0.0:$PORT app:flask_app
+    startCommand: gunicorn --bind 0.0.0.0:$PORT keeper:app
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
@@ -15,14 +15,14 @@ services:
     healthCheckPath: /health
     autoDeploy: true
 
-  # ===== SERVICIO 2: BOT (WORKER) =====
+  # ===== SERVICIO 2: WORKER (BOT) =====
   - type: worker
     name: telegram-bot
     runtime: python
     plan: free
     buildCommand: |
       pip install -r requirements.txt
-    startCommand: python bot.py
+    startCommand: python app.py
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
