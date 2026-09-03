@@ -1,75 +1,52 @@
-# app.py - Bot de Telegram con Pyrogram
 import os
+import threading
+import asyncio
+from flask import Flask, jsonify
 from pyrogram import Client, filters
 from pyrogram.types import Message
 
-# ============================================
-# CONFIGURACIÓN
-# ============================================
+# ======================= CONFIGURACIÓN =======================
 API_ID = 27113333
 API_HASH = "cfe0755384e418f8b0ed6b762843aa68"
 BOT_TOKEN = "6912365083:AAEviaiGxRUF0RFHjmgkPK7YswqFCuTcHNI"
 
-# ============================================
-# INICIALIZAR BOT
-# ============================================
-app = Client(
-    "telegram_bot",
-    api_id=API_ID,
-    api_hash=API_HASH,
-    bot_token=BOT_TOKEN,
-)
+# ======================= FLASK APP =======================
+app = Flask(__name__)  # <--- CAMBIADO a "app"
 
-# ============================================
-# COMANDOS
-# ============================================
+@app.route('/')
+def home():
+    return jsonify({"status": "running", "service": "Telegram Bot"})
 
-@app.on_message(filters.command("start"))
-async def start_command(client: Client, message: Message):
-    """Maneja el comando /start"""
-    user = message.from_user
-    first_name = user.first_name if user else "Usuario"
-    
-    await message.reply_text(
-        f"👋 ¡Hola {first_name}!\n\n"
-        f"🤖 Soy un bot de Telegram.\n"
-        f"📌 Comandos disponibles:\n"
-        f"  /start - Ver este mensaje\n"
-        f"  /ping - Verificar que el bot está vivo\n\n"
-        f"⚡ Desarrollado con Pyrogram"
-    )
+@app.route('/health')
+def health():
+    return jsonify({"status": "healthy"})
 
-@app.on_message(filters.command("ping"))
-async def ping_command(client: Client, message: Message):
-    """Maneja el comando /ping"""
-    await message.reply_text("🏓 Pong! Bot activo ✅")
+# ======================= FUNCIÓN DEL BOT =======================
+def start_bot():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
 
-@app.on_message(filters.command("help"))
-async def help_command(client: Client, message: Message):
-    """Maneja el comando /help"""
-    await message.reply_text(
-        "📌 Comandos disponibles:\n\n"
-        "/start - Mensaje de bienvenida\n"
-        "/ping - Verificar que el bot está vivo\n"
-        "/help - Mostrar esta ayuda\n\n"
-        "🤖 Bot creado con Pyrogram"
-    )
+    bot = Client("telegram_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
-# ============================================
-# MANEJADOR DE ERRORES
-# ============================================
-@app.on_message()
-async def echo(client: Client, message: Message):
-    """Responde a cualquier mensaje no reconocido"""
-    await message.reply_text(
-        "❌ Comando no reconocido.\n"
-        "Usa /help para ver los comandos disponibles."
-    )
+    @bot.on_message(filters.command("start"))
+    async def start_cmd(client, message):
+        await message.reply_text("¡Hola! Soy un bot de Telegram.")
 
-# ============================================
-# INICIO
-# ============================================
+    @bot.on_message(filters.command("ping"))
+    async def ping_cmd(client, message):
+        await message.reply_text("🏓 Pong!")
+
+    @bot.on_message()
+    async def fallback(client, message):
+        await message.reply_text("Comando no reconocido. Usa /start o /ping.")
+
+    print("🤖 Bot iniciado correctamente.")
+    bot.run()
+
+# ======================= INICIO =======================
 if __name__ == "__main__":
-    print("🤖 Bot iniciado...")
-    print(f"📌 Conectado con token: {BOT_TOKEN[:10]}...")
-    app.run()
+    threading.Thread(target=start_bot, daemon=True).start()
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
+else:
+    threading.Thread(target=start_bot, daemon=True).start()
