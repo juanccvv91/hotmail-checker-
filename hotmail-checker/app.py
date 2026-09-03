@@ -1,9 +1,10 @@
 import os
 import threading
 import asyncio
+import re
+import traceback
 from flask import Flask, jsonify
 from pyrogram import Client, filters
-from pyrogram.types import Message
 
 # ======================= CONFIGURACIÓN =======================
 API_ID = 27113333
@@ -23,12 +24,12 @@ def health():
 
 # ======================= FUNCIÓN DEL BOT =======================
 def start_bot():
+    """Inicia Pyrogram en un event loop propio, compatible con Gunicorn."""
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-
     bot = Client("telegram_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
-    @bot.on_message(filters.command("start"))
+    @bot.on_message(filters.regex(re.compile(r"^/start(?:@\w+)?(?:\s|$)", re.IGNORECASE)))
     async def start_cmd(client, message):
         await message.reply_text("¡Hola! Soy un bot de Telegram.")
 
@@ -40,8 +41,21 @@ def start_bot():
     async def fallback(client, message):
         await message.reply_text("Comando no reconocido. Usa /start o /ping.")
 
-    print("🤖 Bot iniciado correctamente.")
-    bot.run()
+    try:
+        loop.run_until_complete(bot.start())
+        print("🤖 Bot iniciado correctamente y escuchando mensajes.", flush=True)
+        loop.run_forever()
+    except Exception:
+        print("❌ Error iniciando el bot:", flush=True)
+        traceback.print_exc()
+    finally:
+        try:
+            if bot.is_connected:
+                loop.run_until_complete(bot.stop())
+        except Exception:
+            traceback.print_exc()
+        finally:
+            loop.close()
 
 # ======================= INICIO =======================
 if __name__ == "__main__":
