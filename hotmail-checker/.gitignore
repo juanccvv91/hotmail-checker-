@@ -26,7 +26,3 @@ Thumbs.db
 *.session
 *.session-journal
 sessions/
-
-# Flask
-instance/
-.flaskenv
