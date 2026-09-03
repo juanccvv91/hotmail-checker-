@@ -1,9 +1,11 @@
 # app.py - Bot de Telegram con Pyrogram
 import os
-from pyrogram import Client, filters
-from pyrogram.types import Message
+import asyncio
 import threading
 import time
+from flask import Flask, jsonify
+from pyrogram import Client, filters
+from pyrogram.types import Message
 
 # ============================================
 # CONFIGURACIÓN
@@ -11,6 +13,23 @@ import time
 API_ID = 27113333
 API_HASH = "cfe0755384e418f8b0ed6b762843aa68"
 BOT_TOKEN = "6912365083:AAEviaiGxRUF0RFHjmgkPK7YswqFCuTcHNI"
+
+# ============================================
+# INICIALIZAR FLASK
+# ============================================
+flask_app = Flask(__name__)
+
+@flask_app.route('/')
+def index():
+    return jsonify({
+        "status": "running",
+        "service": "Telegram Bot",
+        "bot": "@" + BOT_TOKEN.split(":")[0] if BOT_TOKEN else "unknown"
+    })
+
+@flask_app.route('/health')
+def health():
+    return jsonify({"status": "healthy", "bot": "active"})
 
 # ============================================
 # INICIALIZAR BOT
@@ -69,38 +88,25 @@ async def echo(client: Client, message: Message):
     )
 
 # ============================================
-# FUNCIÓN PARA EJECUTAR EL BOT EN UN THREAD
+# FUNCIÓN PARA EJECUTAR EL BOT
 # ============================================
 def run_bot():
-    """Ejecuta el bot en un thread separado"""
+    """Ejecuta el bot con su propio event loop"""
     print("🤖 Bot iniciado...")
     print(f"📌 Conectado con token: {BOT_TOKEN[:10]}...")
+    
+    # Crear nuevo event loop para este hilo
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    
+    # Ejecutar el bot
     app.run()
 
 # ============================================
-# FLASK APP PARA GUNICORN (REQUERIDO PARA RENDER)
-# ============================================
-from flask import Flask, jsonify
-
-flask_app = Flask(__name__)
-
-@flask_app.route('/')
-def index():
-    return jsonify({
-        "status": "running",
-        "service": "Telegram Bot",
-        "bot": "@" + BOT_TOKEN.split(":")[0] if BOT_TOKEN else "unknown"
-    })
-
-@flask_app.route('/health')
-def health():
-    return jsonify({"status": "healthy", "bot": "active"})
-
-# ============================================
-# INICIO DEL BOT EN THREAD SEPARADO
+# INICIO
 # ============================================
 if __name__ == "__main__":
-    # Ejecutar el bot en un thread separado
+    # Para ejecución local: iniciar bot y flask en paralelo
     bot_thread = threading.Thread(target=run_bot, daemon=True)
     bot_thread.start()
     
