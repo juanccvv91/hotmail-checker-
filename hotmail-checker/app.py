@@ -1,3 +1,4 @@
+
 # app.py - BiomedEquip Validator (Flask + Gunicorn)
 import os
 import re
@@ -24,27 +25,37 @@ def curl_request(url, method="GET", post_data=None, cookie_jar=None, extra_heade
     if extra_headers is None:
         extra_headers = []
     
-    headers = [
-        "Host: biomedequip.com",
-        "User-Agent: Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Mobile Safari/537.36",
-        "Accept-Language: pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
-        "Sec-Ch-Ua: \"Not;A=Brand\";v=\"8\", \"Chromium\";v=\"150\", \"Google Chrome\";v=\"150\"",
-        "Sec-Ch-Ua-Mobile: ?1",
-        "Sec-Ch-Ua-Platform: \"Android\""
-    ] + extra_headers
+    headers = {
+        "Host": "biomedequip.com",
+        "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Mobile Safari/537.36",
+        "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+        "Sec-Ch-Ua": '"Not;A=Brand";v="8", "Chromium";v="150", "Google Chrome";v="150"',
+        "Sec-Ch-Ua-Mobile": "?1",
+        "Sec-Ch-Ua-Platform": '"Android"'
+    }
+    
+    # Agregar headers extra
+    for h in extra_headers:
+        if ': ' in h:
+            key, value = h.split(': ', 1)
+            headers[key] = value
     
     session = requests.Session()
     if cookie_jar:
         session.cookies.update(cookie_jar)
     
-    if method == "POST":
-        response = session.post(url, data=post_data, headers=dict([h.split(': ', 1) for h in headers]), timeout=TIMEOUT, verify=False)
-    else:
-        response = session.get(url, headers=dict([h.split(': ', 1) for h in headers]), timeout=TIMEOUT, verify=False)
-    
-    if return_full:
-        return {'body': response.text, 'header': str(response.headers)}
-    return response.text
+    try:
+        if method == "POST":
+            response = session.post(url, data=post_data, headers=headers, timeout=TIMEOUT, verify=False)
+        else:
+            response = session.get(url, headers=headers, timeout=TIMEOUT, verify=False)
+        
+        if return_full:
+            return {'body': response.text, 'header': str(response.headers)}
+        return response.text
+    except Exception as e:
+        print(f"Error en curl_request: {e}")
+        return '{"error": "' + str(e) + '"}'
 
 def get_user_session():
     """Maneja la sesión del usuario"""
@@ -388,6 +399,7 @@ def check_card(card_data):
         return retornar(lista, retorno, status, f"({tempo_formatado})", raw_response)
         
     except Exception as e:
+        print(f"Error en check_card: {e}")
         return retornar(f"{cc}|{mes}|{ano}|{cvv}", f"Erro: {str(e)[:50]}", False, "(0.00s)", "")
 
 # ==================== RUTAS ====================
@@ -407,6 +419,7 @@ def api_check():
         return jsonify({'error': 'Parâmetro "lista" é obrigatório'}), 400
     
     result = check_card(lista)
+    print(f"Resultado: {result}")  # Debug
     return result
 
 @app.route('/api/stats', methods=['GET'])
@@ -430,7 +443,11 @@ def api_clear():
     get_user_session()
     return jsonify({'success': True})
 
-# ==================== HTML TEMPLATE ====================
+@app.route('/health')
+def health():
+    return jsonify({"status": "healthy"})
+
+# ==================== HTML TEMPLATE (CORREGIDO) ====================
 HTML_TEMPLATE = '''<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -1038,6 +1055,8 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
                     const response = await fetch(url);
                     const text = await response.text();
                     
+                    console.log('Respuesta API:', text); // Debug
+                    
                     const parsed = parseResponse(text);
                     results.push({
                         card: card.trim(),
@@ -1055,6 +1074,7 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
                     renderResults();
                     
                 } catch (error) {
+                    console.error('Error:', error);
                     results.push({
                         card: card.trim(),
                         status: false,
@@ -1084,21 +1104,25 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
         }
         
         function parseResponse(text) {
+            // Formato: CC|MÊS|ANO|CVV ~~> MENSAGEM ~~> Live(Approved) ou Die(Reproved) ~~> (TEMPO) ~~> RAW: ...
             const status = text.includes('Live(Approved)');
             
             let message = '';
             let time = '';
             
+            // Extrai mensagem
             const msgMatch = text.match(/\~\~\>\s*([^\~\~]+?)\s*\~\~\>\s*(?:Live|Die)/);
             if (msgMatch) {
                 message = msgMatch[1].trim();
             }
             
+            // Extrai tempo
             const timeMatch = text.match(/\(([\d.]+s)\)/);
             if (timeMatch) {
                 time = timeMatch[1];
             }
             
+            // Se a mensagem contém "Your order has been received" ou similar
             if (message.includes('Your order has been received') || 
                 message.includes('Thank you for your business') ||
                 message.includes('Aprovado')) {
@@ -1164,4 +1188,4 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
 # ==================== PUNTO DE ENTRADA ====================
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    app.run(host='0.0.0.0', port=port, debug=True)
