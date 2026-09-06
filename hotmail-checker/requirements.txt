@@ -2,6 +2,4 @@ Flask==2.3.3
 gunicorn==21.2.0
 Pyrogram==2.0.106
 TgCrypto==1.2.5
-curl_cffi==0.7.0
-pycryptodome==3.19.1
-faker==24.4.0
+requests==2.31.0
