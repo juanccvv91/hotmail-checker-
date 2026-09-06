@@ -15,13 +15,13 @@ API_HASH = "cfe0755384e418f8b0ed6b762843aa68"
 BOT_TOKEN = "6912365083:AAEviaiGxRUF0RFHjmgkPK7YswqFCuTcHNI"
 
 # ======================= FLASK APP =======================
-flask_app = Flask(__name__)
+app = Flask(__name__)
 
-@flask_app.route('/')
+@app.route('/')
 def home():
     return jsonify({"status": "running", "service": "Telegram Bot"})
 
-@flask_app.route('/health')
+@app.route('/health')
 def health():
     return jsonify({"status": "healthy"})
 
@@ -30,10 +30,10 @@ def start_bot():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
-    app = Client("telegram_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
+    bot = Client("telegram_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
     # ===== VARIABLES GLOBALES DEL SCRAPPER =====
-    CHANNEL_ID = None  # Se guarda con /id
+    CHANNEL_ID = None
     PROCESSING = False
 
     # ===== FUNCIÓN PARA OBTENER INFO DEL BIN =====
@@ -55,7 +55,6 @@ def start_bot():
     # ===== FUNCIÓN PARA PROCESAR UNA CC =====
     def process_cc(cc_line):
         """Procesa una línea de CC y retorna el mensaje formateado"""
-        # Extraer números
         numbers = re.findall(r'\d+', cc_line)
         if len(numbers) < 4:
             return None
@@ -86,7 +85,7 @@ def start_bot():
         
         if info:
             mensaje = f"""
-࿓ Scrapper 🏷    
+࿓Elaina Scrapper 🏷    
 ━━━━━━━ቿ━━━━━━━
 ꁴBin ⌯ <code>{bin_num}</code>
 ꁴCC ⌯  <code>{cc}|{mm}|{yy}|{cvv}</code>
@@ -96,14 +95,14 @@ def start_bot():
 ꁴBinlevel ⌯ <code>{info['brand']}</code> - <code>{info['level']}</code>
 ꁴCountry ⌯ <code>{info['country']} | {info['flag']}</code>
 ━━━━━━━ቿ━━━━━━━
-owen:@darkbrx
+owen:@aizen230
 ━━━━━━━ቿ━━━━━━━
 """
             return mensaje
         return None
 
     # ===== COMANDO /start =====
-    @app.on_message(filters.command("start"))
+    @bot.on_message(filters.command("start"))
     async def start_cmd(client, message):
         await message.reply_text(
             "🤖 **Bot Scrapper de CCs**\n\n"
@@ -117,7 +116,7 @@ owen:@darkbrx
         )
 
     # ===== COMANDO /id =====
-    @app.on_message(filters.command("id"))
+    @bot.on_message(filters.command("id"))
     async def set_channel(client, message):
         global CHANNEL_ID
         try:
@@ -138,7 +137,7 @@ owen:@darkbrx
             await message.reply_text("❌ ID inválido. Debe ser un número.")
 
     # ===== MANEJADOR DE ARCHIVOS TXT =====
-    @app.on_message(filters.document & filters.private)
+    @bot.on_message(filters.document & filters.private)
     async def handle_document(client, message):
         global CHANNEL_ID, PROCESSING
         
@@ -186,8 +185,8 @@ owen:@darkbrx
                 mensaje = process_cc(line)
                 if mensaje:
                     try:
-                        # Enviar al canal
-                        photo_path = "img.jpg"  # Ruta de la imagen
+                        # Intentar enviar con foto si existe
+                        photo_path = "img.jpg"
                         if os.path.exists(photo_path):
                             await client.send_photo(CHANNEL_ID, photo_path, caption=mensaje)
                         else:
@@ -221,25 +220,38 @@ owen:@darkbrx
                 os.remove(file_path)
 
     # ===== COMANDO /ping =====
-    @app.on_message(filters.command("ping"))
+    @bot.on_message(filters.command("ping"))
     async def ping_cmd(client, message):
         await message.reply_text("🏓 Pong! Bot activo ✅")
 
+    # ===== COMANDO /help =====
+    @bot.on_message(filters.command("help"))
+    async def help_cmd(client, message):
+        await message.reply_text(
+            "📌 **Comandos disponibles:**\n\n"
+            "/start - Mensaje de bienvenida\n"
+            "/ping - Verificar que el bot está vivo\n"
+            "/help - Mostrar esta ayuda\n"
+            "/id <ID_CANAL> - Configurar canal de destino\n\n"
+            "📤 **Sube un archivo .txt** para procesar CCs\n\n"
+            "📄 **Formato:** cc|mm|yy|cvv (una por línea)"
+        )
+
     # ===== FALLBACK =====
-    @app.on_message()
+    @bot.on_message()
     async def fallback(client, message):
         await message.reply_text(
             "❌ Comando no reconocido.\n"
-            "Usa /start para ver los comandos disponibles."
+            "Usa /help para ver los comandos disponibles."
         )
 
     print("🤖 Bot iniciado correctamente.")
-    app.run()
+    bot.run()
 
 # ======================= INICIO =======================
 if __name__ == "__main__":
     threading.Thread(target=start_bot, daemon=True).start()
     port = int(os.environ.get("PORT", 5000))
-    flask_app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port)
 else:
     threading.Thread(target=start_bot, daemon=True).start()
